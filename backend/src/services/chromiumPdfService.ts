@@ -1,11 +1,6 @@
-import { execFile } from 'node:child_process';
-import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { promisify } from 'node:util';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { access } from 'node:fs/promises';
+import { chromium } from 'playwright-core';
 
-const execFileAsync = promisify(execFile);
 const chromiumCandidates = [
   process.env.CHROMIUM_PATH,
   '/repl/tools/bin/chromium',
@@ -16,33 +11,34 @@ const chromiumCandidates = [
 
 const findChromium = async () => {
   for (const candidate of chromiumCandidates) {
-    try {
-      await access(candidate);
-      return candidate;
-    } catch {
-      // Continue through the known runtime locations.
-    }
+    try { await access(candidate); return candidate; } catch { /* Try the next runtime location. */ }
   }
   throw new Error('Chromium is not available for server-side PDF generation.');
 };
 
-/** One bounded Chromium invocation with a private temporary directory per export. */
+/** Render through Chromium's PDF protocol, without polling a CLI output file. */
 export async function renderHtmlPdf(html: string): Promise<Buffer> {
-  const chromiumPath = await findChromium();
-  const tempDirectory = await mkdtemp(join(tmpdir(), 'smartlab-report-'));
-  const htmlPath = join(tempDirectory, 'report.html');
-  const pdfPath = join(tempDirectory, 'report.pdf');
+  const browser = await chromium.launch({
+    executablePath: await findChromium(), headless: true, timeout: 30000,
+    args: ['--no-sandbox', '--disable-dev-shm-usage'],
+  });
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    await writeFile(htmlPath, html, 'utf8');
-    await execFileAsync(chromiumPath, [
-      '--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
-      '--no-pdf-header-footer', '--run-all-compositor-stages-before-draw',
-      '--virtual-time-budget=1000',
-      '--user-data-dir=' + join(tempDirectory, 'profile'),
-      '--print-to-pdf=' + pdfPath, pathToFileURL(htmlPath).href,
-    ], { timeout: 60000, maxBuffer: 1024 * 1024 });
-    return await readFile(pdfPath);
+    const render = async () => {
+      const page = await browser.newPage();
+      // Reports embed their assets; external requests are unnecessary.
+      await page.route('**/*', route => route.abort());
+      await page.setContent(html, { waitUntil: 'load', timeout: 30000 });
+      return page.pdf({ printBackground: true, preferCSSPageSize: true, displayHeaderFooter: false });
+    };
+    return await Promise.race([
+      render(),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error('PDF rendering timed out.')), 60000);
+      }),
+    ]);
   } finally {
-    await rm(tempDirectory, { recursive: true, force: true });
+    if (timer) clearTimeout(timer);
+    await browser.close();
   }
 }

@@ -1,24 +1,32 @@
 const fs = require('node:fs/promises');
-jest.mock('node:fs/promises', () => ({ access: jest.fn(), mkdtemp: jest.fn(), writeFile: jest.fn(), readFile: jest.fn(), rm: jest.fn() }));
-const mockExecute = jest.fn();
-jest.mock('node:util', () => ({ ...jest.requireActual('node:util'), promisify: () => (...args) => mockExecute(...args) }));
+jest.mock('node:fs/promises', () => ({ access: jest.fn() }));
+const mockPage = { route: jest.fn(), setContent: jest.fn(), pdf: jest.fn() };
+const mockBrowser = { newPage: jest.fn(), close: jest.fn() };
+const mockLaunch = jest.fn();
+jest.mock('playwright-core', () => ({ chromium: { launch: (...args) => mockLaunch(...args) } }));
 const { renderHtmlPdf } = require('../dist/services/chromiumPdfService');
-beforeEach(() => { jest.clearAllMocks(); fs.access.mockResolvedValue(); fs.mkdtemp.mockResolvedValue('C:/temporary report #1'); fs.writeFile.mockResolvedValue(); fs.readFile.mockResolvedValue(Buffer.from('%PDF-test')); fs.rm.mockResolvedValue(); mockExecute.mockResolvedValue(); });
-test('runs Chromium with bounded execution, encoded file URL, isolated profile, and cleanup', async () => {
+beforeEach(() => {
+  jest.resetAllMocks(); fs.access.mockResolvedValue(); mockLaunch.mockResolvedValue(mockBrowser);
+  mockBrowser.newPage.mockResolvedValue(mockPage); mockBrowser.close.mockResolvedValue();
+  mockPage.route.mockResolvedValue(); mockPage.setContent.mockResolvedValue(); mockPage.pdf.mockResolvedValue(Buffer.from('%PDF-test'));
+});
+afterEach(() => jest.useRealTimers());
+test('prints with CSS page size and backgrounds, blocks external requests, and closes browser', async () => {
   await expect(renderHtmlPdf('<html>report</html>')).resolves.toEqual(Buffer.from('%PDF-test'));
-  expect(mockExecute.mock.calls[0][2]).toEqual({ timeout: 60000, maxBuffer: 1024 * 1024 });
-  expect(mockExecute.mock.calls[0][1].at(-1)).toContain('temporary%20report%20%231');
-  expect(mockExecute.mock.calls[0][1].some(a => a.startsWith('--user-data-dir='))).toBe(true);
-  expect(fs.rm).toHaveBeenCalledWith('C:/temporary report #1', {recursive:true,force:true});
+  expect(mockPage.pdf).toHaveBeenCalledWith({ printBackground: true, preferCSSPageSize: true, displayHeaderFooter: false });
+  const abort = jest.fn(); mockPage.route.mock.calls[0][1]({ abort }); expect(abort).toHaveBeenCalled();
+  expect(mockBrowser.close).toHaveBeenCalledTimes(1);
 });
-test.each(['write','mockExecute','read'])('cleans up after %s failure and propagates it', async stage => {
-  const fail = new Error(stage + ' failed');
-  ({write:fs.writeFile,mockExecute,read:fs.readFile})[stage].mockRejectedValueOnce(fail);
-  await expect(renderHtmlPdf('<html/>')).rejects.toBe(fail);
-  expect(fs.rm).toHaveBeenCalledTimes(1);
+test.each(['newPage', 'setContent', 'pdf'])('closes browser after %s failure', async stage => {
+  const error = new Error('render failed'); (mockBrowser[stage] || mockPage[stage]).mockRejectedValueOnce(error);
+  await expect(renderHtmlPdf('<html/>')).rejects.toBe(error); expect(mockBrowser.close).toHaveBeenCalledTimes(1);
 });
-test('missing browser fails before allocating a directory', async () => {
+test('missing Chromium fails before launching', async () => {
   fs.access.mockRejectedValue(new Error('missing'));
-  await expect(renderHtmlPdf('<html/>')).rejects.toThrow('Chromium is not available');
-  expect(fs.mkdtemp).not.toHaveBeenCalled();
+  await expect(renderHtmlPdf('<html/>')).rejects.toThrow('Chromium is not available'); expect(mockLaunch).not.toHaveBeenCalled();
+});
+test('bounds a hung PDF call and closes browser', async () => {
+  jest.useFakeTimers(); mockPage.pdf.mockReturnValue(new Promise(() => {}));
+  const result = expect(renderHtmlPdf('<html/>')).rejects.toThrow('PDF rendering timed out');
+  await jest.advanceTimersByTimeAsync(60000); await result; expect(mockBrowser.close).toHaveBeenCalledTimes(1);
 });
