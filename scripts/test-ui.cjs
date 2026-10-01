@@ -8,7 +8,7 @@ async function main(){
  const out=process.env.SMARTLAB_EVIDENCE_DIR||path.join(root,'artifacts/browser');fs.mkdirSync(out,{recursive:true});
  const env={...process.env,DATABASE_URL:database.href,SMARTLAB_EVIDENCE_DIR:out,CHROMIUM_PATH:process.env.CHROMIUM_PATH||playwright.chromium.executablePath()};
  if(!fs.existsSync(env.CHROMIUM_PATH))throw Error('Run npx playwright install chromium or set CHROMIUM_PATH');
- if(process.argv.includes('--deployment')) {await run(path.join(root,'backend/scripts/smoke-production.cjs'),env);await run(path.join(root,'backend/scripts/smoke-migration-upgrade.cjs'),env);return}
+ if(process.argv.includes('--deployment')) {await run(path.join(root,'backend/scripts/check-pdf-runtime.cjs'),env);await run(path.join(root,'backend/scripts/smoke-production.cjs'),env);await run(path.join(root,'backend/scripts/smoke-migration-upgrade.cjs'),env);return}
  await run(path.join(root,'backend/scripts/verify-ribbons.cjs'),env);
  await run(path.join(root,'backend/scripts/verify-consolidation.cjs'),env);
  const vite=path.join(path.dirname(require.resolve('vite/package.json',{paths:[path.join(root,'frontend')]})),'bin/vite.js');
