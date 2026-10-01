@@ -1,0 +1,470 @@
+// ====================================================
+// SmartLab 2.0 - Optimized Database Schema
+// Based on your MySQL script, optimized for PostgreSQL
+// ====================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ====================================================
+// ENUMS - Convert lookup tables to enums for efficiency
+// ====================================================
+
+enum UserRole {
+  ADMIN
+  FACULTY
+  STUDENT
+}
+
+enum UserStatus {
+  ACTIVE
+  DEACTIVATED
+}
+
+enum EquipmentStatus {
+  AVAILABLE
+  BORROWED
+  DAMAGED
+  UNAVAILABLE
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  RETURNED
+  BORROWED
+}
+
+enum ScheduleType {
+  ONE_TIME
+  WEEKLY
+}
+
+enum NotificationType {
+  REQUEST_APPROVED
+  REQUEST_REJECTED
+  REQUEST_PENDING
+  EQUIPMENT_DUE
+  SYSTEM_ANNOUNCEMENT
+  SCHEDULE_REMINDER
+}
+
+// ====================================================
+// CORE ACADEMIC TABLES (Keep your structure)
+// ====================================================
+
+model AcademicYear {
+  id          String   @id @default(cuid())
+  year        String   @unique // "2024-2025"
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  schedules   LabSchedule[]
+  requests    BorrowRequest[]
+  
+  @@map("academic_years")
+}
+
+model Term {
+  id        String    @id @default(cuid())
+  name      String    @unique // "First Semester"
+  isActive  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // Relations
+  schedules LabSchedule[]
+  requests  BorrowRequest[]
+  
+  @@map("terms")
+}
+
+// ====================================================
+// CAMPUS INFRASTRUCTURE (Keep your structure)
+// ====================================================
+
+model Building {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  rooms       Room[]
+  
+  @@map("buildings")
+}
+
+model Room {
+  id            String   @id @default(cuid())
+  buildingId    String?
+  building      Building? @relation(fields: [buildingId], references: [id], onDelete: SetNull)
+  roomNumber    String?
+  name          String?
+  isComputerLab Boolean  @default(false)
+  
+  // Relations
+  schedules     LabSchedule[]
+  requests      BorrowRequest[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([buildingId, roomNumber])
+  @@map("rooms")
+}
+
+model Program {
+  id          String   @id @default(cuid())
+  code        String   @unique // "BSIT"
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  students     StudentProfile[]
+  schedules    LabSchedule[]
+  requests     BorrowRequest[]
+  
+  @@map("programs")
+}
+
+model Subject {
+  id          String   @id @default(cuid())
+  code        String   @unique // "IT101"
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  schedules   LabSchedule[]
+  requests    BorrowRequest[]
+  
+  @@map("subjects")
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  faculty     FacultyProfile[]
+  
+  @@map("departments")
+}
+
+// ====================================================
+// USER SYSTEM (Optimized your structure)
+// ====================================================
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  sessionVersion Int @default(0)
+  passwordHash String
+  firstName    String
+  lastName     String
+  phone        String?
+  role         UserRole
+  status       UserStatus @default(ACTIVE)
+  
+  // Profile relationships
+  adminProfile   AdminProfile?
+  facultyProfile FacultyProfile?
+  studentProfile StudentProfile?
+  
+  // Activity tracking
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  createdSchedules LabSchedule[]
+  requests         BorrowRequest[] @relation("RequesterUser")
+  reviewedRequests BorrowRequest[] @relation("ReviewerUser")
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+  
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+model AdminProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("admin_profiles")
+}
+
+model FacultyProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  
+  // Relations
+  schedules    LabSchedule[]
+  requests     BorrowRequest[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("faculty_profiles")
+}
+
+model StudentProfile {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programId  String?
+  program    Program? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  yearLevel  Int?
+  
+  // Relations
+  // Note: requests accessed via User.requests
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@map("student_profiles")
+}
+
+// ====================================================
+// EQUIPMENT MANAGEMENT (Keep your smart design)
+// ====================================================
+
+model Equipment {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+  
+  // Inventory management (your smart design)
+  totalQuantity     Int @default(0)
+  availableQuantity Int @default(0)
+  borrowedQuantity  Int @default(0)
+  damagedQuantity   Int @default(0)
+  
+  // Status and metadata
+  status      EquipmentStatus @default(AVAILABLE)
+  retiredAt   DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  requestItems BorrowRequestItem[]
+  
+  @@index([status])
+  @@map("equipment")
+}
+
+// ====================================================
+// SCHEDULING SYSTEM (Keep your flexible design)
+// ====================================================
+
+model LabSchedule {
+  id              String   @id @default(cuid())
+  
+  // Schedule details
+  scheduleType    ScheduleType @default(ONE_TIME)
+  roomId          String?
+  room            Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  facultyId       String
+  faculty         FacultyProfile @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  programId       String?
+  program         Program? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  subjectId       String?
+  subject         Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  
+  // Time scheduling (your smart design)
+  dayOfWeek       Int      // 0-6 (Sunday-Saturday), interpreted in Asia/Manila
+  scheduleDate    DateTime? // For one-time schedules, null for recurring
+  timeStart       DateTime
+  timeEnd         DateTime
+  
+  // Academic context
+  academicYearId  String
+  academicYear    AcademicYear @relation(fields: [academicYearId], references: [id])
+  termId          String
+  term            Term @relation(fields: [termId], references: [id])
+  
+  // Metadata
+  yearLevel       Int?
+  borrowRequestId String?
+  borrowRequest   BorrowRequest? @relation(fields: [borrowRequestId], references: [id], onDelete: SetNull)
+  createdBy       String
+  creator         User     @relation(fields: [createdBy], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([scheduleDate])
+  @@index([roomId, timeStart, timeEnd])
+  @@index([facultyId])
+  @@index([academicYearId, termId, roomId])
+  @@index([borrowRequestId])
+  @@map("lab_schedules")
+}
+
+// ====================================================
+// BORROW REQUEST SYSTEM (Keep your workflow)
+// ====================================================
+
+model BorrowRequest {
+  id              String         @id @default(cuid())
+  
+  // Request details
+  requestedBy     String         // User ID
+  requester       User           @relation("RequesterUser", fields: [requestedBy], references: [id])
+  facultyId       String?
+  faculty         FacultyProfile? @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  
+  // Academic context
+  programId       String?
+  program         Program?       @relation(fields: [programId], references: [id], onDelete: SetNull)
+  subjectId       String?
+  subject         Subject?       @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  yearLevel       Int?
+  
+  // Scheduling
+  dateNeeded      DateTime
+  roomId          String?
+  room            Room?          @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  location        String?        // For general rooms when roomId is null
+  timeStart       DateTime?
+  timeEnd         DateTime?
+  
+  // Request information
+  purpose         String?
+  contactDetails  String?
+  notes           String?
+  
+  // Academic context
+  academicYearId  String
+  academicYear    AcademicYear   @relation(fields: [academicYearId], references: [id])
+  termId          String
+  term            Term           @relation(fields: [termId], references: [id])
+  
+  // Status tracking (your comprehensive design)
+  status          RequestStatus  @default(PENDING)
+  reviewedBy      String?
+  reviewer        User?          @relation("ReviewerUser", fields: [reviewedBy], references: [id])
+  reviewedAt      DateTime?
+  approvedAt      DateTime?
+  borrowedAt      DateTime?
+  returnedAt      DateTime?
+  cancelledAt     DateTime?
+  declinedAt      DateTime?
+  
+  // Relations
+  items           BorrowRequestItem[]
+  schedules       LabSchedule[]
+  notifications   Notification[]
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  @@index([requestedBy])
+  @@index([status])
+  @@index([dateNeeded])
+  @@index([academicYearId, termId])
+  @@index([academicYearId, termId, status, dateNeeded])
+  @@map("borrow_requests")
+}
+
+model BorrowRequestItem {
+  id               String @id @default(cuid())
+  borrowRequestId  String
+  borrowRequest    BorrowRequest @relation(fields: [borrowRequestId], references: [id], onDelete: Cascade)
+  equipmentId      String
+  equipment        Equipment @relation(fields: [equipmentId], references: [id])
+  quantity         Int    @default(1)
+  
+  createdAt        DateTime @default(now())
+  
+  @@unique([borrowRequestId, equipmentId])
+  @@index([equipmentId])
+  @@map("borrow_request_items")
+}
+
+// ====================================================
+// NOTIFICATION SYSTEM (Keep your design)
+// ====================================================
+
+model Notification {
+  id             String           @id @default(cuid())
+  
+  // Recipient
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Content
+  type           NotificationType
+  title          String
+  message        String
+  
+  // Reference
+  referenceType  String?          // "borrow_request", "equipment", etc.
+  referenceId    String?          // ID of referenced entity
+  
+  // Optional link to BorrowRequest
+  borrowRequestId String?
+  borrowRequest   BorrowRequest?   @relation(fields: [borrowRequestId], references: [id], onDelete: Cascade)
+  
+  // Status
+  isRead         Boolean          @default(false)
+  emailSent      Boolean          @default(false)
+  
+  createdAt      DateTime         @default(now())
+  
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+// ====================================================
+// AUDIT LOGGING (Keep your audit trail)
+// ====================================================
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  
+  // Actor
+  actorUserId  String
+  actor        User     @relation(fields: [actorUserId], references: [id])
+  
+  // Action details
+  action       String
+  entityType   String   // "User", "Equipment", "BorrowRequest"
+  entityId     String   // ID of the affected entity
+  details      Json?    // Additional context
+  
+  createdAt    DateTime @default(now())
+  
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([actorUserId, createdAt])
+  @@map("audit_logs")
+}

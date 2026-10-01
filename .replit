@@ -1,0 +1,83 @@
+modules = ["nodejs-22", "web", "python-3.12"]
+run = "npm run dev"
+
+hidden = ["**/node_modules", "**/dist", "**/.svelte-kit", "**/.next"]
+
+[agent]
+expertMode = true
+stack = "BEST_EFFORT_FALLBACK"
+
+[nix]
+channel = "stable-25_05"
+packages = ["freetype", "gumbo", "harfbuzz", "jbig2dec", "libjpeg_turbo", "mupdf", "openjpeg", "swig", "xcbuild", "gcc"]
+
+[userenv]
+
+[userenv.shared]
+NODE_ENV = "development"
+PORT = "3001"
+FRONTEND_URL = "http://localhost:5000"
+CHROMIUM_PATH = "/repl/tools/bin/chromium"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend API"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+# Install dependencies separately before using Run.
+task = "shell.exec"
+args = "npm run dev:frontend"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Backend API"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+# Run starts the API only; database setup and demo seeding are manual.
+task = "shell.exec"
+args = "npm run dev:backend"
+waitForPort = 3001
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["bash", "-c", "npm run start:production"]
+build = [
+  "bash",
+  "-c",
+  "cd backend && npm install && npx prisma generate && npx tsc && cd ../frontend && npm install && npm run build",
+]

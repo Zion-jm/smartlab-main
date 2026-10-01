@@ -1,0 +1,3 @@
+require('dotenv').config();const fs=require('fs');const {PrismaClient}=require('@prisma/client');
+async function main(){let u;try{u=new URL(process.env.DATABASE_URL)}catch{throw Error('Invalid local database configuration')};if(!['localhost','127.0.0.1'].includes(u.hostname)||u.pathname!=='/smartlab_test')throw Error('Local smartlab_test required');const db=new PrismaClient();try{await db.$executeRawUnsafe(fs.readFileSync('prisma/equipment-lifecycle.sql','utf8'));console.log('Equipment retirement column ready in local smartlab_test.')}finally{await db.$disconnect()}}
+main().catch(()=>{console.error('Equipment lifecycle migration failed.');process.exitCode=1});

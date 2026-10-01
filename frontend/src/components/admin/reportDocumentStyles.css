@@ -1,0 +1,649 @@
+/* Use the declared local serif fallbacks; report rendering must work offline. */
+
+.report-document-paper {
+  width: min(100%, 14in);
+  margin: 0 auto;
+  box-sizing: border-box;
+  background: #fff;
+  color: #333;
+  font-family: Arial, sans-serif;
+}
+
+.formal-report-document {
+  padding: 4.6mm 4.5mm 4.9mm;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  box-shadow: 0 12px 30px rgba(31, 41, 55, 0.08);
+}
+
+.report-detail-formal-document {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.report-detail-formal-document.request-report-screen,
+.report-detail-formal-document.schedule-report-screen,
+.report-detail-formal-document.equipment-report-screen {
+  background: #f8f9fa;
+}
+
+.report-detail-formal-document .report-document-print-only {
+  display: none;
+}
+
+.report-document-header {
+  position: relative;
+  display: flex;
+  min-height: 30mm;
+  align-items: flex-start;
+  gap: 4mm;
+  margin: 0;
+  padding: 4mm;
+  background: #fff;
+}
+
+.report-document-logo-frame {
+  display: flex;
+  width: 28mm;
+  height: 28mm;
+  flex: 0 0 28mm;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.report-document-logo {
+  width: 26mm;
+  height: 26mm;
+  object-fit: contain;
+}
+
+.report-document-header-text {
+  padding-top: 4mm;
+  color: #111;
+  font-family: "STIX Two Text", Georgia, serif;
+  line-height: 1.05;
+}
+
+.report-document-header-text p {
+  margin: 0;
+  font-variant: small-caps;
+  font-variant-caps: small-caps;
+}
+
+.report-document-header-text p:nth-child(1) {
+  font-size: 11pt;
+  font-weight: 400;
+  letter-spacing: 0.15px;
+}
+
+.report-document-header-text p:nth-child(2) {
+  font-size: 17pt;
+  font-weight: 400;
+}
+
+.report-document-header-text p:nth-child(3) {
+  font-size: 13pt;
+  font-weight: 400;
+}
+
+.report-document-header-text p:nth-child(4) {
+  margin-top: 0.5mm;
+  font-size: 13pt;
+  font-weight: 700;
+  font-variant: normal;
+  font-variant-caps: normal;
+  text-transform: uppercase;
+}
+
+.report-document-header-initial {
+  font-variant: normal;
+  font-variant-caps: normal;
+}
+
+.report-document-code {
+  margin-left: auto;
+  flex: 0 0 auto;
+  border: 1px solid #555;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+  padding: 2mm 3mm;
+  color: #111;
+  text-align: left;
+  font-family: Arial, sans-serif;
+  font-size: 7.5pt;
+  font-weight: 550;
+  line-height: 1.4;
+}
+
+.report-document-code p {
+  margin: 0;
+}
+
+.report-document-code p:nth-child(3) {
+  margin-top: 1mm;
+}
+
+.report-document-titlebar {
+  margin-top: 1mm;
+  background: #f0ad68;
+  color: #111;
+  padding: 2.5mm 3mm;
+  text-align: center;
+  font-family: "STIX Two Text", Georgia, serif;
+  font-size: 14pt;
+  font-weight: 700;
+  line-height: 1.1;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.report-document-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 4mm;
+  padding: 2.5mm 1mm 1.5mm;
+  color: #333;
+  font-family: "STIX Two Text", Georgia, serif;
+  font-size: 9pt;
+  line-height: 1.2;
+}
+
+.report-document-signatures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40mm;
+  margin: 5mm 10mm 0;
+  color: #333;
+  font-family: "STIX Two Text", Georgia, serif;
+  font-size: 10pt;
+}
+
+.report-document-signature-line {
+  margin-top: 6mm;
+  border-bottom: 1px solid #000;
+}
+
+.report-document-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 5mm;
+  margin-top: 6mm;
+  color: #333;
+  font-family: "STIX Two Text", Georgia, serif;
+  font-size: 8pt;
+  line-height: 1.2;
+}
+
+.report-document-footer p {
+  margin: 0;
+}
+
+.report-document-footer-slogan {
+  margin-top: 2mm !important;
+  font-size: 14pt;
+  font-weight: 700;
+}
+
+.report-document-certification {
+  width: 30mm;
+  height: 30mm;
+  flex: 0 0 30mm;
+  object-fit: contain;
+}
+
+@media (max-width: 720px) {
+  .report-document-header {
+    gap: 2mm;
+    padding: 2mm;
+  }
+
+  .report-document-logo-frame {
+    width: 20mm;
+    height: 20mm;
+    flex-basis: 20mm;
+  }
+
+  .report-document-logo {
+    width: 19mm;
+    height: 19mm;
+  }
+
+  .report-document-header-text {
+    padding-top: 2mm;
+  }
+
+  .report-document-header-text p:nth-child(1) {
+    font-size: 8pt;
+  }
+
+  .report-document-header-text p:nth-child(2) {
+    font-size: 11pt;
+  }
+
+  .report-document-header-text p:nth-child(3),
+  .report-document-header-text p:nth-child(4) {
+    font-size: 8pt;
+  }
+
+  .report-document-code {
+    padding: 1mm 1.5mm;
+    font-size: 6pt;
+  }
+
+  .report-document-meta {
+    flex-direction: column;
+    gap: 1mm;
+  }
+
+  .report-document-meta p:last-child {
+    text-align: left;
+  }
+
+  .report-document-signatures {
+    gap: 8mm;
+    margin-inline: 3mm;
+    font-size: 8pt;
+  }
+
+  .report-document-footer {
+    font-size: 6pt;
+  }
+
+  .report-document-footer-slogan {
+    font-size: 9pt;
+  }
+
+  .report-document-certification {
+    width: 20mm;
+    height: 20mm;
+    flex-basis: 20mm;
+  }
+}
+
+@media print {
+  .report-detail-formal-document {
+    padding: 4.6mm 4.5mm 4.9mm;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    box-shadow: none;
+  }
+
+  .report-detail-formal-document .report-document-header.report-document-print-only {
+    display: flex;
+  }
+
+  .report-detail-formal-document .report-document-titlebar.report-document-print-only {
+    display: block;
+  }
+
+  .report-detail-formal-document .report-document-meta.report-document-print-only {
+    display: flex;
+  }
+
+  .report-detail-formal-document .report-document-signatures.report-document-print-only {
+    display: grid;
+  }
+
+  .report-detail-formal-document .report-document-footer.report-document-print-only {
+    display: flex;
+  }
+
+  .report-document-paper {
+    width: 100%;
+    min-height: auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .report-document-header {
+    padding-inline: 4mm;
+  }
+}
+
+.print-report-paper {
+  width: min(100%, 13in);
+  margin: 0 auto;
+  background: #fff;
+  box-sizing: border-box;
+  color: #333;
+  font-family: Arial, sans-serif;
+}
+
+.print-report-page {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 8.5in;
+  padding: 0 2.5mm 4.9mm;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.print-report-page .report-document-header {
+  flex: 0 0 32mm;
+  height: 32mm;
+  min-height: 32mm;
+  box-sizing: border-box;
+  padding-right: 0;
+}
+
+.print-report-page .report-document-code-stack {
+  align-self: flex-start;
+  margin-left: auto;
+  transform: translateY(5mm);
+  text-align: right;
+}
+
+.print-report-page .report-document-page-number {
+  margin: 0 0 1mm;
+  color: #111;
+  font-family: Arial, sans-serif;
+  font-size: 7.5pt;
+  line-height: 1.2;
+}
+
+.print-report-page .report-document-code-stack .report-document-code {
+  margin-left: 0;
+  transform: none;
+}
+
+.print-report-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.print-report-page-footer {
+  flex: 0 0 54mm;
+  height: 54mm;
+  min-height: 54mm;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+  background: #fff;
+  overflow: hidden;
+}
+
+.print-report-page-footer .report-document-signatures {
+  flex: 0 0 22mm;
+  height: 22mm;
+  min-height: 22mm;
+  margin: 0 5mm 0 15mm;
+  gap: 40mm;
+  font-size: 9pt;
+  font-family: Arial, Helvetica, sans-serif;
+  transform: none;
+}
+
+.print-report-page-footer .report-document-signatures > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.print-report-page-footer .report-document-signatures > div > p:first-child {
+  margin: 0;
+  font-weight: 700;
+}
+
+.print-report-page-footer .report-document-signatures > div > p:last-child {
+  margin-top: 9mm;
+  font-size: 8pt;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.print-report-page-footer .report-document-signature-line {
+  display: none;
+}
+
+.print-report-page-footer .print-report-footer {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 7pt;
+  line-height: 1.2;
+}
+
+.print-report-page-footer .print-report-footer-copy {
+  align-self: flex-end;
+  min-width: 0;
+  transform: translateX(24mm);
+}
+
+.print-report-page-footer .print-report-footer-copy p {
+  margin: 0;
+}
+
+.print-report-page-footer .report-document-footer-slogan {
+  margin-top: 3mm !important;
+  color: #111;
+  font-family: "STIX Two Text", "Times New Roman", Times, serif;
+  font-size: 17pt;
+  font-weight: 200;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.15px;
+  line-height: 1;
+}
+
+.print-report-page-footer .print-report-slogan-small-caps {
+  display: inline-block;
+  font-size: 1.08em;
+  line-height: 0.95;
+  transform: translateY(-0.04em);
+}
+
+.print-report-page-footer .print-report-slogan-ordinal {
+  position: relative;
+  display: inline-block;
+  padding-right: 0.98em;
+  line-height: 1;
+}
+
+.print-report-page-footer .report-document-footer-slogan sup {
+  position: absolute;
+  top: 0;
+  left: 0.6em;
+  font-size: 0.78em;
+  line-height: 1;
+  vertical-align: initial;
+}
+
+.print-report-page-footer .report-document-certification {
+  width: 32mm;
+  height: 32mm;
+  max-width: 32mm;
+  max-height: 32mm;
+  flex-basis: 32mm;
+}
+
+.print-report-table {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  font-size: 7pt;
+}
+
+.print-report-table-main-header {
+  height: 8mm !important;
+  background: #f0ad68;
+  font-size: 12pt !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.print-report-table th,
+.print-report-table td {
+  border: 1px solid #000;
+  height: 6.5mm;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.5mm 0.8mm;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.printable-report-table th:not(.print-report-table-main-header),
+.printable-report-table td {
+  height: 6.5mm;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+  line-height: 1.15;
+}
+
+.printable-report-measurement {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.print-report-table th {
+  background: #f0ad68;
+  height: 6.5mm;
+  font-size: 7pt;
+  font-weight: 700;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.print-report-table td {
+  font-size: 7pt;
+}
+
+@media print {
+  @page {
+    size: 13in 8.5in;
+    margin: 0;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .print-report-paper {
+    width: 100%;
+  }
+
+  .print-report-page {
+    display: grid;
+    grid-template-rows: 32mm minmax(0, 1fr) 51mm;
+    width: 100%;
+    height: 215.9mm;
+    min-height: 215.9mm;
+    max-height: 215.9mm;
+    padding: 0 2.5mm 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    break-inside: avoid;
+    break-after: page;
+    page-break-inside: avoid;
+    page-break-after: always;
+  }
+
+  .print-report-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .print-report-page .report-document-header {
+    position: static;
+    grid-row: 1;
+    width: auto;
+    flex: 0 0 32mm;
+    height: 32mm;
+    min-height: 32mm;
+    max-height: 32mm;
+    margin: 0;
+  }
+
+  .print-report-table-wrap {
+    position: static;
+    grid-row: 2;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+  }
+
+  .print-report-table thead {
+    display: table-header-group;
+  }
+
+  .print-report-table tr {
+    break-inside: avoid;
+  page-break-inside: avoid;
+  }
+
+  .print-report-page-footer {
+    position: static;
+    grid-row: 3;
+    width: auto;
+    display: grid;
+    grid-template-rows: 24mm 27mm;
+    flex: none;
+    height: 51mm;
+    min-height: 51mm;
+    max-height: 51mm;
+    margin: 0;
+  }
+
+  .print-report-page-footer .report-document-signatures {
+    height: 24mm;
+    min-height: 24mm;
+    max-height: 24mm;
+    transform: none;
+  }
+
+  .print-report-page-footer .print-report-footer {
+    position: relative;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    align-items: flex-start;
+  }
+
+  .print-report-page-footer .print-report-footer-copy {
+    align-self: flex-start;
+    transform: translateX(24mm);
+  }
+
+  .print-report-page-footer .print-report-footer .report-document-certification {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1;
+    transform: translateY(-7mm);
+  }
+}

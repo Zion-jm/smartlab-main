@@ -1,0 +1,51 @@
+name: Verification
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: smartlab
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: smartlab_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U smartlab -d smartlab_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://smartlab:ci-only-password@localhost:5432/smartlab_test
+      DATABASE_URL: postgresql://smartlab:ci-only-password@localhost:5432/smartlab_test
+      JWT_SECRET: isolated-ci-only-secret-not-used-for-deployment
+      SMARTLAB_EVIDENCE_DIR: ${{ github.workspace }}/artifacts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global npm@10.9.2
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run build
+      - run: npm run lint:ci
+      - run: npm run test:regression
+      - run: npx playwright install --with-deps chromium
+      - name: Browser contracts
+        run: npm run test:ui
+      - name: Fresh and upgrade migrations with production smoke
+        run: node scripts/test-ui.cjs --deployment
+      - name: Dependency security gate
+        if: always()
+        run: |
+          mkdir -p artifacts
+          npm audit --audit-level=moderate --json > artifacts/npm-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-evidence
+          path: artifacts

@@ -1,0 +1,34 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const ts=require('typescript');
+// Compile the actual frontend utilities in a separate process with this TZ.
+require.extensions['.ts']=(module,file)=>module._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,file);
+const back=require('../../dist/utils/manilaTime');
+const front=require('../../../frontend/src/utils/dateTime.ts');
+const range=require('../../../frontend/src/components/shared/dateRangeUtils.ts');
+const schedules=require('../../dist/services/labScheduleService');
+const templates=require('../../dist/services/email/templates');
+const before=new Date('2035-06-11T15:59:59.999Z'),midnight=new Date('2035-06-11T16:00:00Z');
+assert.equal(back.manilaDateKey(before),'2035-06-11');assert.equal(back.manilaDateKey(midnight),'2035-06-12');
+assert.equal(front.dateToDateKey(before),'2035-06-11');assert.equal(front.dateToDateKey(midnight),'2035-06-12');
+const bounds=back.manilaDayBounds('2035-06-12');
+assert.equal(bounds.start.toISOString(),'2035-06-11T16:00:00.000Z');assert.equal(bounds.end.toISOString(),'2035-06-12T16:00:00.000Z');
+assert.equal(bounds.end-bounds.start,86400000);assert.equal(midnight.toISOString(),'2035-06-11T16:00:00.000Z');
+for(const date of ['2035-06-12','2035-06-12T00:00:00Z','2035-06-12T00:00:00+08:00']){assert.equal(back.manilaDateKey(date),'2035-06-12');assert.equal(front.dateToDateKey(date),'2035-06-12');}
+assert.equal(front.combineManilaDateTime('2035-06-12','07:30'),'2035-06-11T23:30:00.000Z');
+assert.equal(back.parseManilaDate('2035-06-12T07:30:00').toISOString(),'2035-06-11T23:30:00.000Z');
+assert.equal(front.parseManilaValue('2035-06-12T07:30:00').toISOString(),'2035-06-11T23:30:00.000Z');
+assert.equal(front.extractTimeString('2035-06-11T23:30:00Z'),'07:30');assert.equal(front.dateToTimeString(midnight),'00:00');
+assert.equal(back.manilaWeekday(midnight),front.dateToWeekdayIndex(midnight));
+assert.equal(front.pickerDateToDateKey(front.dateKeyToPickerDate('2035-06-12')),'2035-06-12');
+assert.equal(front.pickerDateToDateKey(front.manilaTodayForPicker(midnight)),'2035-06-12');
+assert.equal(front.nextManilaWeekday(back.manilaWeekday(midnight),midnight),'2035-06-19');
+assert.deepEqual(range.getDateRangePreset('today',midnight),{from:'2035-06-12',to:'2035-06-12'});
+assert.deepEqual(range.getDateRangePreset('month',new Date('2024-02-29T15:59:59Z')),{from:'2024-02-01',to:'2024-02-29'});
+assert.equal(front.addCalendarDays('2024-03-10',1),'2024-03-11');
+assert.equal(front.combineManilaDateTime('2025-02-30','08:00'),null);assert.equal(front.dateToDateKey('2025-02-30'),'');assert.equal(front.combineManilaDateTime('2035-06-12','24:00'),null);
+assert.equal(Number.isNaN(back.parseManilaDate('2025-02-30').getTime()),true);
+assert.equal(schedules.hasTimeOverlap(new Date('2035-06-11T23:30:00Z'),new Date('2035-06-12T02:00:00Z'),new Date('2035-06-12T00:00:00Z'),new Date('2035-06-12T01:00:00Z')),true);
+const email=templates.requestDetailBlock({id:'timezone-test',requesterName:'Test',dateNeeded:'2035-06-11T16:00:00Z',timeStart:'2035-06-11T23:30:00Z',timeEnd:'2035-06-12T02:00:00Z',location:'Test',purpose:'Test',items:[]});
+assert.match(email,/June 12, 2035/);assert.match(email,/07:30/);
+process.stdout.write('Manila contract passed: '+process.env.TZ);

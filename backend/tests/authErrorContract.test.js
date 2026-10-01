@@ -1,0 +1,12 @@
+const {Prisma}=jest.requireActual('@prisma/client');
+const mockFind=jest.fn();jest.mock('@prisma/client',()=>({...jest.requireActual('@prisma/client'),PrismaClient:jest.fn(()=>({user:{findUnique:mockFind}}))}));
+const jwt=require('jsonwebtoken'),express=require('express');const {authenticateToken,authorizeRoles}=require('../dist/middleware/auth');const {errorResponseContract,errorHandler}=require('../dist/middleware/errors');
+let server,base;beforeAll(async()=>{process.env.JWT_SECRET='test-only-authentication-contract-secret';const app=express();app.use(errorResponseContract);app.get('/',authenticateToken,authorizeRoles('ADMIN'),(_req,res)=>res.json({ok:true}));app.use(errorHandler);server=await new Promise(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s))});base='http://127.0.0.1:'+server.address().port});afterAll(()=>new Promise(resolve=>server.close(resolve)));beforeEach(()=>mockFind.mockReset());
+async function call(token){const r=await fetch(base,{headers:token?{Authorization:'Bearer '+token}:{}});return {status:r.status,body:await r.json()}}
+const valid=()=>jwt.sign({userId:'test',sessionVersion:0},process.env.JWT_SECRET);
+test('missing token returns 401 contract',async()=>{expect(await call()).toMatchObject({status:401,body:{code:'AUTHENTICATION_REQUIRED',error:expect.any(String)}})});
+test('invalid token returns 401 SESSION_INVALID without database access',async()=>{expect(await call('invalid')).toMatchObject({status:401,body:{code:'SESSION_INVALID'}});expect(mockFind).not.toHaveBeenCalled()});
+test('database outage remains 503 and does not invalidate token',async()=>{mockFind.mockRejectedValue(new Prisma.PrismaClientInitializationError('PRIVATE','test'));expect(await call(valid())).toEqual({status:503,body:{error:'Service unavailable. Please try again.',code:'SERVICE_UNAVAILABLE'}})});
+test('unexpected auth lookup failure remains 500',async()=>{mockFind.mockRejectedValue(new Error('PRIVATE'));expect(await call(valid())).toMatchObject({status:500,body:{code:'INTERNAL_ERROR'}})});
+test('current database role governs 403',async()=>{mockFind.mockResolvedValue({id:'test',role:'STUDENT',status:'ACTIVE',sessionVersion:0});expect(await call(valid())).toMatchObject({status:403,body:{code:'FORBIDDEN'}})});
+test('inactive and revoked sessions return 401',async()=>{for(const user of [{status:'DEACTIVATED',sessionVersion:0},{status:'ACTIVE',sessionVersion:1}]){mockFind.mockResolvedValue({id:'test',role:'ADMIN',...user});expect(await call(valid())).toMatchObject({status:401,body:{code:'SESSION_INVALID'}})}});

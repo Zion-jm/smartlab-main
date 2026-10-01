@@ -1,0 +1,40 @@
+import { recordRequiredAuditLog } from './auditLogService';
+import { Prisma, RequestStatus, UserRole } from '@prisma/client';
+import { borrowRequestInclude, ensureTransition } from './borrowRequestService';
+
+import { RequestActionError } from './requestActionError';
+export { RequestActionError } from './requestActionError';
+import { moveInventory } from './inventoryMovementService';
+
+// The caller owns the transaction so related notification changes roll back too.
+export const cancelBorrowRequest = async (
+  tx: Prisma.TransactionClient,
+  input: { id: string; actorId: string; actorRole: UserRole; pendingOnly?: boolean }
+) => {
+  const request = await tx.borrowRequest.findUnique({
+    where: { id: input.id }, include: { items: true },
+  });
+  if (!request) throw new RequestActionError(404, 'Request not found');
+  const isAdmin = input.actorRole === UserRole.ADMIN;
+  if (!isAdmin && request.requestedBy !== input.actorId) {
+    throw new RequestActionError(403, 'Access denied');
+  }
+  const wasBorrowed = request.status === RequestStatus.BORROWED;
+  if (request.status !== RequestStatus.PENDING && (input.pendingOnly || !isAdmin || !wasBorrowed)) {
+    throw new RequestActionError(409, input.pendingOnly || !isAdmin
+      ? 'Can only cancel pending requests' : 'Can only cancel pending or borrowed requests');
+  }
+  ensureTransition(request.status, RequestStatus.CANCELLED);
+  const claimed = await tx.borrowRequest.updateMany({
+    where: { id: request.id, requestedBy: request.requestedBy, status: request.status },
+    data: { status: RequestStatus.CANCELLED, cancelledAt: new Date() },
+  });
+  if (claimed.count !== 1) throw new RequestActionError(409, 'Request changed. Refresh and try again.');
+
+  if (wasBorrowed) await moveInventory(tx, request.items, 'restore');
+  const cancelledRequest = await tx.borrowRequest.findUniqueOrThrow({
+    where: { id: request.id }, include: borrowRequestInclude,
+  });
+  await recordRequiredAuditLog(tx, { actorUserId: input.actorId, action: 'CANCEL', entityType: 'BorrowRequest', entityId: request.id, details: { wasBorrowed } });
+  return { cancelledRequest, wasBorrowed };
+};
