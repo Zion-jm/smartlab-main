@@ -39,6 +39,14 @@ jobs:
         run: npm run test:ui
       - name: Fresh and upgrade migrations with production smoke
         run: node scripts/test-ui.cjs --deployment
+      - name: Build staging container
+        run: docker build --tag smartlab-staging:ci .
+      - name: Verify container migrations, startup, administrator and PDF
+        run: >-
+          docker run --rm --network host
+          --env DATABASE_URL
+          smartlab-staging:ci
+          node backend/scripts/smoke-production.cjs
       - name: Dependency security gate
         if: always()
         run: |
