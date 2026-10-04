@@ -795,7 +795,7 @@ export function ScheduleReportView({
             </p>
           </div>
           <TableContainer className="rounded-xl border border-[#e5e7eb]">
-            <Table className="report-print-table min-w-[980px]">
+            <Table className="schedule-mobile-report report-print-table min-w-[980px]">
               <TableHead>
                 <TableHeaderCell>Day / date</TableHeaderCell>
                 <TableHeaderCell>Room / time</TableHeaderCell>

@@ -496,7 +496,7 @@ export default function AdminReports() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
+      <div className="reports-mobile-workspace mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         <FilterToolbar
           searchValue=""
           onSearchChange={() => undefined}
@@ -576,7 +576,7 @@ export default function AdminReports() {
                     <h2 id="demand-highlights-title" className="text-sm font-semibold text-[#800000]">Demand highlights</h2>
                     <p className="mt-1 text-xs leading-5 text-[#6b7280]">Selected academic period · {reportRangeLabel}. Counts include all request statuses, including declined and cancelled; they show demand, not confirmed usage.</p>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                  <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
                     {demandHighlights.map((highlight, index) => (
                       <article key={highlight.title} className="flex min-w-0 flex-col rounded-2xl border border-[#eadfd9] bg-[#fffdfb] p-4">
                         <h3 className="text-xs font-medium text-[#756969]">{highlight.title}</h3>
@@ -595,7 +595,7 @@ export default function AdminReports() {
                   <p className="text-xs text-[#756969]">Equipment is counted once per request, regardless of quantity. Faculty refers to the supervising faculty; records without a section or faculty assignment are excluded from those rankings.</p>
                 </section>
 
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
                   <MetricCard label="Borrow requests" value={summary.totalRequests} detail="Within this period" tone="maroon" />
                   <MetricCard label="Units requested" value={summary.totalUnits} detail="Approved, borrowed, or returned" tone="blue" />
                   <MetricCard label="Returned requests" value={summary.returnedRequests} detail="Completed equipment returns" tone="green" />

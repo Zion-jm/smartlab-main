@@ -232,7 +232,7 @@ export function RequestReportOutputMenu({
           role="menu"
           aria-label="Request report output options"
           style={{ top: menuPosition.top, right: menuPosition.right }}
-          className="fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
+          className="report-export-menu fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
         >
           <div className="grid grid-cols-1 divide-y divide-[#f1e9e7] md:grid-cols-3 md:divide-x md:divide-y-0">
             <div className="min-w-0 px-4 py-4 lg:px-6">
@@ -536,7 +536,7 @@ export function EquipmentReportOutputMenu({
           role="menu"
           aria-label="Equipment report output options"
           style={{ top: menuPosition.top, right: menuPosition.right }}
-          className="fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
+          className="report-export-menu fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
         >
           <div className="grid grid-cols-1 divide-y divide-[#f1e9e7] md:grid-cols-3 md:divide-x md:divide-y-0">
             <div className="min-w-0 px-4 py-4 lg:px-6">
@@ -787,7 +787,7 @@ export function ScheduleReportOutputMenu({
           role="menu"
           aria-label="Schedule report output options"
           style={{ top: menuPosition.top, right: menuPosition.right }}
-          className="fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
+          className="report-export-menu fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
         >
           <div className="grid grid-cols-1 divide-y divide-[#f1e9e7] md:grid-cols-3 md:divide-x md:divide-y-0">
             <div className="min-w-0 px-4 py-4 lg:px-6">

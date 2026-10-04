@@ -810,7 +810,7 @@ export function EquipmentReportView({
             </p>
           </div>
           <TableContainer className="rounded-xl border border-[#e5e7eb]">
-            <Table className={`report-print-table ${hasRange ? 'min-w-[1100px]' : 'min-w-[900px]'}`}>
+            <Table className={`equipment-mobile-report ${hasRange ? 'equipment-range-report' : 'equipment-stock-report'} report-print-table ${hasRange ? 'min-w-[1100px]' : 'min-w-[900px]'}`}>
               <TableHead>
                 <TableHeaderCell>Equipment</TableHeaderCell>
                 <TableHeaderCell>Status</TableHeaderCell>

@@ -879,3 +879,43 @@
  .dashboard-section > div:last-child { padding: .75rem; }
  .dashboard-workspace button { min-height: 44px; }
 }
+
+@media screen and (max-width: 767px) {
+ .reports-mobile-workspace [role="tablist"] { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+ .reports-mobile-workspace [role="tab"] { min-width: 0; min-height: 44px; height: auto; white-space: normal; }
+ .reports-mobile-workspace .academic-period-filter--dropdown > div { flex-direction: column; align-items: stretch; gap: .5rem; }
+ .reports-mobile-workspace .academic-period-filter--dropdown > div > .grid { width: 100%; flex: auto; grid-template-columns: minmax(0,1fr); }
+ .report-export-menu { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
+ .request-mobile-report, .schedule-mobile-report, .equipment-mobile-report { display: block; min-width: 0 !important; width: 100%; }
+ .request-mobile-report thead, .schedule-mobile-report thead, .equipment-mobile-report thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+ .request-mobile-report tbody, .schedule-mobile-report tbody, .equipment-mobile-report tbody { display: block; }
+ .request-mobile-report tbody tr, .schedule-mobile-report tbody tr, .equipment-mobile-report tbody tr { display: block; margin: .75rem; padding: .5rem; border: 1px solid #ead7d3; border-radius: 1rem; background: white; }
+ .request-mobile-report td, .schedule-mobile-report td, .equipment-mobile-report td { display: block; width: 100%; max-width: none; padding: .625rem !important; white-space: normal; overflow-wrap: anywhere; border: 0; text-align: left; }
+ .request-mobile-report td::before, .schedule-mobile-report td::before, .equipment-mobile-report td::before { display: block; margin-bottom: .3rem; font-size: 10px; font-weight: 600; color: #786565; }
+ .request-mobile-report td[colspan]::before, .schedule-mobile-report td[colspan]::before, .equipment-mobile-report td[colspan]::before { content: none !important; }
+ .request-mobile-report td:nth-child(1)::before { content: 'Date / status'; }
+ .request-mobile-report td:nth-child(2)::before { content: 'Room / time'; }
+ .request-mobile-report td:nth-child(3)::before { content: 'Equipment'; }
+ .request-mobile-report td:nth-child(4)::before { content: 'Requester / section'; }
+ .request-mobile-report td:nth-child(5)::before { content: 'Subject'; }
+ .request-mobile-report td:nth-child(6)::before { content: 'Faculty-in-charge'; }
+ .schedule-mobile-report td:nth-child(1)::before { content: 'Day / date'; }
+ .schedule-mobile-report td:nth-child(2)::before { content: 'Room / time'; }
+ .schedule-mobile-report td:nth-child(3)::before { content: 'Subject'; }
+ .schedule-mobile-report td:nth-child(4)::before { content: 'Faculty-in-charge'; }
+ .schedule-mobile-report td:nth-child(5)::before { content: 'Section'; }
+ .schedule-mobile-report td:nth-child(6)::before { content: 'Schedule type'; }
+ .equipment-stock-report td:nth-child(1)::before { content: 'Equipment'; }
+ .equipment-stock-report td:nth-child(2)::before { content: 'Status'; }
+ .equipment-stock-report td:nth-child(3)::before { content: 'Total quantity'; }
+ .equipment-stock-report td:nth-child(4)::before { content: 'Available'; }
+ .equipment-stock-report td:nth-child(5)::before { content: 'Borrowed'; }
+ .equipment-stock-report td:nth-child(6)::before { content: 'Damaged'; }
+ .equipment-range-report td:nth-child(1)::before { content: 'Equipment'; }
+ .equipment-range-report td:nth-child(2)::before { content: 'Status'; }
+ .equipment-range-report td:nth-child(3)::before { content: 'Total quantity'; }
+ .equipment-range-report td:nth-child(4)::before { content: 'Request records'; }
+ .equipment-range-report td:nth-child(5)::before { content: 'Units requested'; }
+ .equipment-range-report td:nth-child(6)::before { content: 'Units returned'; }
+ .equipment-range-report td:nth-child(7)::before { content: 'Unreturned'; }
+}
