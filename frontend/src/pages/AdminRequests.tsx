@@ -587,7 +587,25 @@ export default function AdminRequests() {
         />
       ) : (
       <>
-        <TableContainer>
+        <div className="space-y-3 md:hidden">
+          {requests.map(request => <article key={request.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
+            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f1e6e3] bg-[#fffaf7] p-3">
+              <h3 className="text-sm font-semibold text-[#57322d]">{request.referenceCode || request.id.slice(-6).toUpperCase()}</h3>
+              <span className={'rounded-full px-2.5 py-1 text-xs font-semibold ' + statusMeta[request.status].className}>{statusMeta[request.status].label}</span>
+            </header>
+            <div className="space-y-3 p-4 text-sm">
+              <div><p className="font-semibold text-[#321d1d]">{request.requesterName}</p><p className="break-all text-xs text-[#786565]">{request.requesterEmail}</p></div>
+              <p className="flex items-start gap-2"><MapPin size={17} className="mt-0.5 shrink-0 text-[#9a7b4f]" aria-hidden="true" /><span>{resolveRoom(request)}</span></p>
+              <div className="flex items-start gap-2"><CalendarDays size={17} className="mt-0.5 shrink-0 text-[#9a7b4f]" aria-hidden="true" /><p>{formatDate(request.dateNeeded)}<span className="block text-xs text-[#786565]">{formatTimeRange(request.timeStart, request.timeEnd)}</span></p></div>
+              <div className="rounded-xl bg-[#faf7f5] p-3"><p className="mb-2 text-xs font-semibold text-[#786565]">Equipment</p><ul className="space-y-1.5 text-xs leading-relaxed">{request.items?.length ? request.items.map(item => <li key={item.id} className="flex items-start justify-between gap-3"><span className="min-w-0 break-words">{item.equipmentName || item.equipment?.name || 'Equipment'}</span><span className="shrink-0 font-semibold">×{item.quantity}</span></li>) : <li>No equipment requested</li>}</ul></div>
+            </div>
+            <footer className="grid grid-cols-2 gap-2 border-t border-[#f1e6e3] p-3">
+              <button type="button" onClick={() => handleOpenDetailModal(request)} className="min-h-11 rounded-xl border border-[#ead7d3] text-xs font-semibold text-[#800000]">View details</button>
+              <button type="button" onClick={() => setSelectedRequest(request)} className="min-h-11 rounded-xl bg-[#800000] text-xs font-semibold text-white">{request.status === 'PENDING' ? 'Review request' : 'Manage request'}</button>
+            </footer>
+          </article>)}
+        </div>
+        <div className="hidden md:block"><TableContainer>
           <Table>
           <TableHead>
             <TableHeaderCell>Requester</TableHeaderCell>
@@ -600,7 +618,7 @@ export default function AdminRequests() {
             <TableBody>
             {requests.map(request => <RequestTableRow key={request.id} request={request} onOpen={handleOpenDetailModal} onSelect={setSelectedRequest} onAction={handleAction} />)}            </TableBody>
           </Table>
-        </TableContainer>
+        </TableContainer></div>
         <TablePagination
           currentPage={requestPage}
           pageSize={requestPageSize}
@@ -616,7 +634,7 @@ export default function AdminRequests() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
+      <div className="admin-requests-workspace mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         <FilterToolbar
           searchValue={filters.search}
           onSearchChange={(value) => handleFilterChange('search', value)}

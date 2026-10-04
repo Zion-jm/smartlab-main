@@ -817,3 +817,21 @@
   .ribbon-date-range-filter--styled .ribbon-date-range-actions { grid-column: 1 / -1; height: auto; min-height: 44px; }
   .ribbon-date-range-filter--styled .ribbon-date-range-actions button { min-height: 44px; }
 }
+
+@media (max-width: 767px) {
+ .admin-requests-workspace .academic-period-filter--dropdown > div { flex-direction: column; align-items: stretch; gap: .5rem; }
+ .admin-requests-workspace .academic-period-filter--dropdown > div > .grid { width: 100%; flex: auto; grid-template-columns: minmax(0, 1fr); }
+ .admin-requests-workspace .academic-period-filter--dropdown button { min-height: 44px; font-size: .8125rem; }
+ .admin-requests-workspace .filter-active-chips { width: 100%; gap: .5rem; }
+ .admin-requests-workspace .filter-active-chip { padding: .25rem .625rem; border-radius: .75rem; max-width: 100%; min-height: 40px; }
+ .admin-requests-workspace .filter-active-chip button { min-width: 32px; min-height: 32px; }
+ .admin-requests-workspace .filter-active-reset { width: 100%; }
+ .admin-requests-workspace .filter-active-reset > button { width: 100%; min-height: 44px; }
+ .table-pagination { padding: .875rem; gap: .75rem; border-radius: 0 0 1rem 1rem; background: #fffaf8; }
+ .table-pagination > p { text-align: center; }
+ .table-pagination > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+ .table-pagination > div > div { justify-content: center; }
+ .table-pagination > div > div:last-child { flex-wrap: nowrap; gap: .5rem; }
+ .table-pagination button { min-height: 44px; border-radius: .75rem; }
+ .table-pagination > div > div:last-child > button:not(.hidden) { flex: 1; }
+}
