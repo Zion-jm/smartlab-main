@@ -41,7 +41,7 @@ export default function MobileScheduleExplorer({ schedules, loading, error, relo
       {view === 'timetable' ? <p className="mobile-schedule-guidance">Choose a computer lab in the timetable below. Showing schedules for the {allRooms ? 'selected' : 'active'} academic period.</p> : <div className="schedule-ribbon-filters compact-filter-panel space-y-3">
         <label className="block text-xs font-semibold uppercase tracking-wide text-[#74615e]">Search<input type="search" aria-label="Search schedules" placeholder="Subject, room, or faculty" className={field + ' mt-1 font-normal normal-case'} value={search} onChange={event => setSearch(event.target.value)} /></label>
         <div className="grid grid-cols-1 gap-3">
-          <DateRangeFilter value={range} onChange={value => {setRange(value);setDate(value.from || value.to || todayKey());}} className="w-full min-w-0" />
+          <DateRangeFilter styledDates value={range} onChange={value => {setRange(value);setDate(value.from || value.to || todayKey());}} className="w-full min-w-0" />
           <DropdownField label={allRooms ? "Room" : "Computer lab"} value={room} onChange={setRoom} options={[{value:'',label:allRooms ? 'All rooms' : 'All computer labs'}, ...rooms.map(name => ({value:name,label:name}))]} />
         </div>
         {(search || room || date !== todayKey()) && <div className="flex justify-end border-t border-[#ead7d3] pt-2"><button type="button" onClick={() => {setSearch('');setRoom('');setDate(todayKey());setRange({from:todayKey(),to:shift(todayKey(),6)});}} className="min-h-11 rounded-lg border border-[#ead7d3] bg-white px-3 text-xs font-semibold text-[#800000]">Reset filters</button></div>}

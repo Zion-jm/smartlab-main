@@ -1,6 +1,8 @@
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { InputField } from './InputField';
 import { getDateRangePreset, type DateRangePreset, type DateRangeValue } from './dateRangeUtils';
-import type { InputHTMLAttributes } from 'react';
+import { useId, type InputHTMLAttributes } from 'react';
 
 type DateRangeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'onChange'> & {
   'data-testid'?: string;
@@ -18,6 +20,7 @@ type DateRangeFilterProps = {
   value: DateRangeValue;
   onChange: (value: DateRangeValue) => void;
   label?: string;
+  styledDates?: boolean;
   className?: string;
   presets?: readonly DateRangePreset[];
   actions?: readonly DateRangeAction[];
@@ -40,9 +43,11 @@ export default function DateRangeFilter({
   className = 'w-full min-w-0 md:w-3/4',
   presets = DEFAULT_PRESETS,
   actions,
+  styledDates = false,
   fromInputProps,
   toInputProps,
 }: DateRangeFilterProps) {
+  const dateId = useId();
   const activePreset = actions
     ? null
     : presets.find((preset) => {
@@ -59,13 +64,40 @@ export default function DateRangeFilter({
         onClick: () => onChange(getDateRangePreset(preset)),
       }));
 
+  const parseDate = (key: string) => key ? new Date(key + 'T00:00:00') : null;
+  const dateKey = (date: Date | null) => date ? [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-') : '';
+  const dateControl = (side: 'from' | 'to') => <div className="schedule-date-control min-w-0">
+    <span id={`${dateId}-${side}-label`} className="mb-1 block text-xs font-medium text-[#74615e]">{side === 'from' ? 'From' : 'To'}</span>
+    <DatePicker
+      selected={parseDate(value[side])}
+      onChange={(date: Date | null) => onChange({ ...value, [side]: dateKey(date) })}
+      minDate={side === 'to' ? parseDate(value.from) ?? undefined : undefined}
+      maxDate={side === 'from' ? parseDate(value.to) ?? undefined : undefined}
+      ariaLabelledBy={`${dateId}-${side}-label`}
+      ariaLabelClose="Close calendar"
+      placeholderText={side === 'from' ? 'From date' : 'To date'}
+      dateFormat="dd/MM/yyyy"
+      className="schedule-date-input"
+      wrapperClassName="w-full"
+      calendarClassName="schedule-date-calendar"
+      popperClassName="schedule-date-popper"
+      popperProps={{ strategy: 'fixed' }}
+      popperPlacement="bottom-start"
+      showPopperArrow={false}
+      showMonthDropdown showYearDropdown dropdownMode="select"
+      isClearable
+      strictParsing
+      id={side === 'from' ? fromInputProps?.id : toInputProps?.id}
+    />
+  </div>;
+
   return (
     <div className={`ribbon-date-range-filter ${className}`} role="group" aria-label={label}>
       <div className="ribbon-filter-label flex flex-wrap items-center gap-x-6 gap-y-1">
         <span>{label}</span>
       </div>
       <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.35fr)]">
-        <InputField
+        {styledDates ? dateControl('from') : <InputField
           {...fromInputProps}
           type="date"
           aria-label="Start date"
@@ -73,8 +105,8 @@ export default function DateRangeFilter({
           max={value.to || undefined}
           onChange={(event) => onChange({ ...value, from: event.target.value })}
           size="md"
-        />
-        <InputField
+        />}
+        {styledDates ? dateControl('to') : <InputField
           {...toInputProps}
           type="date"
           aria-label="End date"
@@ -82,7 +114,7 @@ export default function DateRangeFilter({
           min={value.from || undefined}
           onChange={(event) => onChange({ ...value, to: event.target.value })}
           size="md"
-        />
+        />}
         <div
           role="group"
           aria-label={actions ? 'Date range actions' : 'Quick date ranges'}
