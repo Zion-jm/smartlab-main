@@ -858,3 +858,11 @@
  .equipment-usage-summary > div > p:last-child { display: none; }
  .equipment-usage-details { border: 1px solid #ead7d3; border-radius: 1rem; overflow: hidden; }
 }
+
+@media (max-width: 767px) {
+ .academic-directory-workspace [role="tablist"] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
+ .academic-directory-workspace [role="tab"] { min-width: 0; min-height: 44px; height: auto; padding: .625rem .375rem; white-space: normal; }
+ .academic-directory-workspace [role="tab"]:last-child { grid-column: 1 / -1; }
+ .academic-directory-workspace .filter-active-chip { border-radius: .75rem; max-width: 100%; }
+ .academic-directory-workspace .filter-active-chip button { min-height: 32px; min-width: 32px; }
+}
