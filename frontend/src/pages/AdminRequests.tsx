@@ -1,7 +1,7 @@
 import type { EquipmentAvailabilitySummary } from '../components/equipment/EquipmentConflictChecker';
 import { useRef } from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 import { borrowRequestApi } from '../services/api';
 import api from '../services/api';
@@ -215,6 +215,24 @@ export default function AdminRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<ApiBorrowRequest | null>(null);
+  const location = useLocation();
+  const reviewRequestId = location.state?.reviewRequestId;
+  const reviewToken = location.state?.reviewToken;
+  useEffect(() => {
+    if (typeof reviewRequestId !== 'string') return;
+    let active = true;
+    borrowRequestApi.getById(reviewRequestId).then(({ data }) => {
+      if (!active) return;
+      const r = data.request ?? data;
+      setSelectedRequest({ ...r,
+        requesterName: [r.requester?.firstName, r.requester?.lastName].filter(Boolean).join(' '),
+        requesterEmail: r.requester?.email || '', requesterRole: r.requester?.role || '',
+        program: r.program?.name ?? null, subject: r.subject?.name ?? null,
+        items: (r.items ?? []).map((item: { equipment?: { name?: string } }) => ({ ...item, equipmentName: item.equipment?.name || 'Equipment' })),
+      });
+    }).catch(() => { if (active) toast.error('Could not open this request. It may no longer be available in the active academic period.'); });
+    return () => { active = false; };
+  }, [reviewRequestId, reviewToken]);
   const [mutatingId, setMutatingId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [detailModalRequest, setDetailModalRequest] = useState<ApiBorrowRequest | null>(null);
@@ -338,7 +356,7 @@ export default function AdminRequests() {
     if (filters.toDate) next.set('toDate', filters.toDate);
     if (academicPeriod.academicYearId) next.set('academicYearId', academicPeriod.academicYearId);
     if (academicPeriod.termId) next.set('termId', academicPeriod.termId);
-    setSearchParams(next, { replace: true });
+    setSearchParams(next, { replace: true, state: location.state });
   }, [academicPeriod, filters, setSearchParams]);
 
   const handleFilterChange = (field: keyof BorrowRequestFilters, value: string) => {

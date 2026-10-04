@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import MyRequestDetailModal from '../features/requests/MyRequestDetailModal';
 import { normalizeBorrowRequest, type RequestRow } from '../features/requests/requestModels';
 import { createPortal } from 'react-dom';
@@ -12,6 +13,7 @@ import { formatTimeRange } from '../utils/dateTime';
 
 type RequestDetail = { reference: string; status: string; date: string; time: string; location: string; equipment: string; purpose: string; notes: string; requester: string };
 export default function NotificationBell() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<AppNotification | null>(null);
   const [detail, setDetail] = useState<RequestDetail | null>(null);
@@ -74,7 +76,7 @@ export default function NotificationBell() {
       if (!notice.isRead) void n.markAsRead(notice.id);
       void userApi.getById(notice.referenceId).then(({ data }) => window.location.assign('/admin/users?search=' + encodeURIComponent(data.user.email))).catch(() => { setSelected(notice); setRequestDetail(null); setDetail(null); setDetailError('Could not open the account. Try again or search in Manage Accounts.'); setOpen(false); }); return;
     }
-    setSelected(notice); setDetail(null); setDetailError(''); setOpen(false);
+    setSelected(notice); setRequestDetail(null); setDetail(null); setDetailError(''); setOpen(false);
     if (!notice.isRead) void n.markAsRead(notice.id);
   };
   const selectedData = detail ?? { message: selected?.message ?? '', information: detailError || (selected?.borrowRequestId ? 'Loading request details…' : 'No linked request.') };
@@ -108,7 +110,11 @@ export default function NotificationBell() {
         <footer className="flex items-center justify-between border-t border-[#eee5e3] px-4 py-2 text-xs text-[#756969]"><span>Updates every 30 seconds</span><button type="button" disabled={n.isLoading || n.isSaving} onClick={() => void n.fetchNotifications()} className="inline-flex min-h-10 items-center gap-2 text-[#800000]"><RefreshCw size={14} />Refresh</button></footer>
       </div>
     </dialog>, document.body)}
-    {selected && requestDetail && role !== 'ADMIN' && <MyRequestDetailModal key={requestDetail.id} request={requestDetail} onClose={() => { setSelected(null); setRequestDetail(null); }} />}
-    <TableCellDetailModal<Record<string, string>> isOpen={Boolean(selected) && !(requestDetail && role !== 'ADMIN')} onClose={() => setSelected(null)} title={detail ? `Request ${detail.reference}` : selected?.title || 'Notification'} subtitle={detail ? 'Current request details' : undefined} data={selectedData as Record<string, string>} fields={Object.keys(selectedData).map(key => ({ key, label: key.charAt(0).toUpperCase() + key.slice(1), fullWidth: key === 'equipment' || key === 'notes' || key === 'message' }))} />
+    {selected && requestDetail && <MyRequestDetailModal key={requestDetail.id} request={requestDetail} requester={role === 'ADMIN' ? detail?.requester : undefined} onReview={role === 'ADMIN' ? () => {
+      const requestId = requestDetail.id;
+      setSelected(null); setRequestDetail(null);
+      navigate('/admin/requests', { state: { reviewRequestId: requestId, reviewToken: Date.now() } });
+    } : undefined} onClose={() => { setSelected(null); setRequestDetail(null); }} />}
+    <TableCellDetailModal<Record<string, string>> isOpen={Boolean(selected) && !requestDetail} onClose={() => setSelected(null)} title={detail ? `Request ${detail.reference}` : selected?.title || 'Notification'} subtitle={detail ? 'Current request details' : undefined} data={selectedData as Record<string, string>} fields={Object.keys(selectedData).map(key => ({ key, label: key.charAt(0).toUpperCase() + key.slice(1), fullWidth: key === 'equipment' || key === 'notes' || key === 'message' }))} />
   </>;
 }

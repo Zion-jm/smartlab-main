@@ -3,15 +3,16 @@ import { CalendarDays, Clock, MapPin } from 'lucide-react';
 import TableCellDetailModal from '../../components/shared/TableCellDetailModal';
 import type { RequestRow } from './requestModels';
 
-export default function MyRequestDetailModal({ request, onClose }: { request: RequestRow; onClose: () => void }) {
+export default function MyRequestDetailModal({ request, onClose, onReview, requester }: { request: RequestRow; onClose: () => void; onReview?: () => void; requester?: string }) {
   const [expanded, setExpanded] = useState(false);
   const source = request.source;
   const items = source.items ?? [];
   const status = request.status === 'REJECTED' ? 'Declined' : request.status.charAt(0) + request.status.slice(1).toLowerCase();
   const section = [source.program?.code || source.program?.name, source.yearLevel].filter(value => value != null && value !== '').join(' - ');
   const faculty = [source.faculty?.user?.firstName, source.faculty?.user?.lastName].filter(Boolean).join(' ');
-  return <TableCellDetailModal isOpen onClose={onClose} title={request.reference} data={source} fields={[]}>
+  return <TableCellDetailModal isOpen onClose={onClose} title={request.reference} data={source} fields={[]} subtitle={onReview ? 'Review the details before making a decision' : undefined} actions={onReview ? [{ label: request.status === 'PENDING' ? 'Review request' : 'Open request', onClick: onReview, variant: 'primary' }] : []}>
     <div className="space-y-5 text-sm text-[#514343]">
+      {requester && <section className="rounded-xl bg-[#fff8f3] p-4"><p className="text-xs text-[#786565]">Requested by</p><p className="mt-1 font-semibold text-[#321d1d]">{requester}</p></section>}
       <section aria-label="Request summary">
         <span className="inline-flex rounded-full bg-[#f5eae5] px-3 py-1 text-xs font-semibold text-[#800000]">{status}</span>
         <h3 className="mt-4 flex items-start gap-2 text-lg font-semibold text-[#321d1d]"><MapPin size={20} className="mt-1 shrink-0 text-[#800000]" aria-hidden="true" />{request.room}</h3>
