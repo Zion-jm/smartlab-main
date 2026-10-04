@@ -1,3 +1,4 @@
+import { downloadReportSpreadsheet } from '../printableReportUtils';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -17,7 +18,7 @@ import {
 PrintableReportDocument,
 type PrintableReportDefinition,
 } from '../PrintableReportDocument';
-import { downloadPrintableReport } from '../printableReportUtils';
+
 import '../reportDocumentStyles.css';
 import { buildDemandRows, buildRequestPrintRows, demandGroupDescriptions, demandGroupLabels, demandRoomLabels, demandSourceLabels, demandStatusScopeLabels, formatDate, formatSectionLabel, getRequestUnits, inDateRange, reportableStatuses, reportYearLevels, statusLabels, type DateRange, type DemandGroupBy, type DemandRoomFilter, type DemandRow, type DemandSortBy, type DemandSourceFilter, type DemandStatusScope, type ReportCatalog, type RequestPrintRow } from './reportData';
 import { FormalReportFrame, RequestReportOutputMenu } from './ReportOutput';
@@ -437,7 +438,7 @@ export function RequestReportView({
     [demandGroupBy, demandRows]
   );
   const handleExport = () => {
-    downloadPrintableReport(requestLogDefinition);
+    void downloadReportSpreadsheet(requestLogDefinition, { academicPeriod, range, filters: appliedFilters.map(filter => filter.label) });
   };
 
   const exportRequestPdf = async (scope: 'period' | 'filtered') => {

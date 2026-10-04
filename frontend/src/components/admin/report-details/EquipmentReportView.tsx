@@ -1,3 +1,4 @@
+import { downloadReportSpreadsheet } from '../printableReportUtils';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -18,7 +19,7 @@ PrintableReportDocument,
 type PrintableReportDefinition,
 } from '../PrintableReportDocument';
 import '../reportDocumentStyles.css';
-import { buildDemandRows, buildSectionDemand, createEquipmentUsage, demandGroupDescriptions, demandGroupLabels, demandSourceLabels, demandStatusScopeLabels, downloadCsv, equipmentReportStatusOrder, equipmentStatusLabels, inDateRange, reportableStatuses, statusLabels, toEquipmentPrintRow, type DateRange, type DemandGroupBy, type DemandSortBy, type DemandSourceFilter, type DemandStatusScope, type EquipmentAnalysisPrintRow, type EquipmentOverviewRow, type EquipmentPrintRow, type EquipmentUsage } from './reportData';
+import { buildDemandRows, buildSectionDemand, createEquipmentUsage, demandGroupDescriptions, demandGroupLabels, demandSourceLabels, demandStatusScopeLabels, equipmentReportStatusOrder, equipmentStatusLabels, inDateRange, reportableStatuses, statusLabels, toEquipmentPrintRow, type DateRange, type DemandGroupBy, type DemandSortBy, type DemandSourceFilter, type DemandStatusScope, type EquipmentAnalysisPrintRow, type EquipmentOverviewRow, type EquipmentPrintRow, type EquipmentUsage } from './reportData';
 import { EquipmentReportOutputMenu, FormalReportFrame } from './ReportOutput';
 import { RequestDemandPanel } from './RequestReportView';
 
@@ -416,42 +417,15 @@ export function EquipmentReportView({
   };
 
   const handleExport = () => {
-    if (hasRange) {
-      downloadCsv(
-        'smartlab-equipment-usage-report.csv',
-        ['Name', 'Status', 'Total Qty', 'Request Records', 'Units Requested', 'Units Returned', 'Unreturned'],
-        rows.map(({ item, usage }) => [
-          item.name,
-          equipmentStatusLabels[item.status],
-          item.totalQuantity,
-          usage.timesRequested,
-          usage.unitsRequested,
-          usage.unitsReturned,
-          Math.max(usage.unitsRequested - usage.unitsReturned, 0),
-        ])
-      );
-      return;
-    }
-    downloadCsv(
-      'smartlab-equipment-inventory-report.csv',
-      ['Name', 'Status', 'Total Qty', 'Available', 'Borrowed', 'Damaged'],
-      rows.map(({ item }) => [
-        item.name,
-        equipmentStatusLabels[item.status],
-        item.totalQuantity,
-        item.availableQuantity,
-        item.borrowedQuantity,
-        item.damagedQuantity,
-      ])
-    );
+    void downloadReportSpreadsheet({ ...equipmentLogDefinition, rows: filteredEquipmentPrintRows, filename: hasRange ? 'smartlab-equipment-usage.csv' : 'smartlab-equipment-inventory.csv' }, { academicPeriod, range, filters: appliedFilters.map(filter => filter.label) });
   };
 
   const handleSectionExport = () => {
-    downloadCsv(
-      'smartlab-equipment-demand-by-section.csv',
-      ['Rank', 'Section', 'Request records', 'Equipment units', 'Most requested equipment'],
-      sectionDemand.map((row, index) => [index + 1, row.section, row.requests, row.units, row.topEquipment ?? ''])
-    );
+    void downloadReportSpreadsheet({
+      title: 'Equipment Demand by Section', filename: 'smartlab-equipment-demand-by-section.csv',
+      rows: sectionDemand.map((row, index) => ({ ...row, rank: index + 1 })),
+      columns: [{ key: 'rank', label: 'Rank' }, { key: 'section', label: 'Section' }, { key: 'requests', label: 'Request records' }, { key: 'units', label: 'Equipment units' }, { key: 'topEquipment', label: 'Most requested equipment' }],
+    }, { academicPeriod, range, filters: appliedFilters.map(filter => filter.label) });
   };
 
   const exportEquipmentPdf = async (

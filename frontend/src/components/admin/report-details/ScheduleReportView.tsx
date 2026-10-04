@@ -1,3 +1,4 @@
+import { downloadReportSpreadsheet } from '../printableReportUtils';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -18,7 +19,7 @@ PrintableReportDocument,
 type PrintableReportDefinition,
 } from '../PrintableReportDocument';
 import '../reportDocumentStyles.css';
-import { buildScheduleDemandRows, buildSchedulePrintRows, dayNames, downloadCsv, formatDate, formatSectionLabel, inDateRange, scheduleDay, scheduleDemandGroupDescriptions, scheduleDemandGroupLabels, scheduleFaculty, scheduleProgram, scheduleRoom, scheduleSubject, type DateRange, type ScheduleDemandGroupBy, type ScheduleDemandRow, type ScheduleDemandSortBy, type SchedulePrintRow } from './reportData';
+import { buildScheduleDemandRows, buildSchedulePrintRows, dayNames, formatDate, formatSectionLabel, inDateRange, scheduleDay, scheduleDemandGroupDescriptions, scheduleDemandGroupLabels, scheduleFaculty, scheduleProgram, scheduleRoom, scheduleSubject, type DateRange, type ScheduleDemandGroupBy, type ScheduleDemandRow, type ScheduleDemandSortBy, type SchedulePrintRow } from './reportData';
 import { FormalReportFrame, ScheduleReportOutputMenu } from './ReportOutput';
 
 export function ScheduleDemandPanel({
@@ -396,19 +397,7 @@ export function ScheduleReportView({
   );
 
   const handleExport = () => {
-    downloadCsv(
-      'smartlab-schedule-report.csv',
-      ['Day / date', 'Room', 'Subject', 'Faculty', 'Section', 'Time', 'Type'],
-      filteredSchedules.map((schedule) => [
-        schedule.scheduleType === 'WEEKLY' ? `Every ${scheduleDay(schedule)}` : formatDate(schedule.scheduleDate),
-        scheduleRoom(schedule),
-        scheduleSubject(schedule),
-        scheduleFaculty(schedule),
-        formatSectionLabel(schedule.program?.code ?? schedule.program?.name, schedule.yearLevel),
-        formatTimeRange(schedule.timeStart, schedule.timeEnd),
-        schedule.scheduleType === 'WEEKLY' ? 'Recurring' : 'One-time',
-      ])
-    );
+    void downloadReportSpreadsheet(scheduleLogDefinition, { academicPeriod, range, filters: appliedFilters.map(filter => filter.label) });
   };
 
   const exportSchedulePdf = async (scope: 'period' | 'filtered', view: 'log' | 'analysis' = 'log') => {
