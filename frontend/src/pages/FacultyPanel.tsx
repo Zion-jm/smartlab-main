@@ -785,7 +785,7 @@ function RequestFormScaffold({
               <p className="text-xs text-[#6b7280]">Specify the supervising faculty, program, year level, and subject.</p>
             </div>
             <div className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1" data-field="facultyId">
                   <label className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
                     <FieldLabel text="Faculty in charge" required showMissing={missingFields.includes('facultyId')} />
@@ -798,7 +798,7 @@ function RequestFormScaffold({
                   </div>
                   <p className="text-[11px] text-[#6b7280]">Contact the admin if you need another faculty assigned.</p>
                 </div>
-                <div data-field="subjectId">
+                <div className="min-w-0" data-field="subjectId">
                   <DropdownField
                     label={<FieldLabel text="Subject" required showMissing={missingFields.includes('subjectId')} />}
                     value={form.subjectId}
@@ -809,8 +809,8 @@ function RequestFormScaffold({
                   />
                 </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div data-field="programId">
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="min-w-0" data-field="programId">
                   <DropdownField
                     label={<FieldLabel text="Program" required showMissing={missingFields.includes('programId')} />}
                     value={form.programId}
@@ -820,7 +820,7 @@ function RequestFormScaffold({
                     onChange={(value) => updateForm('programId', value)}
                   />
                 </div>
-                <div data-field="yearLevel">
+                <div className="min-w-0" data-field="yearLevel">
                   <DropdownField
                     label={<FieldLabel text="Year level" required showMissing={missingFields.includes('yearLevel')} />}
                     value={form.yearLevel}

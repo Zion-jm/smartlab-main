@@ -151,9 +151,9 @@ export default function DropdownField<T extends string>({
   const renderMenu = (menu: ReactNode) => portal ? createPortal(menu, document.body) : menu;
 
   return (
-    <div ref={containerRef} className={`flex flex-col gap-1 ${className}`}>
+    <div ref={containerRef} className={`flex min-w-0 max-w-full flex-col gap-1 ${className}`}>
       {labelText && <label htmlFor={selectId} className="block text-xs font-semibold text-[#4b5563]">{labelText}</label>}
-      <div className="relative">
+      <div className="relative min-w-0 max-w-full">
         <select
           aria-hidden="true"
           tabIndex={-1}
@@ -187,13 +187,13 @@ export default function DropdownField<T extends string>({
             setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
           }}
           onKeyDown={handleKeyDown}
-          className={`flex h-11 w-full items-center justify-between rounded-xl border bg-white px-3 pr-3 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-[#e5e7eb] disabled:bg-[#f3f4f6] disabled:text-[#9ca3af] ${
+          className={`flex h-11 min-w-0 w-full max-w-full items-center justify-between rounded-xl border bg-white px-3 pr-3 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-[#e5e7eb] disabled:bg-[#f3f4f6] disabled:text-[#9ca3af] ${
             open
               ? 'border-[#800000] ring-2 ring-[#800000]/20'
               : 'border-[#d1d5db] hover:border-[#800000]'
           }`}
         >
-          <span className={selectedOption ? 'truncate text-[#1f2937]' : 'truncate text-[#9ca3af]'}>
+          <span className={selectedOption ? 'min-w-0 flex-1 truncate text-[#1f2937]' : 'truncate text-[#9ca3af]'}>
             {selectedOption?.label ?? placeholder}
           </span>
           <svg
@@ -215,7 +215,7 @@ export default function DropdownField<T extends string>({
             id={listboxId}
             role="listbox"
             aria-label={labelText ? String(labelText) : placeholder}
-            className="absolute left-0 top-full z-[1000] mt-1 max-h-60 w-full overflow-auto rounded-xl border border-[#d1d5db] bg-white p-1 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]"
+            className="absolute left-0 top-full z-[1000] mt-1 max-h-60 w-full overflow-y-auto overflow-x-hidden rounded-xl border border-[#d1d5db] bg-white p-1 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]"
           >
             {options.map((option, index) => {
               const isSelected = option.value === value;
@@ -229,7 +229,7 @@ export default function DropdownField<T extends string>({
                   aria-selected={isSelected}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   onClick={() => selectOption(option)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                  className={`flex min-w-0 w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                     isSelected
                       ? 'bg-[#800000] font-semibold text-white'
                       : isHighlighted
@@ -237,7 +237,7 @@ export default function DropdownField<T extends string>({
                         : 'text-[#1f2937] hover:bg-[#fff8f8] hover:text-[#800000]'
                   }`}
                 >
-                  <span className="truncate">{option.label}</span>
+                  <span className="min-w-0 flex-1 whitespace-normal [overflow-wrap:anywhere]">{option.label}</span>
                   {isSelected && (
                     <svg aria-hidden="true" className="ml-3 h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="m4.5 10 3.5 3.5L15.5 6" strokeLinecap="round" strokeLinejoin="round" />
