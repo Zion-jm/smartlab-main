@@ -811,3 +811,9 @@
 @media (max-width: 767px) {
  .mobile-schedule-ribbon .ribbon-date-range-filter > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+@media (max-width: 767px) {
+  .ribbon-date-range-filter--styled > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ribbon-date-range-filter--styled .ribbon-date-range-actions { grid-column: 1 / -1; height: auto; min-height: 44px; }
+  .ribbon-date-range-filter--styled .ribbon-date-range-actions button { min-height: 44px; }
+}

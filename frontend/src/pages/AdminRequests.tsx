@@ -433,7 +433,7 @@ export default function AdminRequests() {
       </div>
 
       <div className="flex flex-col gap-2.5 md:flex-row md:items-end md:justify-start">
-        <DateRangeFilter
+        <DateRangeFilter styledDates
           value={{ from: filters.fromDate, to: filters.toDate }}
           onChange={(range) => setFilters((previous) => ({
             ...previous,

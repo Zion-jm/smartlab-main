@@ -92,7 +92,7 @@ export default function DateRangeFilter({
   </div>;
 
   return (
-    <div className={`ribbon-date-range-filter ${className}`} role="group" aria-label={label}>
+    <div className={`ribbon-date-range-filter ${styledDates ? 'ribbon-date-range-filter--styled' : ''} ${className}`} role="group" aria-label={label}>
       <div className="ribbon-filter-label flex flex-wrap items-center gap-x-6 gap-y-1">
         <span>{label}</span>
       </div>
