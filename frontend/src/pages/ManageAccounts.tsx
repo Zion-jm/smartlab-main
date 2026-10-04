@@ -1,3 +1,4 @@
+import { toast } from '../stores/toastStore';
 import { useRef } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -92,6 +93,7 @@ type DrawerState =
 
 export default function ManageAccounts() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [resetSending, setResetSending] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [accountsError, setAccountsError] = useState<string | null>(null);
@@ -358,7 +360,7 @@ export default function ManageAccounts() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-7xl space-y-4 p-2 lg:p-3">
+      <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         <FilterToolbar
           searchValue={search}
           onSearchChange={setSearch}
@@ -431,6 +433,7 @@ export default function ManageAccounts() {
                                 onClick={() => setDrawerState({ account, mode: 'edit' })}
                                 icon="edit"
                               />
+                              <button type="button" disabled={resetSending !== null} className="ml-2 min-h-10 rounded-lg border border-[#ead7d3] px-3 text-xs font-semibold text-[#800000] disabled:opacity-50" onClick={async()=>{setResetSending(account.id);try{const {data}=await userApi.sendPasswordReset(account.id);toast.success(data.message);}catch{toast.error('Could not request a reset email. Please try again.');}finally{setResetSending(null);}}}>{resetSending===account.id ? 'Sending…' : 'Send reset link'}</button>
                             </TableCell>
                           </TableRow>
                         ))}

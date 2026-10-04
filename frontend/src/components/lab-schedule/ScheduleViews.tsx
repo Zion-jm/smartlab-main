@@ -1,3 +1,5 @@
+import DropdownField from '../shared/DropdownField';
+import ScheduleDetailModal from './ScheduleDetailModal';
 import { useMemo, useState } from 'react';
 import type { LabSchedule } from '../../types/labSchedule';
 import { manilaTodayForPicker } from '../../utils/dateTime';
@@ -40,8 +42,8 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
   }, [labOverride, labs]);
 
   const dataset = useMemo(() => {
-    if (!selectedLab) return schedules;
-    return schedules.filter((schedule) => schedule.roomLabel === selectedLab);
+    if (!selectedLab) return [];
+    return schedules.filter((schedule) => schedule.isComputerLab === true && schedule.roomLabel === selectedLab);
   }, [schedules, selectedLab]);
 
   const summaryStats = useMemo(() => {
@@ -80,10 +82,10 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
 
   return (
     <div className="px-4 lg:px-6 py-6 space-y-6">
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="rounded-2xl border border-[#f1f5f9] bg-[#f9fafb] p-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <div className="row-span-2 flex min-w-0 flex-col justify-center rounded-2xl border border-[#f1f5f9] bg-[#f9fafb] p-4 md:row-span-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#9ca3af]">Total Schedules</p>
-          <p className="text-2xl font-bold text-[#111827]">{summaryStats.total}</p>
+          <p className="text-3xl md:text-2xl font-bold text-[#111827]">{summaryStats.total}</p>
         </div>
         <div className="rounded-2xl border border-[#f1f5f9] bg-[#f9fafb] p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#9ca3af]">Active Labs</p>
@@ -103,21 +105,7 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
           </div>
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</label>
-            <select
-              value={selectedLab}
-              onChange={(event) => setLabOverride(event.target.value || null)}
-              className="rounded-xl border border-[#d1d5db] px-3 py-2 text-xs font-semibold text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#800000]"
-            >
-              {labs.length === 0 ? (
-                <option value="">No labs available</option>
-              ) : (
-                labs.map((lab) => (
-                  <option key={lab} value={lab}>
-                    {lab}
-                  </option>
-                ))
-              )}
-            </select>
+            <DropdownField value={selectedLab} onChange={value => setLabOverride(value || null)} options={labs.map(lab => ({value:lab,label:lab}))} placeholder="No labs available" disabled={!labs.length} className="min-w-[140px]" />
           </div>
         </div>
 
@@ -188,45 +176,7 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
         )}
       </div>
 
-      {selectedSchedule && (
-        <div
-          className="fixed inset-0 z-20 flex items-center justify-center bg-black/40 px-4"
-          onClick={() => setSelectedSchedule(null)}
-        >
-          <div
-            className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-[#f3f4f6] px-4 py-3">
-              <p className="text-sm font-semibold text-[#111827]">Schedule Details</p>
-              <button
-                type="button"
-                onClick={() => setSelectedSchedule(null)}
-                className="text-[#6b7280] hover:text-[#111827]"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-3 px-4 py-4 text-sm text-[#111827]">
-              <div className="rounded-2xl border border-[#f1f5f9] p-3">
-                <div className="flex items-center justify-between text-xs text-[#6b7280]">
-                  <span>{scheduleTypeLabel[selectedSchedule.scheduleType]}</span>
-                  <span>{selectedSchedule.timeRange}</span>
-                </div>
-                <p className="text-sm font-semibold text-[#111827]">{selectedSchedule.programLabel}</p>
-                {selectedSchedule.subjectLabel && (
-                  <p className="text-xs text-[#6b7280]">{selectedSchedule.subjectLabel}</p>
-                )}
-                <p className="text-xs text-[#6b7280]">{selectedSchedule.roomLabel}</p>
-                <p className="text-xs text-[#6b7280]">{selectedSchedule.facultyName}</p>
-                <p className="text-xs text-[#6b7280]">
-                  {selectedSchedule.scheduleType === 'WEEKLY' ? 'Every ' + selectedSchedule.displayDay : selectedSchedule.displayDate}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {selectedSchedule && <ScheduleDetailModal schedule={selectedSchedule} onClose={() => setSelectedSchedule(null)} />}
     </div>
   );
 }
@@ -422,3 +372,4 @@ export function CalendarView({ schedules, dayLabels = dayNames }: CalendarViewPr
     </div>
   );
 }
+

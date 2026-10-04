@@ -308,7 +308,7 @@ export function RequestReportView({
         { key: 'room', label: 'Room', width: '9%' },
         { key: 'equipment', label: 'Equipment', width: '17%' },
         { key: 'requester', label: 'Requester', width: '16%' },
-        { key: 'programYear', label: 'Program / Year', width: '11%' },
+        { key: 'programYear', label: 'Section', width: '11%' },
         { key: 'faculty', label: 'Faculty-in-Charge', width: '15%' },
         { key: 'time', label: 'Time', width: '9%' },
         { key: 'status', label: 'Status', width: '7%' },
@@ -422,7 +422,7 @@ export function RequestReportView({
   }, [demandGroupBy, demandRoomType, demandSource, demandStatusScope, filteredRequests]);
   const demandAnalysisDefinition = useMemo<PrintableReportDefinition<DemandRow>>(
     () => ({
-      title: `Request Demand Analysis — ${demandGroupLabels[demandGroupBy]}`,
+      title: `Request Demand Analysis – ${demandGroupLabels[demandGroupBy]}`,
       filename: `smartlab-request-demand-analysis-${demandGroupBy}.csv`,
       rows: demandRows,
       columns: [
@@ -904,12 +904,12 @@ export function RequestReportView({
       </FormalReportFrame>
       <div className="request-report-print-document">
         {printMode === 'demand' ? (
-          <PrintableReportDocument
+          <PrintableReportDocument headerPeriod={academicPeriod} headerRange={range}
             definition={demandAnalysisDefinition}
             rows={demandRows}
           />
         ) : (
-          <PrintableReportDocument
+          <PrintableReportDocument headerPeriod={academicPeriod} headerRange={range}
             definition={printableDefinition}
             rows={printableRows}
           />

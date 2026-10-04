@@ -79,6 +79,7 @@ export type ApiBorrowRequest = {
   } | null;
   purpose?: string | null;
   notes?: string | null;
+  rejectionNote?: string | null;
   room?: {
     id: string;
     name?: string | null;

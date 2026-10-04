@@ -149,6 +149,7 @@ export default function PortalLayout({
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const userId = user?.id ?? 'anonymous';
+  const setPreference = usePreferencesStore((state) => state.setPreference);
   const preferencesByUser = usePreferencesStore((state) => state.preferencesByUser);
   const sidebarCollapsedByDefault = getUserPreferences(preferencesByUser, userId).sidebarCollapsedByDefault;
   const [isCollapsed, setIsCollapsed] = useState(sidebarCollapsedByDefault);
@@ -216,7 +217,7 @@ export default function PortalLayout({
   const roleLabel = user?.role === 'ADMIN' ? 'Admin Portal' : user?.role === 'FACULTY' ? 'Faculty Portal' : 'Student Portal';
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] font-['Inter',sans-serif]">
+    <div className="min-h-dvh lg:min-h-screen bg-[#f8f9fa] font-['Inter',sans-serif]">
       {mobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />}
 
       <aside
@@ -321,6 +322,7 @@ export default function PortalLayout({
                   <UserAvatarIcon />
                   My Profile
                 </button>
+                {user?.role === 'ADMIN' && (
                 <button
                   type="button"
                   role="menuitem"
@@ -333,6 +335,7 @@ export default function PortalLayout({
                   <SettingsIcon />
                   Settings
                 </button>
+                )}
                 <button
                   type="button"
                   role="menuitem"
@@ -349,11 +352,11 @@ export default function PortalLayout({
       </aside>
 
       <main
-        className={`min-h-screen min-w-0 max-h-screen transition-all duration-300 overflow-hidden flex flex-col ${
+        className={`h-dvh min-h-0 lg:min-h-screen min-w-0 max-h-dvh lg:max-h-screen transition-all duration-300 overflow-hidden flex flex-col ${
           isCollapsed ? 'lg:ml-[70px] lg:w-[calc(100%-70px)]' : 'lg:ml-[250px] lg:w-[calc(100%-250px)]'
         }`}
       >
-        <header className="sticky top-0 z-40 bg-white border-b border-[#e5e7eb] px-4 lg:px-6 py-4 flex items-center justify-between">
+        <header className="shrink-0 sticky top-0 z-40 bg-white border-b border-[#e5e7eb] px-4 lg:px-6 py-4 flex items-center justify-between">
           <div className="flex items-start gap-4">
             <div className="flex items-center gap-2 pt-0.5">
               <button
@@ -365,7 +368,13 @@ export default function PortalLayout({
               </button>
 
               <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
+                onClick={() => {
+                  const next = !isCollapsed;
+                  setIsCollapsed(next);
+                  if (user?.role === 'STUDENT' || user?.role === 'FACULTY') {
+                    setPreference(userId, 'sidebarCollapsedByDefault', next);
+                  }
+                }}
                 className="hidden lg:inline-flex p-2 rounded-lg hover:bg-[rgba(128,0,0,0.05)] text-[#4b5563] transition-all"
                 aria-label="Toggle sidebar"
               >
@@ -393,7 +402,7 @@ export default function PortalLayout({
 
         <div
           ref={setTableScrollRoot}
-          className="portal-content min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#f8f9fa] p-2 lg:p-4"
+          className="portal-content min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#f8f9fa] p-2 lg:p-4"
         >
           <TableScrollContext.Provider value={{root:tableScrollRoot,inset:tableStickyInset,setInset:setTableStickyInset}}>{children}</TableScrollContext.Provider>
         </div>

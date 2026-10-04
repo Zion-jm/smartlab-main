@@ -170,6 +170,8 @@ model Department {
 // ====================================================
 
 model User {
+  passwordResets PasswordReset[]
+  reactivationRequests ReactivationRequest[]
   id           String     @id @default(cuid())
   email        String     @unique
   sessionVersion Int @default(0)
@@ -467,4 +469,41 @@ model AuditLog {
   @@index([createdAt])
   @@index([actorUserId, createdAt])
   @@map("audit_logs")
+}
+model EmailOutbox {
+  id String @id
+  eventKey String @unique
+  recipient String
+  subject String
+  html String
+  text String
+  status String @default("PENDING")
+  attempts Int @default(0)
+  nextAttemptAt DateTime @default(now())
+  lockedAt DateTime?
+  sentAt DateTime?
+  lastError String?
+  createdAt DateTime @default(now())
+  @@index([status, nextAttemptAt])
+}
+
+model ReactivationRequest {
+  id String @id
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  reason String @default("")
+  status String @default("PENDING")
+  createdAt DateTime @default(now())
+  // Partial unique index for one pending request per user is maintained in SQL.
+}
+
+model PasswordReset {
+ tokenHash String @id
+ userId String
+ user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ sessionVersion Int
+ createdAt DateTime @default(now())
+ expiresAt DateTime
+ usedAt DateTime?
+ @@index([userId, createdAt])
 }

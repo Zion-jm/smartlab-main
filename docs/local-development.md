@@ -1,9 +1,9 @@
-# Local and Replit development
+# Local development
 
 Existing local installations: keep backend/.env. Run npm.cmd run dev from the repository root. Starting the app no longer installs packages, synchronizes the database, or seeds accounts.
 
 For a new installation:
-1. Run npm install at the repository root.
+1. Run npm ci at the repository root.
 2. Copy backend/.env.example to backend/.env, only if no .env exists. Fill in your PostgreSQL URL and a unique random JWT_SECRET. URL-encode special characters in the database password.
 3. Run npm run db:generate.
 4. For a new disposable development database only, run npm run db:push. Review schema changes before applying them to any database with valuable data.
@@ -34,8 +34,8 @@ Use the actual disposable database name. Production mode, missing confirmation, 
 
 The reset script additionally requires RESET_TEST_DATABASE=1 and deletes database records. Do not run it on valuable data. No database reset or seed is needed for this configuration fix.
 
-## Replit and future hosting
-Store DATABASE_URL, JWT_SECRET, and optional SMTP credentials in the provider's environment/secret settings. Replit is development/testing only for this project. Install dependencies and generate Prisma manually before first Run. The Run workflows now only start the application. Keep demo seed flags out of saved settings. Choose production hosting and a reviewed migration workflow later.
+## Hosting
+Store DATABASE_URL, JWT_SECRET, and SMTP credentials in your hosting provider's environment settings. Use the root npm scripts for startup and the Dockerfile for a portable production runtime. Run npm ci and npm run db:generate during setup, then npm run build. Review migrations before applying them; never enable demo seed flags in production. See README.md and EMAIL_NOTIFICATIONS.md for runtime requirements.
 
 ## Git and existing secrets
 Ignore rules do not remove files already tracked. From the repository root, run git rm --cached -- .env backend/.env if these files still appear in git ls-files. This keeps the files on disk. Commit the removal alongside the safe example files and configuration changes.

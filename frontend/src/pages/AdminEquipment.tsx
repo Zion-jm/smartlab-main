@@ -407,14 +407,14 @@ export default function AdminEquipment() {
                       </TableCell>
                       <TableActionsCell>
                         <TextActionButton
-                          label="Edit"
+                          label="Edit" icon="edit"
                           onClick={() => openDrawer('edit', item)}
                           variant="default"
                         />
                         <TextActionButton
                           label={archivingId === item.id ? 'Saving…' : item.retiredAt ? 'Restore' : 'Archive'}
                           onClick={() => item.retiredAt ? handleRestore(item) : handleArchive(item)}
-                          variant="danger"
+                          variant="default" icon={item.retiredAt ? 'restore' : 'archive'} disabled={archivingId !== null} busy={archivingId === item.id}
                         />
                       </TableActionsCell>
                     </TableRow>
@@ -558,7 +558,7 @@ export default function AdminEquipment() {
 
   return (
     <AdminLayout>
-      <div className="p-2 lg:p-3 max-w-7xl mx-auto space-y-4">
+      <div className="p-2 lg:p-3 responsive-workspace mx-auto space-y-4">
         <FilterToolbar
           searchValue={filters.search}
           onSearchChange={(value) => setFilters((previous) => ({ ...previous, search: value }))}
@@ -598,9 +598,7 @@ export default function AdminEquipment() {
           className={viewMode === 'table' ? 'space-y-4' : 'py-2'}
         >
             <div className="space-y-4">
-              {viewMode === 'table' && (
-                <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-              )}
+              <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
               {viewMode === 'table' && renderSummaryCards()}
               {viewMode === 'table' && stats && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">

@@ -1,4 +1,5 @@
 import './config/loadEnvironment';
+import { startEmailWorker, stopEmailWorker } from './services/email/outbox';
 import { createShutdown } from './services/shutdown';
 import { drainNotifications } from './services/notificationService';
 import { prisma } from './db/prisma';
@@ -101,6 +102,7 @@ async function start() {
   server = app.listen(PORT, () => {
     console.log('SmartLab listening on port ' + PORT + ' (' + (process.env.NODE_ENV || 'development') + ')');
     verifyEmailTransport();
+    startEmailWorker();
   });
 }
 const started = start().catch(async () => {
@@ -117,7 +119,7 @@ const shutdown = createShutdown({
       server!.closeIdleConnections();
     });
   },
-  drain: drainNotifications,
+  drain: async () => { await drainNotifications(); await stopEmailWorker(); },
   disconnect: () => prisma.$disconnect(),
   exit: code => process.exit(code),
 });

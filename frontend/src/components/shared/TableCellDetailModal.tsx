@@ -1,16 +1,20 @@
-import React from 'react';
-
+import React, { useEffect, useId, useRef } from 'react';
+import { FileText, X } from 'lucide-react';
 type TableCellDetailModalProps<T = Record<string, unknown>> = {
   isOpen: boolean;
+  testId?: string;
+  closeTestId?: string;
+  dismissTestId?: string;
   onClose: () => void;
   title: string;
   subtitle?: string;
+  children?: React.ReactNode;
   data: T;
   status?: string;
   statusBadge?: string;
   fields: {
     label: string;
-    key: keyof T;
+    key: keyof T; section?: string;
     formatter?: (value: unknown, data?: T) => string | React.ReactNode;
     condition?: (value: unknown) => boolean;
     fullWidth?: boolean;
@@ -23,164 +27,60 @@ type TableCellDetailModalProps<T = Record<string, unknown>> = {
   }[];
 };
 
-export default function TableCellDetailModal<T = Record<string, unknown>>({
-  isOpen,
-  onClose,
-  title,
-  subtitle,
-  data,
-  status,
-  statusBadge,
-  fields,
-  actions = [],
-}: TableCellDetailModalProps<T>) {
+export default function TableCellDetailModal<T = Record<string, unknown>>({ isOpen, onClose, title, subtitle, children, data, statusBadge, fields, actions = [], testId, closeTestId, dismissTestId }: TableCellDetailModalProps<T>) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  useEffect(() => {
+    const element = dialog.current;
+    if (!isOpen || !element) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    element.showModal();
+    document.body.style.overflow = 'hidden';
+    return () => { element.close(); document.body.style.overflow = overflow; previous?.focus(); };
+  }, [isOpen]);
   if (!isOpen) return null;
-
-  const renderFieldValue = (field: typeof fields[0]) => {
-    const value = data[field.key];
-    
-    // Check condition if provided
-    if (field.condition && !field.condition(value)) {
-      return null;
-    }
-    
-    // Use formatter if provided, otherwise convert to string
-    if (field.formatter) {
-      return field.formatter(value, data);
-    }
-    
-    if (value === null || value === undefined || value === '') {
-      return <span className="text-gray-400">—</span>;
-    }
-    
-    return String(value);
-  };
-
-  const requester = data as unknown as {
-    requesterName?: string;
-    requesterRole?: string;
-    requesterEmail?: string;
-  };
-
-  const getStatusColor = (status?: string) => {
-    if (!status) return 'bg-gray-100 text-gray-800';
-    const statusLower = status.toLowerCase();
-    if (statusLower.includes('pending')) return 'bg-yellow-100 text-yellow-800';
-    if (statusLower.includes('approved')) return 'bg-green-100 text-green-800';
-    if (statusLower.includes('rejected') || statusLower.includes('declined')) return 'bg-red-100 text-red-800';
-    if (statusLower.includes('borrowed')) return 'bg-blue-100 text-blue-800';
-    if (statusLower.includes('returned')) return 'bg-purple-100 text-purple-800';
-    if (statusLower.includes('cancelled')) return 'bg-gray-100 text-gray-800';
-    return 'bg-gray-100 text-gray-800';
-  };
-
-  const getActionVariant = (variant?: string) => {
-    switch (variant) {
-      case 'primary': return 'bg-red-800 text-white hover:bg-red-700';
-      case 'danger': return 'bg-red-600 text-white hover:bg-red-500';
-      case 'success': return 'bg-green-600 text-white hover:bg-green-500';
-      case 'warning': return 'bg-yellow-600 text-white hover:bg-yellow-500';
-      default: return 'bg-gray-600 text-white hover:bg-gray-500';
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-60 backdrop-blur-[1px] px-4" onClick={onClose}>
-      <div
-        className="w-full max-w-xl bg-white rounded-xl shadow-2xl overflow-hidden max-h-[90vh]"
-        onClick={(event) => event.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-orange-50">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-red-800">{subtitle}</span>
-            {statusBadge && (
-              <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(status)}`}>
-                {statusBadge}
-              </span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl font-light transition-colors"
-          >
-            ×
-          </button>
+  const requester = data as { requesterName?: string; requesterRole?: string; requesterEmail?: string };
+  const visible = fields.filter(field => !field.condition || field.condition(data[field.key]));
+  const groups = visible.reduce<(typeof visible)[]>((result, field) => {
+    const previous = result[result.length - 1];
+    if (!previous || previous[0].section !== field.section) result.push([field]);
+    else previous.push(field);
+    return result;
+  }, []);
+  return <dialog data-testid={testId} ref={dialog} aria-labelledby={titleId} className="record-detail-dialog" onCancel={event => { event.preventDefault(); onClose(); }} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="record-detail-shell">
+      <header className="record-detail-header">
+        <span className="record-detail-symbol"><FileText size={22} strokeWidth={1.75} aria-hidden="true" /></span>
+        <div className="min-w-0 flex-1">
+          <h2 id={titleId} className="text-lg font-bold text-[#451a1a]">{title}</h2>
+          {subtitle && <p className="mt-1 text-sm text-[#786565] break-words">{subtitle}</p>}
         </div>
-
-        {/* Body */}
-        <div className="px-5 py-4 max-h-[60vh] overflow-y-auto">
-          <h3 className="text-base font-bold text-gray-900 mb-3">{title}</h3>
-          
-          {/* Requester Card */}
-          {requester.requesterName && (
-            <div className="flex items-center gap-3 p-2.5 bg-red-50 border border-red-100 rounded-lg mb-4">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-700 to-red-800 text-yellow-400 flex items-center justify-center font-bold text-xs">
-                {requester.requesterName.charAt(0).toUpperCase() || '?'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-900 text-sm">{requester.requesterName}</div>
-                <div className="text-xs text-gray-500 truncate">
-                  {requester.requesterRole} • {requester.requesterEmail}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Info Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            {fields.map((field, index) => {
-              const renderedValue = renderFieldValue(field);
-              if (renderedValue === null) return null;
-              
-              return (
-                <div 
-                  key={index} 
-                  className={`${field.fullWidth ? 'col-span-2' : 'col-span-1'}`}
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-semibold text-orange-700 uppercase tracking-wider">
-                      {field.label}
-                    </span>
-                    <div className="text-xs font-medium text-gray-700">
-                      {renderedValue}
-                    </div>
-                  </div>
-                </div>
-              );
+        <button data-testid={closeTestId} type="button" autoFocus onClick={onClose} aria-label={`Close ${title.toLowerCase()}`} className="record-detail-close"><X size={20} aria-hidden="true" /></button>
+      </header>
+      <div className="record-detail-body">
+        {children}
+        {statusBadge && <span className="mb-5 inline-flex rounded-full bg-[#f4e4e3] px-3 py-1 text-xs font-semibold text-[#800000]">{statusBadge.replaceAll('_', ' ')}</span>}
+        {requester.requesterName && <div className="record-detail-requester rounded-xl border border-[#ead7d3] bg-[#fffafa] p-4">
+          <p className="text-xs font-medium text-[#786565]">Requested by</p>
+          <p className="mt-1 font-semibold text-[#451a1a]">{requester.requesterName}</p>
+          <p className="mt-1 break-words text-xs text-[#786565]">{[requester.requesterRole, requester.requesterEmail].filter(Boolean).join(' · ')}</p>
+        </div>}
+          {groups.map((group, groupIndex) => <dl key={groupIndex} aria-label={group[0].section} className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+            {group.map((field, index) => {
+              const value = data[field.key];
+              return <div key={index} className={field.fullWidth ? 'min-w-0 sm:col-span-2' : 'min-w-0'}>
+                <dt className="text-xs font-semibold tracking-wide text-[#800000]">{field.label}</dt>
+                <dd className="mt-1 whitespace-pre-wrap break-words text-sm font-medium leading-6 text-[#292323]">{field.formatter ? field.formatter(value, data) : value == null || value === '' ? 'Not specified' : String(value)}</dd>
+              </div>;
             })}
-          </div>
-        </div>
+          </dl>)}
 
-        {/* Actions */}
-        {actions.length > 0 && (
-          <div className="px-5 py-3 border-t border-gray-200 flex flex-wrap gap-2 justify-end bg-gray-50">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Close
-            </button>
-            {actions.map((action, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={action.onClick}
-                disabled={action.disabled}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                  action.disabled
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : getActionVariant(action.variant)
-                }`}
-              >
-                {action.label}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+      <footer className="record-detail-footer">
+        <button data-testid={dismissTestId} type="button" onClick={onClose} className="record-detail-button">Close</button>
+        {actions.map((action, index) => <button key={index} type="button" onClick={action.onClick} disabled={action.disabled} className={`record-detail-button ${action.variant && action.variant !== 'default' ? 'record-detail-button-primary' : ''}`}>{action.label}</button>)}
+      </footer>
     </div>
-  );
+  </dialog>;
 }

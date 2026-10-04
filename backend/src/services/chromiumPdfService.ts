@@ -3,7 +3,6 @@ import { chromium } from 'playwright-core';
 
 const chromiumCandidates = [
   process.env.CHROMIUM_PATH,
-  '/repl/tools/bin/chromium',
   '/usr/bin/chromium',
   '/usr/bin/chromium-browser',
   '/usr/bin/google-chrome',

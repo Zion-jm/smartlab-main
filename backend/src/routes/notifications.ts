@@ -10,15 +10,20 @@ const router = Router();
 // GET /api/notifications — current user's notifications (latest 30)
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    const limit = 30;
+    const offset = Math.max(0, Math.min(100000, Number.parseInt(String(req.query.offset ?? '0'), 10) || 0));
+    const unreadOnly = req.query.unread === 'true';
+    const where = { userId: req.user!.id, ...(unreadOnly ? { isRead: false } : {}) };
     const notifications = await prisma.notification.findMany({
-      where: { userId: req.user!.id },
-      orderBy: { createdAt: 'desc' },
-      take: 30,
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      skip: offset,
+      take: limit + 1,
     });
     const unreadCount = await prisma.notification.count({
       where: { userId: req.user!.id, isRead: false },
     });
-    res.json({ notifications, unreadCount });
+    res.json({ notifications: notifications.slice(0, limit), unreadCount, hasMore: notifications.length > limit });
   } catch (error) { sendError(error, res); }
 });
 

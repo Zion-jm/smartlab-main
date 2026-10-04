@@ -386,7 +386,7 @@ export function ScheduleReportView({
       filename: 'smartlab-schedule-analysis.csv',
       rows: scheduleDemandRows,
       columns: [
-        { key: 'section', label: 'Program / year level', width: '40%' },
+        { key: 'section', label: 'Section', width: '40%' },
         { key: 'entries', label: 'Schedule entries', width: '20%' },
         { key: 'rooms', label: 'Rooms used', width: '20%' },
         { key: 'recurring', label: 'Recurring entries', width: '20%' },
@@ -878,9 +878,9 @@ export function ScheduleReportView({
       </FormalReportFrame>
       <div className="schedule-report-print-document">
         {printMode === 'analysis' ? (
-          <PrintableReportDocument definition={scheduleAnalysisDefinition} rows={scheduleDemandRows} />
+          <PrintableReportDocument headerPeriod={academicPeriod} headerRange={range} definition={scheduleAnalysisDefinition} rows={scheduleDemandRows} />
         ) : (
-          <PrintableReportDocument definition={printableScheduleDefinition} rows={printableScheduleRows} />
+          <PrintableReportDocument headerPeriod={academicPeriod} headerRange={range} definition={printableScheduleDefinition} rows={printableScheduleRows} />
         )}
       </div>
     </>

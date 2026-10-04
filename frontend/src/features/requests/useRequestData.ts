@@ -33,10 +33,10 @@ export const useMyBorrowRequests = (): RequestsHookState => {
   const performLoadRequests = useCallback(async () => {
     const version = ++requestVersion.current;
     
-      return borrowRequestApi.getMyPage({ page, pageSize: 25, search: requestSearch, status: requestStatus }).then((response) => {
+      return borrowRequestApi.getMyPage({ page, pageSize: 10, search: requestSearch, status: requestStatus }).then((response) => {
       if (version !== requestVersion.current) return;
       setTotal(response.data.total);
-      if (page > 1 && response.data.total <= (page - 1) * 25) setPage(Math.max(1, Math.ceil(response.data.total / 25)));
+      if (page > 1 && response.data.total <= (page - 1) * 10) setPage(Math.max(1, Math.ceil(response.data.total / 10)));
       const data = Array.isArray(response.data?.requests) ? (response.data.requests as ApiBorrowRequest[]) : [];
       setRows(data.map(normalizeBorrowRequest));
     
@@ -92,10 +92,12 @@ export const useLabSchedules = (): SchedulesState => {
 
   const performLoadSchedules = useCallback(async () => {
     
-      const params = dateFilter ? { date: dateFilter } : undefined;
+      // Fetch the whole active period; individual views apply their own date filters.
+      const params = undefined;
       return labScheduleApi.getAll(params).then((response) => {
       const data = Array.isArray(response.data?.schedules) ? (response.data.schedules as ApiLabSchedule[]) : [];
-      setSchedules(data.map(schedule => normalizeSchedule(schedule)));
+      // Student/faculty schedule views only include explicitly flagged computer labs.
+      setSchedules(data.filter(schedule => schedule.room?.isComputerLab === true).map(schedule => normalizeSchedule(schedule)));
     
     }).catch((err) => {
       console.error('Failed to load lab schedules', err);
@@ -104,10 +106,10 @@ export const useLabSchedules = (): SchedulesState => {
     }).finally(() => {
       setLoading(false);
     });
-  }, [dateFilter]);
+  }, []);
 
   // Automatic loads reset pending state when their query changes; refreshes reset it in the event.
-  const loadSchedulesInputs = [dateFilter];
+  const loadSchedulesInputs: string[] = [];
   const [loadSchedulesSource, setloadSchedulesSource] = useState(loadSchedulesInputs);
   if (loadSchedulesInputs.some((value, index) => !Object.is(value, loadSchedulesSource[index]))) {
     setloadSchedulesSource(loadSchedulesInputs);

@@ -107,8 +107,8 @@ const formatTimeRange = (
 };
 
 const formatSectionLabel = (program: string | null | undefined, yearLevel: number | null | undefined) =>
-  [program?.trim(), yearLevel != null ? String(yearLevel) : ''].filter(Boolean).join(' ') ||
-  'Unassigned program/year';
+  [program?.trim(), yearLevel != null ? String(yearLevel) : ''].filter(Boolean).join(' - ') ||
+  'Unassigned section';
 
 const parseDateBoundary = (value: string | undefined, endExclusive = false) => {
   if (!value || !validDateKey(value)) return undefined;
@@ -212,7 +212,7 @@ const renderRows = (rows: RequestSummary[]) =>
         request.location || '',
         request.equipmentList || '',
         request.requesterName,
-        formatSectionLabel(request.program, request.yearLevel),
+        formatSectionLabel(request.programCode ?? request.program, request.yearLevel),
         request.facultyName || '',
         formatTimeRange(request.timeStart, request.timeEnd),
         statusLabels[request.status],
@@ -275,7 +275,7 @@ const renderPage = (
             <tr><th colspan="9" class="title-row">Borrow Request Log</th></tr>
             <tr>
               <th>Date</th><th>Room</th><th>Equipment</th><th>Requester</th>
-              <th>Program / Year</th><th>Faculty-in-Charge</th><th>Time</th>
+              <th>Section</th><th>Faculty-in-Charge</th><th>Time</th>
               <th>Status</th><th>Subject</th>
             </tr>
           </thead>
@@ -814,7 +814,7 @@ const renderScheduleAnalysisDocument = (
               <colgroup><col style="width: 40%" /><col style="width: 20%" /><col style="width: 20%" /><col style="width: 20%" /></colgroup>
               <thead>
                 <tr><th colspan="4" class="title-row">Schedule Section Analysis</th></tr>
-                <tr><th>Program / year level</th><th>Schedule entries</th><th>Rooms used</th><th>Recurring entries</th></tr>
+                <tr><th>Section</th><th>Schedule entries</th><th>Rooms used</th><th>Recurring entries</th></tr>
               </thead>
               <tbody>${renderScheduleAnalysisRows(rows)}</tbody>
             </table>
@@ -856,7 +856,7 @@ const buildScheduleFilename = (filters: ScheduleReportFilters) => {
 const demandGroupLabels: Record<DemandGroupBy, string> = {
   faculty: 'Faculty in charge',
   submittedBy: 'Submitted by',
-  program: 'Program and year level',
+  program: 'Section',
   subject: 'Subject',
   room: 'Requested room',
 };
@@ -900,9 +900,9 @@ const getDemandGroup = (request: RequestSummary, groupBy: DemandGroupBy) => {
     return {
       key: request.programId
         ? `program:${request.programId}`
-        : `program:${formatSectionLabel(request.program, request.yearLevel)}`,
-      label: formatSectionLabel(request.program, request.yearLevel),
-      detail: 'Program and year level',
+        : `program:${formatSectionLabel(request.programCode ?? request.program, request.yearLevel)}`,
+      label: formatSectionLabel(request.programCode ?? request.program, request.yearLevel),
+      detail: 'Section',
     };
   }
 
@@ -1040,7 +1040,7 @@ const renderDemandPage = (
             <col style="width: 13%" />
           </colgroup>
           <thead>
-            <tr><th colspan="6" class="title-row">Request Demand Analysis — ${escapeHtml(demandGroupLabels[filters.groupBy])}</th></tr>
+            <tr><th colspan="6" class="title-row">Request Demand Analysis – ${escapeHtml(demandGroupLabels[filters.groupBy])}</th></tr>
             <tr>
               <th>Group</th><th>Group type</th><th>Requests</th>
               <th>Equipment units</th><th>Student-submitted</th><th>Faculty-submitted</th>
@@ -1159,6 +1159,24 @@ const buildDemandFilename = (filters: DemandAnalysisReportFilters) => {
   }.pdf`;
 };
 
+
+// Add context only within the existing merged title cell in every PDF page.
+const withReportHeaderContext = async (
+  html: string, prisma: PrismaClient,
+  filters: { academicYearId?: string; termId?: string; from?: string; to?: string }
+) => {
+  const [year, term] = await Promise.all([
+    filters.academicYearId ? prisma.academicYear.findUnique({ where: { id: filters.academicYearId }, select: { year: true } }) : null,
+    filters.termId ? prisma.term.findUnique({ where: { id: filters.termId }, select: { name: true } }) : null,
+  ]);
+  const range = filters.from && filters.to ? formatDate(filters.from) + ' – ' + formatDate(filters.to)
+    : filters.from ? 'From ' + formatDate(filters.from) : filters.to ? 'Through ' + formatDate(filters.to) : 'All recorded dates';
+  const context = [year?.year, term?.name, range].filter(Boolean).join(' · ');
+  return html.replace(/(<th[^>]*class="title-row"[^>]*>)([\s\S]*?)(<\/th>)/g,
+    (_match, open: string, title: string, close: string) => open + title + '<span class="report-title-context">' + escapeHtml(context) + '</span>' + close)
+    .replace('</style>', 'th.title-row { height: auto; padding: 1.5mm 2mm; white-space: normal; overflow: visible; overflow-wrap: anywhere; line-height: 1.2; } .report-title-context { display: block; margin-top: 1mm; font-size: 8pt; font-weight: 400; line-height: 1.2; }</style>');
+};
+
 export const generateBorrowRequestPdf = limitedReport(async (
   prisma: PrismaClient,
   filters: BorrowRequestReportFilters
@@ -1177,7 +1195,7 @@ export const generateBorrowRequestPdf = limitedReport(async (
   ]);
 
     return {
-      buffer: await renderHtmlPdf(renderDocument(pages, logoDataUri, certificationDataUri)),
+      buffer: await renderHtmlPdf(await withReportHeaderContext(renderDocument(pages, logoDataUri, certificationDataUri), prisma, filters)),
       filename: buildFilename(filters),
       count: requests.length,
     };
@@ -1209,7 +1227,7 @@ export const generateLabSchedulePdf = limitedReport(async (
         )
       : renderScheduleDocument(pages as SchedulePdfRow[][], logoDataUri, certificationDataUri);
     return {
-      buffer: await renderHtmlPdf(html),
+      buffer: await renderHtmlPdf(await withReportHeaderContext(html, prisma, filters)),
       filename: buildScheduleFilename(filters),
       count: rows.length,
     };
@@ -1232,7 +1250,7 @@ export const generateDemandAnalysisPdf = limitedReport(async (
   ]);
 
     return {
-      buffer: await renderHtmlPdf(renderDemandDocument(pages, filters, logoDataUri, certificationDataUri)),
+      buffer: await renderHtmlPdf(await withReportHeaderContext(renderDemandDocument(pages, filters, logoDataUri, certificationDataUri), prisma, filters)),
       filename: buildDemandFilename(filters),
       count: rows.length,
     };
@@ -1626,7 +1644,7 @@ export const generateEquipmentPdf = limitedReport(async (
   ]);
 
     return {
-      buffer: await renderHtmlPdf(renderEquipmentDocument(pages, filters, logoDataUri, certificationDataUri)),
+      buffer: await renderHtmlPdf(await withReportHeaderContext(renderEquipmentDocument(pages, filters, logoDataUri, certificationDataUri), prisma, filters)),
       filename: buildEquipmentFilename(filters),
       count: outputRows.length,
     };

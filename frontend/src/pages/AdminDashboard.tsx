@@ -281,7 +281,7 @@ export default function AdminDashboard() {
   if (!stats) {
     return (
       <AdminLayout>
-        <div className="mx-auto flex min-h-[400px] max-w-7xl items-center justify-center p-2 lg:p-3">
+        <div className="mx-auto flex min-h-[400px] responsive-workspace items-center justify-center p-2 lg:p-3">
           <div className="text-center">
             <RefreshIcon spinning={true} />
             <p className="mt-4 text-sm text-[#6b7280]">Loading dashboard…</p>
@@ -300,7 +300,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-7xl p-2 lg:p-3">
+      <div className="mx-auto responsive-workspace p-2 lg:p-3">
         {dashboardError && (
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#f6e8b1] bg-[#fffdf5] px-4 py-3 text-sm text-[#92400e]">
             <span>{dashboardError}</span>
@@ -341,6 +341,8 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
+        <div aria-hidden="true" className="mb-4 h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+
         <Card title="Equipment status">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg border border-[#e2e8f0] bg-[#f8fafc] p-3">
@@ -365,6 +367,8 @@ export default function AdminDashboard() {
             </div>
           </div>
         </Card>
+
+        <div aria-hidden="true" className="mb-4 h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
         <Card title="Operations at a glance">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -391,6 +395,8 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
+        <div aria-hidden="true" className="mb-4 h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+
         <Card title="Quick actions">
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
             {quickActions.map(({ label, icon: Icon, gradient, href }) => (
@@ -406,6 +412,8 @@ export default function AdminDashboard() {
             ))}
           </div>
         </Card>
+
+        <div aria-hidden="true" className="mb-4 h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
         <Card
           title="Needs attention"

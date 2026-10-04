@@ -1,4 +1,4 @@
-import { combineManilaDateTime as combineDateTime, nextManilaWeekday as getNextDateForDay } from '../utils/dateTime';
+import { dateToDateKey, combineManilaDateTime as combineDateTime, nextManilaWeekday as getNextDateForDay } from '../utils/dateTime';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AxiosResponse } from 'axios';
 import type { ScheduleType } from '../types/labSchedule';
@@ -8,7 +8,7 @@ const normalizeRoomLabel = (label: string | null | undefined) => label?.trim() |
 
 const deriveDateForSchedule = (scheduleType: ScheduleType, scheduleDate?: string | null, dayOfWeek?: string | null) => {
   if (scheduleType === 'ONE_TIME') {
-    return scheduleDate?.trim() || null;
+    return dateToDateKey(scheduleDate) || null;
   }
   const numericDay = dayOfWeek !== undefined && dayOfWeek !== null ? Number(dayOfWeek) : Number.NaN;
   if (!Number.isInteger(numericDay)) {
@@ -58,6 +58,7 @@ export type ScheduleConflictParams = {
   academicYearId?: string;
   termId?: string;
   excludeScheduleId?: string | number | null;
+  excludeRequestId?: string;
 };
 
 export type UseScheduleConflictResult = {
@@ -133,7 +134,7 @@ export function useScheduleConflictCheck(
       academicYearId: params.academicYearId,
       termId: params.termId,
       scheduleType: params.scheduleType,
-      scheduleDate: params.scheduleType === 'ONE_TIME' ? params.scheduleDate : undefined,
+      scheduleDate: params.scheduleType === 'ONE_TIME' ? baseDate : undefined,
       dayOfWeek:
         params.scheduleType === 'WEEKLY' && params.dayOfWeek !== undefined && params.dayOfWeek !== ''
           ? Number(params.dayOfWeek)
@@ -141,6 +142,7 @@ export function useScheduleConflictCheck(
       timeStart: timeStartIso,
       timeEnd: timeEndIso,
       excludeScheduleId: params.excludeScheduleId ?? undefined,
+      excludeRequestId: params.excludeRequestId,
     };
     return body;
   }, [params, ready]);

@@ -647,3 +647,19 @@
     transform: translateY(-7mm);
   }
 }
+/* Interactive report tabs follow the workspace; printed documents retain paper sizing. */
+@media screen {
+  .report-detail-formal-document.request-report-screen,
+  .report-detail-formal-document.schedule-report-screen,
+  .report-detail-formal-document.equipment-report-screen {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Only the merged title cell grows with the report context. */
+.printable-report-table th.print-report-table-main-header {
+  height: auto !important; padding: 1.5mm 2mm; white-space: normal;
+  overflow: visible; overflow-wrap: anywhere; text-overflow: clip; line-height: 1.2 !important;
+}
+.print-report-header-context { display: block; margin-top: 1mm; font-size: 8pt; font-weight: 400; line-height: 1.2; }

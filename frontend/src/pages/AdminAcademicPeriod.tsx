@@ -225,7 +225,7 @@ export default function AdminAcademicPeriod() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="mx-auto flex min-h-[420px] max-w-6xl items-center justify-center">
+        <div className="mx-auto flex min-h-[420px] responsive-workspace items-center justify-center">
           <div className="text-center">
             <RefreshCw className="mx-auto h-6 w-6 animate-spin text-[#800000]" />
             <p className="mt-3 text-sm text-[#6b7280]">Loading academic period settings…</p>
@@ -237,7 +237,7 @@ export default function AdminAcademicPeriod() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-6xl space-y-4">
+      <div className="mx-auto responsive-workspace space-y-4">
         {error && (
           <div data-testid="status-academic-period-error" className="flex items-start gap-3 rounded-2xl border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
@@ -303,7 +303,9 @@ export default function AdminAcademicPeriod() {
           </div>
         </section>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_2px_minmax(320px,0.85fr)]">
           <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
             <div className="border-b border-[#f3f4f6] px-5 py-4">
               <div className="flex items-center gap-2">
@@ -410,6 +412,8 @@ export default function AdminAcademicPeriod() {
             </form>
           </section>
 
+          <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2] xl:-my-4 xl:h-auto xl:w-0.5 xl:self-stretch" />
+
           <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
             <div className="border-b border-[#f3f4f6] px-5 py-4">
               <div className="flex items-center gap-2">
@@ -432,6 +436,8 @@ export default function AdminAcademicPeriod() {
             </div>
           </section>
         </div>
+
+        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
         <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <div className="flex items-center gap-2 border-b border-[#f3f4f6] px-5 py-4">

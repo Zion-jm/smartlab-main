@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 
 type DropdownOption<T extends string> = {
@@ -15,6 +16,7 @@ interface DropdownFieldProps<T extends string> {
   disabled?: boolean;
   id?: string;
   testId?: string;
+  portal?: boolean;
 }
 
 export default function DropdownField<T extends string>({
@@ -27,11 +29,14 @@ export default function DropdownField<T extends string>({
   disabled = false,
   id,
   testId,
+  portal = false,
 }: DropdownFieldProps<T>) {
   const generatedSelectId = useId();
   const selectId = id ?? generatedSelectId;
   const listboxId = `${selectId}-options`;
   const containerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState({ left: 0, top: 0, width: 112, maxHeight: 240 });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(() => {
@@ -50,7 +55,7 @@ export default function DropdownField<T extends string>({
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
+      if (!containerRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) {
         setOpen(false);
       }
     };
@@ -66,6 +71,29 @@ export default function DropdownField<T extends string>({
     if (selectedIndex >= 0) setHighlightedIndex(selectedIndex);
   }
 
+  const openMenu = () => {
+    if (portal && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const below = window.innerHeight - rect.bottom - 12;
+      const above = rect.top - 12;
+      const upward = below < 240 && above > below;
+      const maxHeight = Math.max(40, Math.min(240, upward ? above : below));
+      const height = Math.min(maxHeight, options.length * 40 + 10);
+      const width = Math.min(Math.max(rect.width, 112), window.innerWidth - 16);
+      setMenuPosition({ left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)), top: upward ? rect.top - height - 4 : rect.bottom + 4, width, maxHeight: height });
+    }
+    setOpen(true);
+  };
+  useEffect(() => {
+    if (!portal || !open) return;
+    const close = (event: Event) => {
+      if (!menuRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => { window.removeEventListener('scroll', close, true); window.removeEventListener('resize', close); };
+  }, [portal, open]);
+
   const selectOption = (option: DropdownOption<T>) => {
     onChange(option.value);
     setOpen(false);
@@ -78,7 +106,7 @@ export default function DropdownField<T extends string>({
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       if (!open) {
-        setOpen(true);
+        openMenu();
         setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
         return;
       }
@@ -120,6 +148,8 @@ export default function DropdownField<T extends string>({
     }
   };
 
+  const renderMenu = (menu: ReactNode) => portal ? createPortal(menu, document.body) : menu;
+
   return (
     <div ref={containerRef} className={`flex flex-col gap-1 ${className}`}>
       {labelText && <label htmlFor={selectId} className="block text-xs font-semibold text-[#4b5563]">{labelText}</label>}
@@ -153,7 +183,7 @@ export default function DropdownField<T extends string>({
           aria-controls={open ? listboxId : undefined}
           disabled={disabled}
           onClick={() => {
-            setOpen((current) => !current);
+            if (open) setOpen(false); else openMenu();
             setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
           }}
           onKeyDown={handleKeyDown}
@@ -178,7 +208,10 @@ export default function DropdownField<T extends string>({
           </svg>
         </button>
         {open && options.length > 0 && (
+          renderMenu(
           <div
+            ref={menuRef}
+            style={portal ? { position: 'fixed', ...menuPosition, zIndex: 1000, marginTop: 0 } : undefined}
             id={listboxId}
             role="listbox"
             aria-label={labelText ? String(labelText) : placeholder}
@@ -214,6 +247,7 @@ export default function DropdownField<T extends string>({
               );
             })}
           </div>
+          )
         )}
       </div>
     </div>

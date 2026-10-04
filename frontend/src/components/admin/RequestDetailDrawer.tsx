@@ -1,3 +1,4 @@
+import { UserRound, Package, Mail, GraduationCap, MapPin, BookOpen, CalendarDays, Clock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api';
 import { useScheduleConflictCheck } from '../../hooks/useScheduleConflictCheck';
@@ -101,10 +102,10 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
       timeStart,
       timeEnd,
       roomId: roomId || undefined,
-      roomLabel: request.location || '',
+      roomLabel: request.location || request.room?.name || request.room?.roomNumber || roomId,
       academicYearId,
       termId,
-      excludeScheduleId: request.id,
+      excludeRequestId: request.id,
     };
 
     return params;
@@ -255,20 +256,21 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
-      <div className="absolute inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#f3f4f6]">
-          <div>
+      <div className="request-review-drawer absolute inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl flex flex-col">
+        <div className="request-review-header flex items-center justify-between gap-3 px-6 py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="request-review-avatar" aria-hidden="true"><UserRound size={23} strokeWidth={1.75} /></span><div className="min-w-0">
             <p className="text-xs uppercase font-semibold text-[#9ca3af]">
               Request #{request.referenceCode ?? request.id.slice(-6)}
             </p>
-            <h3 className="text-lg font-semibold text-[#111827]">{request.requesterName}</h3>
+            <h3 className="text-lg font-semibold text-[#111827]">{request.requesterName}</h3></div>
           </div>
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold ${statusChip.className}`}>
             {statusChip.label}
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <div className="request-review-body flex-1 overflow-y-auto px-6 py-5 space-y-5">
           {conflictParams && (
             <ConflictStatusCard
               status={conflictCheck.status}
@@ -298,41 +300,41 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
             />
           )}
 
-          <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-[#374151]">
+          <section className="request-review-fields grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-[#374151]">
             <div>
-              <p className="text-xs font-semibold text-[#9ca3af]">Email</p>
+              <p className="request-review-label"><Mail size={14} strokeWidth={1.75} aria-hidden="true" />Email</p>
               <p>{request.requesterEmail}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-[#9ca3af]">Role</p>
+              <p className="request-review-label"><GraduationCap size={14} strokeWidth={1.75} aria-hidden="true" />Role</p>
               <p>{request.requesterRole}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-[#9ca3af]">Room</p>
+              <p className="request-review-label"><MapPin size={14} strokeWidth={1.75} aria-hidden="true" />Room</p>
               <p>{resolveRoom()}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-[#9ca3af]">Subject</p>
+              <p className="request-review-label"><BookOpen size={14} strokeWidth={1.75} aria-hidden="true" />Subject</p>
               <p>{request.subject || '—'}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-[#9ca3af]">Date needed</p>
+              <p className="request-review-label"><CalendarDays size={14} strokeWidth={1.75} aria-hidden="true" />Date needed</p>
               <p>{formatDate(request.dateNeeded)}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-[#9ca3af]">Time</p>
+              <p className="request-review-label"><Clock size={14} strokeWidth={1.75} aria-hidden="true" />Time</p>
               <p>{formatTimeRange(request.timeStart, request.timeEnd)}</p>
             </div>
           </section>
 
           <section>
-            <p className="text-xs font-semibold text-[#9ca3af] mb-1">Equipment requested</p>
-            <div className="rounded-2xl border border-[#e5e7eb] p-3 bg-[#f9fafb] space-y-2 text-sm">
+            <p className="request-review-label mb-2"><Package size={15} aria-hidden="true" />Equipment requested</p>
+            <div className="request-review-equipment text-sm">
               {request.items?.length ? (
                 request.items.map((item) => (
                   <div key={item.id} className="flex items-center justify-between">
                     <span className="text-[#111827]">{item.equipmentName}</span>
-                    <span className="text-xs text-[#6b7280]">x{item.quantity}</span>
+                    <span className="request-review-quantity">x{item.quantity}</span>
                   </div>
                 ))
               ) : (
@@ -378,7 +380,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-[#f3f4f6] flex flex-wrap gap-2 justify-between">
+        <div className="request-review-footer px-6 py-4 flex flex-wrap gap-2 justify-between">
           <button
             className="px-4 py-2 text-xs font-semibold text-[#374151] rounded-full border border-[#e5e7eb]"
             onClick={handleClose}

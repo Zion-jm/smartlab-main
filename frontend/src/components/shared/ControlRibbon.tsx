@@ -45,6 +45,8 @@ export default function ControlRibbon({
     return () => { observer.disconnect(); setInset(0); };
   }, [setInset]);
   const userId = useAuthStore((state) => state.user?.id ?? 'anonymous');
+  const role = useAuthStore((state) => state.user?.role);
+  const setPreference = usePreferencesStore((state) => state.setPreference);
   const preferencesByUser = usePreferencesStore((state) => state.preferencesByUser);
   const ribbonExpandedByDefault = !getUserPreferences(preferencesByUser, userId).ribbonControlsHiddenByDefault;
   const [expanded, setExpanded] = useState(defaultExpanded ?? ribbonExpandedByDefault);
@@ -110,8 +112,14 @@ export default function ControlRibbon({
             type="button"
             aria-expanded={expanded}
             aria-controls={contentId}
-            onClick={() => setExpanded((current) => !current)}
-            className="page-control-ribbon__toggle"
+            onClick={() => {
+              const next = !expanded;
+              setExpanded(next);
+              if (role === 'STUDENT' || role === 'FACULTY') {
+                setPreference(userId, 'ribbonControlsHiddenByDefault', !next);
+              }
+                }}
+                className="page-control-ribbon__toggle"
           >
             <span>{expanded ? 'Hide controls' : 'Show controls'}</span>
             <svg

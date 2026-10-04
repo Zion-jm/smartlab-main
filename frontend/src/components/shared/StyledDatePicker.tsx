@@ -1,3 +1,4 @@
+import DropdownField from './DropdownField';
 import { manilaTodayForPicker } from '../../utils/dateTime';
 import { useMemo } from 'react';
 import DatePicker from 'react-datepicker';
@@ -5,6 +6,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { colors, fontSize, fontWeight, input, radius, shadows, zIndex } from '../../styles/tokens';
 
 interface StyledDatePickerProps {
+  browsing?: boolean;
   value: Date | null;
   onChange: (date: Date | null) => void;
   placeholder?: string;
@@ -15,6 +17,7 @@ interface StyledDatePickerProps {
 
 export function StyledDatePicker({
   value,
+  browsing = false,
   onChange,
   placeholder = 'Select a date',
   disabled = false,
@@ -51,12 +54,12 @@ export function StyledDatePicker({
       <DatePicker
         selected={value}
         onChange={onChange}
-        minDate={minDate}
-        filterDate={(date) => !isDateDisabled(date)}
+        minDate={browsing ? undefined : minDate}
+        filterDate={(date) => browsing || !isDateDisabled(date)}
         placeholderText={placeholder}
         disabled={disabled}
         required={required}
-        dayClassName={dayClassName}
+        dayClassName={browsing ? undefined : dayClassName}
         calendarClassName="custom-calendar"
         wrapperClassName="custom-wrapper"
         popperClassName="custom-popper"
@@ -107,30 +110,10 @@ export function StyledDatePicker({
               
               <div className="picker-controls">
                 {/* Month Picker */}
-                <select
-                  value={currentMonth}
-                  onChange={(e) => changeMonth(Number(e.target.value))}
-                  className="month-picker"
-                >
-                  {months.map((month, index) => (
-                    <option key={month} value={index}>
-                      {month}
-                    </option>
-                  ))}
-                </select>
+                <DropdownField value={String(currentMonth)} onChange={value => changeMonth(Number(value))} options={months.map((month, index) => ({label: month, value: String(index)}))} className="min-w-0 flex-1" />
                 
                 {/* Year Picker */}
-                <select
-                  value={currentYear}
-                  onChange={(e) => changeYear(Number(e.target.value))}
-                  className="year-picker"
-                >
-                  {yearOptions.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
+                <DropdownField value={String(currentYear)} onChange={value => changeYear(Number(value))} options={yearOptions.map(year => ({label: String(year), value: String(year)}))} className="min-w-0 flex-1" />
               </div>
               
               <button

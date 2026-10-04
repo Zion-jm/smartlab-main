@@ -22,7 +22,7 @@ import type { AcademicContextSelection, ApiLabSchedule, LabSchedule, LabSchedule
 
 import LabScheduleModal from '../components/lab-schedule/LabScheduleModal';
 
-import TableCellDetailModal from '../components/shared/TableCellDetailModal';
+import ScheduleDetailModal from '../components/lab-schedule/ScheduleDetailModal';
 
 import { IconActionButton } from '../components/shared/TableActionButtons';
 
@@ -501,7 +501,7 @@ export default function AdminLabSchedule() {
 
   return (
     <AdminLayout>
-      <div className="px-2 pb-2 lg:px-3 lg:pb-3 max-w-7xl mx-auto space-y-4">
+      <div className="px-2 pb-2 lg:px-3 lg:pb-3 responsive-workspace mx-auto space-y-4">
         <FilterToolbar
           searchValue={search}
           onSearchChange={setSearch}
@@ -537,8 +537,9 @@ export default function AdminLabSchedule() {
           id="lab-schedule-tabpanel"
           role="tabpanel"
           aria-labelledby={getPageTabId('lab-schedule-tabpanel', viewMode)}
-          className={viewMode === 'table' ? 'space-y-4' : 'py-2'}
+          className="space-y-4"
         >
+          <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
             {loading ? (
               <LoadingState message="Loading schedules…" />
             ) : error ? (
@@ -548,7 +549,6 @@ export default function AdminLabSchedule() {
                 <EmptyState title="No schedules found" description="No schedules match your filters yet." variant="minimal" />
               ) : (
                 <>
-                  <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
                   <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
                     <div className="px-4 py-5 lg:px-6">
                     <ScheduleDataTable schedules={paginatedSchedules}
@@ -607,26 +607,7 @@ export default function AdminLabSchedule() {
       )}
 
       {detailsModalConfig && (
-        <TableCellDetailModal
-          isOpen={true}
-          onClose={() => setDetailsModalConfig(null)}
-          title="Schedule Details"
-          data={detailsModalConfig.schedule!}
-          fields={[
-            { key: 'scheduleType' as keyof LabSchedule, label: 'Schedule Type', formatter: (value: unknown) => (value as string) === 'ONE_TIME' ? 'One Time' : 'Weekly' },
-            { key: 'displayDate' as keyof LabSchedule, label: 'Date' },
-            { key: 'displayDay' as keyof LabSchedule, label: 'Day' },
-            { key: 'timeRange' as keyof LabSchedule, label: 'Time' },
-            { key: 'roomLabel' as keyof LabSchedule, label: 'Room' },
-            { key: 'subjectLabel' as keyof LabSchedule, label: 'Subject' },
-            { key: 'programLabel' as keyof LabSchedule, label: 'Program' },
-            { key: 'facultyName' as keyof LabSchedule, label: 'Faculty' },
-            { key: 'academicYearLabel' as keyof LabSchedule, label: 'Academic Year', formatter: (value: unknown) => (value as string | null) || '—' },
-            { key: 'termLabel' as keyof LabSchedule, label: 'Term', formatter: (value: unknown) => (value as string | null) || '—' },
-            { key: 'yearLevel' as keyof LabSchedule, label: 'Year Level', formatter: (value: unknown) => (value as number | null)?.toString() || '—' },
-          ]}
-          actions={[]}
-        />
+        <ScheduleDetailModal schedule={detailsModalConfig.schedule!} onClose={() => setDetailsModalConfig(null)} />
       )}
     </AdminLayout>
   );

@@ -69,6 +69,7 @@ export const summarizeRequest = (request: BorrowRequestWithRelations) => {
     requesterAvatar: null,
     facultyId: request.faculty?.id ?? null,
     program: request.program?.name ?? null,
+    programCode: request.program?.code ?? null,
     programId: request.program?.id ?? null,
     yearLevel: request.yearLevel,
     facultyName: request.faculty?.user
@@ -110,6 +111,10 @@ export type RequestSummary = ReturnType<typeof summarizeRequest>;
 export const buildEmailDetails = (summary: RequestSummary) => ({
   id: summary.id,
   requesterName: summary.requesterName,
+  requesterRole: summary.requesterRole,
+  programCode: summary.programCode,
+  program: summary.program,
+  yearLevel: summary.yearLevel,
   dateNeeded: summary.dateNeeded,
   timeStart: summary.timeStart,
   timeEnd: summary.timeEnd,

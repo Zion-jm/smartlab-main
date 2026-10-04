@@ -5,7 +5,7 @@
 Use this checklist alongside the [implementation plan](control-ribbon-implementation-plan.md). Recheck the plan's repository snapshot before starting. Leave boxes unchecked until the item is verified on the implementation branch.
 
 **Current progress:** Phases 1–3, 4A–4B, and 4C are recorded (4C FAIL); 4D.1 is recorded as FAIL/BLOCKED; sticky-shell code is in place, with authenticated scrolling verification blocked.
-**Checkpoint labels:** Suggested names only. Save the actual Replit checkpoint after its gate passes; this document does not create checkpoints.
+**Checkpoint labels:** Suggested names only. Save the actual the previous hosted development environment checkpoint after its gate passes; this document does not create checkpoints.
 
 ## Phase 0 — Baseline
 
@@ -210,7 +210,7 @@ For each assigned page, use representative widths of 1280px (desktop), 1024px (t
 - **Academic period controls — pass.** The Change disclosure controls its panel; the visible year and term selects have labels, use native select controls, and respond to ArrowDown/ArrowUp. The ribbon buttons, date inputs, and visible selects measured 40px high.
 - **Advanced and empty states — pass.** On the Requests report tab, More filters expanded and exposed its controlled panel. The inner disclosure remained expanded when the outer ribbon was collapsed. A future date range rendered “Showing 0 of 0 requests” without a reporting-data error.
 - **Date error announcement — fail.** Reversed dates displayed “The start date must be before the end date,” but neither that message nor its ancestors exposed `role=alert` or `aria-live`, so the dynamic error has no live announcement for assistive technology.
-- **Checkpoint:** Replit manages checkpoints automatically and does not support assigning a custom `CP4A` label; the suggested label remains unchecked. The review results are now recorded in the implementation plan's Reports interaction-matrix section. The page-wide mobile overflow and error-announcement findings remain open for their separate fixes.
+- **Checkpoint:** the previous hosted development environment manages checkpoints automatically and does not support assigning a custom `CP4A` label; the suggested label remains unchecked. The review results are now recorded in the implementation plan's Reports interaction-matrix section. The page-wide mobile overflow and error-announcement findings remain open for their separate fixes.
 
 ### Phase 4B — Admin Equipment and Lab Schedule
 
@@ -256,7 +256,7 @@ For each assigned page, use representative widths of 1280px (desktop), 1024px (t
 - **Parent gate: COMPLETE as a review record; overall outcome FAIL/BLOCKED.** Both assigned pages have recorded results, and no page-by-page checks were repeated during consolidation.
 - **Interaction-matrix status:** `AdminEquipment` responsive = **FAIL**; `AdminEquipment` interactions = **BLOCKED**; `AdminLabSchedule` responsive = **FAIL**; `AdminLabSchedule` interactions = **BLOCKED**.
 - **Carried findings:** Equipment Usage Calendar touch targets; AdminLabSchedule Chart/Calendar touch targets; AdminLabSchedule Chart View lab-label association; and the missing authenticated admin browser prerequisite. Each is documented above with its reproduction context.
-- **Checkpoint:** The suggested `CP4B` label is not manually saved here; Replit manages checkpoints automatically, and this record must not be interpreted as a passed quality gate.
+- **Checkpoint:** The suggested `CP4B` label is not manually saved here; the previous hosted development environment manages checkpoints automatically, and this record must not be interpreted as a passed quality gate.
 
 ### Phase 4C — Admin Requests and Academic Directory
 
@@ -325,7 +325,7 @@ For each assigned page, use representative widths of 1280px (desktop), 1024px (t
 
 - **Carried findings:** Requests date-range validation errors are not announced to assistive technology (reproduction is recorded in 4C.2); the Academic Directory entity tabs cause page-level horizontal overflow at 390px (reproduction is recorded in 4C.4). These findings remain unresolved and are not reported as passes.
 - **Blockers and captures:** No checks were blocked for lack of an authenticated admin session. Both required Requests captures exist: `screenshots/phase-4c-admin-requests-1280.jpg` and `screenshots/phase-4c-admin-requests-390.jpg`.
-- **Checkpoint:** Replit manages checkpoints automatically; no manually named `CP4C` checkpoint is claimed. This review record has failed rows and is not an overall quality pass.
+- **Checkpoint:** the previous hosted development environment manages checkpoints automatically; no manually named `CP4C` checkpoint is claimed. This review record has failed rows and is not an overall quality pass.
 - **Scope boundary:** Consolidation only; no page checks were repeated and no application-code changes were made.
 
 ### Phase 4D — Admin supporting pages

@@ -1,3 +1,6 @@
+import DateRangeFilter from '../components/shared/DateRangeFilter';
+import MobileScheduleExplorer from '../features/requests/MobileScheduleExplorer';
+import { CalendarDays as RequestCalendarIcon, GraduationCap as RequestAcademicIcon, FileText as RequestPurposeIcon } from 'lucide-react';
 import { CalendarView, ChartView } from '../components/lab-schedule/ScheduleViews';
 import { ConflictDetailModal } from '../components/shared/ConflictDetailModal';
 import { ConflictStatusCard } from '../components/shared/ConflictStatusCard';
@@ -286,12 +289,23 @@ type FacultyScheduleExplorerProps = SchedulesState & { computerLabNames: string[
 
 function FacultyScheduleExplorer({ schedules, loading, error, dateFilter, setDateFilter, reload, computerLabNames }: FacultyScheduleExplorerProps) {
   const [search, setSearch] = useState('');
+  const [range, setRange] = useState({from:'',to:''});
   const [viewMode, setViewMode] = useState<'table' | 'chart' | 'calendar'>('table');
 
   const filteredSchedules = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return schedules;
-    return schedules.filter((schedule) =>
+    const dated = schedules.filter(schedule => {
+      if (viewMode === 'chart' || (!range.from && !range.to)) return true;
+      if (schedule.scheduleType !== 'WEEKLY') { const key = schedule.date?.slice(0,10); return !!key && (!range.from || key >= range.from) && (!range.to || key <= range.to); }
+      if (!range.from || !range.to) return true;
+      const start = new Date(range.from + 'T00:00:00Z');
+      const end = new Date(range.to + 'T00:00:00Z');
+      const offset = ((schedule.dayOfWeekIndex ?? -7) - start.getUTCDay() + 7) % 7;
+      return schedule.dayOfWeekIndex !== null && start.getTime() + offset * 86400000 <= end.getTime();
+    });
+    if (viewMode === 'chart') return schedules;
+    if (!query) return dated;
+    return dated.filter((schedule) =>
       [
         schedule.roomLabel,
         schedule.facultyName,
@@ -304,14 +318,34 @@ function FacultyScheduleExplorer({ schedules, loading, error, dateFilter, setDat
         .toLowerCase()
         .includes(query)
     );
-  }, [schedules, search]);
+  }, [schedules, search, range, viewMode]);
 
   return (
-    <section className="bg-white border border-[#e5e7eb] rounded-2xl shadow-sm">
+    <>
+    <MobileScheduleExplorer schedules={schedules} loading={loading} error={error} dateFilter={dateFilter} setDateFilter={setDateFilter} reload={reload} computerLabNames={computerLabNames} />
+    <section className="hidden md:block mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
       <FilterToolbar
+        compactFilters
         searchValue={search}
         onSearchChange={setSearch}
-        extraContent={
+        searchInFilters
+        filters={
+          <div className="schedule-ribbon-filters compact-filter-panel grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <label className="flex min-w-0 flex-col gap-1 text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">Search<input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Subject, room, or faculty" className="h-10 rounded-lg border border-[#d8c7c3] bg-white px-3 text-sm font-normal normal-case" /></label>
+            <div className="flex w-full items-end gap-2 md:col-span-2">
+            <DateRangeFilter value={range} onChange={setRange} className="min-w-0 flex-1" />
+            {(range.from || range.to) && <ResetFiltersButton onClick={() => setRange({from:'',to:''})} label="Clear dates" className="mb-0 whitespace-nowrap" />}
+            </div>
+          </div>
+        }
+        filtersActiveCount={range.from || range.to ? 1 : 0}
+        ribbonSummary={`View: ${studentScheduleViewTabs.find((tab) => tab.id === viewMode)?.label ?? 'Schedule'}${range.from || range.to ? ` · Dates: ${range.from || 'Any'} – ${range.to || 'Any'}` : ''}`}
+        onRefresh={reload}
+        refreshing={loading}
+        refreshError={Boolean(error)}
+        className="mb-1"
+      />
+      <div className="page-control-ribbon--flush px-0 pt-3 pb-0">
           <PageTabGroup
             tabs={studentScheduleViewTabs}
             value={viewMode}
@@ -319,32 +353,10 @@ function FacultyScheduleExplorer({ schedules, loading, error, dateFilter, setDat
             ariaLabel="Student schedule views"
             panelId="student-schedule-tabpanel"
           />
-        }
-        filters={
-          <div className="flex flex-wrap gap-3 w-full">
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">Filter by date</label>
-              <input
-                type="date"
-                aria-label="Filter by date"
-                value={dateFilter}
-                onChange={(event) => setDateFilter(event.target.value)}
-                className="h-10 rounded-lg border border-[#d1d5db] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
-              />
-            </div>
-            {dateFilter && (
-              <ResetFiltersButton onClick={() => setDateFilter('')} label="Clear date" />
-            )}
-          </div>
-        }
-        filtersActiveCount={dateFilter ? 1 : 0}
-        ribbonSummary={`View: ${studentScheduleViewTabs.find((tab) => tab.id === viewMode)?.label ?? 'Schedule'}${dateFilter ? ` · Date: ${dateFilter}` : ''}`}
-        onRefresh={reload}
-        refreshing={loading}
-        refreshError={Boolean(error)}
-        className="px-4 lg:px-6 pt-4 lg:pt-5 pb-4 border-b border-[#e5e7eb]"
-      />
+      </div>
+      <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
       <div
+        className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm"
         id="student-schedule-tabpanel"
         role="tabpanel"
         aria-labelledby={getPageTabId('student-schedule-tabpanel', viewMode)}
@@ -363,12 +375,13 @@ function FacultyScheduleExplorer({ schedules, loading, error, dateFilter, setDat
         ) : viewMode === 'table' ? (
           <ScheduleDataTable schedules={filteredSchedules} />
         ) : viewMode === 'chart' ? (
-          <ChartView schedules={filteredSchedules} computerLabNames={computerLabNames} />
+          <ChartView schedules={schedules} computerLabNames={computerLabNames} />
         ) : (
           <CalendarView schedules={filteredSchedules} />
         )}
       </div>
     </section>
+    </>
   );
 }
 
@@ -517,7 +530,7 @@ function RequestFormScaffold({
       roomLabel: selectedRoomOption?.label ?? '',
       academicYearId: academicContext?.academicYearId ?? '',
       termId: academicContext?.termId ?? '',
-      excludeScheduleId: editingRequest?.id,
+      excludeRequestId: editingRequest?.id,
     };
     if (!academicContext) return null;
     if (!useLabRoom) return null; // Only check conflicts for lab room requests
@@ -683,10 +696,10 @@ function RequestFormScaffold({
           ? 'Update the pending request below. Changes will be sent back for administrator review.'
           : 'Fill in the details below to reserve a room and equipment for your lab session.'}
       >
-        <div className="rounded-2xl border border-[#f1f5f9] bg-[#fdfdfd] divide-y divide-[#f1f5f9]">
+        <div className="request-form-sections rounded-2xl border border-[#f1f5f9] bg-[#fdfdfd] divide-y divide-[#f1f5f9]">
           <section className="space-y-4 p-4 lg:p-5">
             <div>
-              <h4 className="text-sm font-semibold text-[#111827]">Particulars</h4>
+              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestCalendarIcon size={18} aria-hidden="true" className="md:hidden" />Room & schedule</h4>
               <p className="text-xs text-[#6b7280]">Indicate if you need a laboratory room and which equipment to reserve.</p>
             </div>
             <div className="flex flex-col gap-3">
@@ -804,7 +817,7 @@ function RequestFormScaffold({
               />
             )}
 
-            <div className="mt-4">
+            <div className="request-equipment-section mt-4">
               <UnifiedEquipmentSection
                 equipment={equipmentList}
                 selectedEquipment={selectedEquipment}
@@ -822,7 +835,7 @@ function RequestFormScaffold({
 
           <section className="space-y-4 p-4 lg:p-5">
             <div>
-              <h4 className="text-sm font-semibold text-[#111827]">Academic context</h4>
+              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestAcademicIcon size={18} aria-hidden="true" className="md:hidden" />Academic details</h4>
               <p className="text-xs text-[#6b7280]">Select the faculty member supervising your session, along with your program, year level, and subject.</p>
             </div>
             <div className="space-y-3">
@@ -875,7 +888,7 @@ function RequestFormScaffold({
 
           <section className="space-y-4 p-4 lg:p-5">
             <div>
-              <h4 className="text-sm font-semibold text-[#111827]">Purpose & contact details</h4>
+              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestPurposeIcon size={18} aria-hidden="true" className="md:hidden" />Purpose & contact</h4>
               <p className="text-xs text-[#6b7280]">Provide contacts plus rationale for your request.</p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
@@ -916,25 +929,23 @@ function RequestFormScaffold({
             <p>
               {equipmentSelections.length === 0
                 ? 'No equipment reserved. You can still submit a request without equipment.'
-                : `${equipmentSelections.length} equipment line item(s) selected.`}
+                : `${equipmentSelections.length} equipment types · ${equipmentSelections.reduce((sum, [, qty]) => sum + qty, 0)} units selected.`}
             </p>
             {selectedEquipmentDetails.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {selectedEquipmentDetails.map((item) => (
-                  <span key={item.id} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#f9fafb] border border-[#e5e7eb]">
-                    {item.name}
-                    <span className="font-semibold text-[#111827]">×{item.qty}</span>
-                  </span>
-                ))}
-              </div>
+              <details className="mt-2">
+                <summary className="cursor-pointer py-3 text-xs font-semibold text-[#800000]">Review selected equipment</summary>
+                <ul className="divide-y divide-[#ead7d3]">
+                  {selectedEquipmentDetails.map(item => <li key={item.id} className="flex justify-between gap-3 py-2"><span>{item.name}</span><span className="shrink-0 font-semibold">×{item.qty}</span></li>)}
+                </ul>
+              </details>
             )}
             {missingFields.length > 0 && (
               <button
                 type="button"
                 onClick={() => focusField(missingFields[0])}
-                className="text-[11px] font-semibold text-[#b91c1c] underline"
+                className="mt-2 min-h-11 rounded-xl border border-[#f4dfac] bg-[#fffaf0] px-3 py-2 text-left text-xs font-medium leading-relaxed text-[#92400e]"
               >
-                Missing: {missingFields.map((field) => requiredFieldLabels[field]).join(', ')}
+                Complete these fields: {missingFields.map((field) => requiredFieldLabels[field]).join(', ')}
               </button>
             )}
           </div>

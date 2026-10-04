@@ -596,7 +596,7 @@ export default function AdminAcademicDirectory() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-7xl space-y-4 p-2 lg:p-3">
+      <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         {data && renderDirectoryControls()}
         <div className="page-control-ribbon--flush px-0 pt-3 pb-0">
           <PageTabGroup

@@ -18,7 +18,7 @@ The frontend clears its saved authentication on explicit SESSION_INVALID respons
 
 Added users.sessionVersion, an integer with default 0. Applied only to localhost smartlab_test using the guarded backend/scripts/apply-local-session-version.cjs script. Prisma Client regenerated. No database reset, seed, record deletion, or remote deployment was performed.
 
-The reviewed additive SQL is backend/prisma/session-version.sql. Before running this code against Replit or another database, back up that database and apply that SQL, then generate Prisma Client and build/restart the API. The helper script intentionally refuses databases other than local smartlab_test. Do not run a reset to install this column.
+The reviewed additive SQL is backend/prisma/session-version.sql. Before running this code against the previous hosted development environment or another database, back up that database and apply that SQL, then generate Prisma Client and build/restart the API. The helper script intentionally refuses databases other than local smartlab_test. Do not run a reset to install this column.
 
 Previously issued tokens do not contain a session version and are rejected. All users must sign in again after this update. Restart your local development processes to load the regenerated Prisma Client.
 

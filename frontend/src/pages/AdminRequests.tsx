@@ -170,8 +170,9 @@ function RequestTableRow({ request, onOpen, onSelect, onAction }: {
                   <TableCell align="right">
                     <TableActionGroup
                       actions={[
+                        { label: 'View', icon: 'view', accessibleLabel: `View request from ${request.requesterName}`, onClick: () => onOpen(request) },
                         ...inlineActions.map((item) => ({
-                          label: item.label,
+                          label: item.label, icon: item.action,
                           onClick: item.action === 'approve'
                             ? () => { onSelect(request); }
                             : () => onAction(request, item.action),
@@ -595,7 +596,7 @@ export default function AdminRequests() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-7xl space-y-4 p-2 lg:p-3">
+      <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         <FilterToolbar
           searchValue={filters.search}
           onSearchChange={(value) => handleFilterChange('search', value)}
@@ -640,28 +641,28 @@ export default function AdminRequests() {
           statusBadge={detailModalRequest.status}
           data={detailModalRequest}
           fields={[
-            { label: 'Location', key: 'location' },
-            { label: 'Subject', key: 'subject' },
-            { label: 'Date Needed', key: 'dateNeeded', formatter: (value) => formatDate(value as string) },
-            { label: 'Time', key: 'timeStart', formatter: (_, data) => {
+            { label: 'Location', section: 'Booking information', key: 'location' },
+            { label: 'Subject', section: 'Booking information', key: 'subject' },
+            { label: 'Date Needed', section: 'Booking information', key: 'dateNeeded', formatter: (value) => formatDate(value as string) },
+            { label: 'Time', section: 'Booking information', key: 'timeStart', formatter: (_, data) => {
               const requestData = data as ApiBorrowRequest;
               return formatTimeRange(requestData.timeStart, requestData.timeEnd);
             }},
-            { label: 'Program & Year', key: 'program', formatter: (_, data) => {
+            { label: 'Program & Year', section: 'Booking information', key: 'program', formatter: (_, data) => {
               const requestData = data as ApiBorrowRequest;
               const program = requestData.program;
               const year = requestData.yearLevel;
               return program && year ? `${program} - Year ${year}` : program || '—';
             }},
-            { label: 'Purpose', key: 'purpose', fullWidth: true },
-            { label: 'Equipment', key: 'items', formatter: (items) => {
+            { label: 'Purpose', section: 'Request contents', key: 'purpose', fullWidth: true },
+            { label: 'Equipment', section: 'Request contents', key: 'items', formatter: (items) => {
               if (!items || !Array.isArray(items) || items.length === 0) return '—';
               return items.map((item) => `${item.equipmentName} (x${item.quantity})`).join(', ');
             }, fullWidth: true },
-            { label: 'Date Created', key: 'createdAt', formatter: (value) => formatDate(value as string) },
-            { label: 'Date Approved', key: 'approvedAt', formatter: (value) => value ? formatDate(value as string) : '—' },
-            { label: 'Date Borrowed', key: 'borrowedAt', formatter: (value) => value ? formatDate(value as string) : '—' },
-            { label: 'Date Returned', key: 'returnedAt', formatter: (value) => value ? formatDate(value as string) : '—' },
+            { label: 'Date Created', section: 'Activity dates', key: 'createdAt', formatter: (value) => formatDate(value as string) },
+            { label: 'Date Approved', section: 'Activity dates', key: 'approvedAt', formatter: (value) => value ? formatDate(value as string) : '—' },
+            { label: 'Date Borrowed', section: 'Activity dates', key: 'borrowedAt', formatter: (value) => value ? formatDate(value as string) : '—' },
+            { label: 'Date Returned', section: 'Activity dates', key: 'returnedAt', formatter: (value) => value ? formatDate(value as string) : '—' },
           ]}
           actions={[
             {

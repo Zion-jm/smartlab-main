@@ -23,6 +23,7 @@ export interface BorrowRequest {
   requesterAvatar?: string | null;
   program?: string | null;
   programId?: string | null;
+  programCode?: string | null;
   yearLevel?: number | null;
   facultyId?: string | null;
   facultyName?: string | null;

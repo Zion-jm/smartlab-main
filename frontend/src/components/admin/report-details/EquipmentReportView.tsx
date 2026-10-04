@@ -797,7 +797,7 @@ export function EquipmentReportView({
 
         <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
-        <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm lg:p-5">
+        <div id="equipment-request-ranking" className="scroll-mt-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm lg:p-5">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9a7770]">Detailed log</p>
@@ -901,12 +901,12 @@ export function EquipmentReportView({
     </FormalReportFrame>
     <div className="equipment-report-print-document">
       {printMode === 'analysis' ? (
-        <PrintableReportDocument
+        <PrintableReportDocument headerPeriod={academicPeriod} headerRange={range}
           definition={equipmentAnalysisDefinition}
           rows={equipmentAnalysisRows}
         />
       ) : (
-        <PrintableReportDocument
+        <PrintableReportDocument headerPeriod={academicPeriod} headerRange={range}
           definition={equipmentLogDefinition}
           rows={printMode === 'filtered' ? filteredEquipmentPrintRows : allEquipmentPrintRows}
         />

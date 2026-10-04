@@ -1,3 +1,5 @@
+import { requestPasswordReset } from '../services/passwordResetService';
+import { accountStatusChanged } from '../services/accountReactivationService';
 import { prisma } from '../db/prisma';
 import { pagination, pageHeaders } from '../utils/pagination';
 import { sendError } from '../middleware/errors';
@@ -510,6 +512,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       if (!isAdmin && email !== existingUser.email) {
         await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'SESSIONS_REVOKED', entityType: 'User', entityId: id, details: { reason: 'Email changed' } });
       }
+      await accountStatusChanged(tx, updatedUser, existingUser.status);
       return updatedUser;
     });
 
@@ -525,6 +528,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
   } catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') { res.status(409).json({ error: 'Account changed. Refresh and try again.' }); return; } sendError(error, res); }
 });
 
+router.post('/:id/password-reset', authenticateToken, authorizeRoles(UserRole.ADMIN), async (req,res) => {
+  try {
+    const user=await prisma.user.findUniqueOrThrow({where:{id:req.params.id},select:{email:true}});
+    await requestPasswordReset(user.email,req.user!.id);
+    res.json({message:'A reset link has been requested. If one was sent recently, ask the user to check their existing email.'});
+  } catch(error) { sendError(error,res); }
+});
 // Update user status (Admin only)
 router.patch(
   '/:id/status',
@@ -541,8 +551,9 @@ router.patch(
       }
 
       const user = await prisma.$transaction(async tx => {
+        const previous = await tx.user.findUniqueOrThrow({ where: { id } });
         const user = await tx.user.update({
-          where: { id },
+          where: { id, updatedAt: previous.updatedAt },
           data: { status: requestedStatus, sessionVersion: { increment: 1 } },
           select: {
             id: true,
@@ -559,6 +570,7 @@ router.patch(
           entityId: user.id,
           details: { label: user.email, next: user.status },
         });
+        await accountStatusChanged(tx, user, previous.status);
         return user;
       });
       res.json({

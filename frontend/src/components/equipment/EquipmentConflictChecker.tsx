@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Clock, Package } from 'lucide-react';
+import { Clock, Package, CircleCheck, TriangleAlert, CircleAlert, LoaderCircle } from 'lucide-react';
 import api from '../../services/api';
 
 interface ConflictRequest {
@@ -331,7 +331,7 @@ export default function EquipmentConflictChecker({
           date,
           timeStart,
           timeEnd,
-          equipment,
+          equipment: equipment.map(item => ({ equipmentId: item.equipmentId, requestedQuantity: item.quantity })),
           excludeRequestId
         });
         
@@ -415,19 +415,20 @@ export default function EquipmentConflictChecker({
     return 'All requested quantities are available with no overlapping reservations.';
   })();
 
+  const StatusIcon = status === 'safe' ? CircleCheck : status === 'warning' ? TriangleAlert : status === 'waiting' ? LoaderCircle : CircleAlert;
   return (
     <>
       {/* Compact Status Card */}
       <div
-        className={`rounded-2xl border border-[#e5e7eb] px-4 py-3 ${token.bg} ${className}`}
+        className={`availability-card availability-card--${status} ${className}`}
         data-testid="status-equipment-check"
       >
         <div className="flex items-start justify-between gap-4">
           <div className={`flex items-start gap-2 ${token.text}`}>
-            <span aria-hidden className="mt-0.5">{token.icon}</span>
+            <span className="availability-card-icon"><StatusIcon size={20} strokeWidth={1.75} aria-hidden="true" className={status === "waiting" ? "animate-spin motion-reduce:animate-none" : undefined} /></span>
             <div>
-              <p className="text-sm font-semibold">{token.label}</p>
-              <p className="mt-1 text-xs font-medium opacity-90" data-testid="text-equipment-check-summary">
+              <p className="availability-card-title">{token.label}</p>
+              <p className="availability-card-description" data-testid="text-equipment-check-summary">
                 {statusDescription}
               </p>
             </div>

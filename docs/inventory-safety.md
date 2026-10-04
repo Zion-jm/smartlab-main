@@ -21,7 +21,7 @@ node scripts/check-inventory.cjs --apply
 
 The utility refuses other hosts/database names, reports the inconsistent-row count, and refuses to apply if that count is nonzero. Installation and validation share a transaction. It is not run on application startup.
 
-For Replit or future hosting, review and incorporate the SQL into the database deployment/migration process. It has NOT been applied to a remote database. Prisma schema.prisma cannot express this PostgreSQL CHECK constraint; schema recreation can require reapplication. Do not use a destructive database reset as a migration strategy. Existing migration deployment work remains checklist item 11.
+For the previous hosted development environment or future hosting, review and incorporate the SQL into the database deployment/migration process. It has NOT been applied to a remote database. Prisma schema.prisma cannot express this PostgreSQL CHECK constraint; schema recreation can require reapplication. Do not use a destructive database reset as a migration strategy. Existing migration deployment work remains checklist item 11.
 
 ## Repeat focused verification
 

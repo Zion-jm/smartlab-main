@@ -12,6 +12,8 @@ import { cancelBorrowRequest, RequestActionError } from '../services/cancelBorro
 import { Prisma, RequestStatus, UserRole, NotificationType } from '@prisma/client';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import {
+  sendRequestCancelledEmail,
+  sendAdminRequestEmail,
   sendRequestSubmittedEmail,
   sendRequestApprovedEmail,
   sendRequestRejectedEmail,
@@ -168,18 +170,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         AND: [requestVisibility(req.user!)],
         ...academicPeriodWhere(periodSelection),
       },
-      include: {
-        requester: {
-          select: { id: true, firstName: true, lastName: true, email: true },
-        },
-        faculty: {
-          include: {
-            user: { select: { firstName: true, lastName: true } },
-          },
-        },
-        items: { include: { equipment: true } },
-        reviewer: { select: { firstName: true, lastName: true } },
-      },
+      include: { ...borrowRequestInclude, reviewer: { select: { firstName: true, lastName: true } } },
     });
 
     if (!request) {
@@ -293,26 +284,12 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const request = await prisma.borrowRequest.create({
       data: requestData,
-      include: {
-        items: {
-          include: { equipment: { select: { id: true, name: true } } },
-        },
-      },
+      include: borrowRequestInclude,
     });
 
-    sendRequestSubmittedEmail(req.user!.email, {
-      id: request.id,
-      requesterName: `${req.user!.firstName} ${req.user!.lastName}`.trim(),
-      dateNeeded: request.dateNeeded.toISOString(),
-      timeStart: request.timeStart?.toISOString() ?? null,
-      timeEnd: request.timeEnd?.toISOString() ?? null,
-      location: null,
-      purpose: request.purpose ?? null,
-      items: request.items.map((item) => ({
-        name: item.equipment?.name ?? 'Unknown',
-        quantity: item.quantity,
-      })),
-    }).catch((err) => console.error('Email (submitted) failed:', err));
+    const submittedDetails = buildEmailDetails(summarizeRequest(request as BorrowRequestWithRelations));
+    await Promise.all([sendRequestSubmittedEmail(req.user!.email, submittedDetails), sendAdminRequestEmail(submittedDetails, 'submitted')])
+      .catch(() => console.error('Email enqueue failed after request submission.'));
 
     notifyAdmins({
       type: NotificationType.REQUEST_PENDING,
@@ -440,6 +417,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       include: borrowRequestInclude,
     });
 
+    await sendAdminRequestEmail(buildEmailDetails(summarizeRequest(updatedRequest as BorrowRequestWithRelations)), 'updated', updatedRequest.updatedAt.toISOString()).catch(() => console.error('Email enqueue failed after request edit.'));
     notifyAdmins({
       type: NotificationType.REQUEST_PENDING,
       title: 'Borrow Request Updated',
@@ -468,7 +446,7 @@ router.patch(
       const { request: updatedRequest, schedule } = await approveRequest(prisma, { id, actorId: adminId, actorRole: req.user!.role });
       if (schedule) {
         const approvedSummary = summarizeRequest(updatedRequest);
-        sendRequestApprovedEmail(updatedRequest.requester.email, buildEmailDetails(approvedSummary))
+        await sendRequestApprovedEmail(updatedRequest.requester.email, buildEmailDetails(approvedSummary))
           .catch((err) => console.error('Email (approved) failed:', err));
 
         notifyUser(updatedRequest.requestedBy, {
@@ -509,7 +487,7 @@ router.patch(
         const request = updatedRequest;
 
         const regularApprovedSummary = summarizeRequest(request);
-        sendRequestApprovedEmail(request.requester.email, buildEmailDetails(regularApprovedSummary))
+        await sendRequestApprovedEmail(request.requester.email, buildEmailDetails(regularApprovedSummary))
           .catch((err) => console.error('Email (approved) failed:', err));
 
         notifyUser(request.requestedBy, {
@@ -569,7 +547,7 @@ router.patch(
       });
 
       const rejectedSummary = summarizeRequest(request);
-      sendRequestRejectedEmail(request.requester.email, buildEmailDetails(rejectedSummary), reason)
+      await sendRequestRejectedEmail(request.requester.email, buildEmailDetails(rejectedSummary), reason)
         .catch((err) => console.error('Email (rejected) failed:', err));
 
       notifyUser(request.requestedBy, {
@@ -600,7 +578,7 @@ router.patch(
       });
 
       const borrowedSummary = summarizeRequest(request as BorrowRequestWithRelations);
-      sendEquipmentBorrowedEmail(request.requester.email, buildEmailDetails(borrowedSummary))
+      await sendEquipmentBorrowedEmail(request.requester.email, buildEmailDetails(borrowedSummary))
         .catch((err) => console.error('Email (borrowed) failed:', err));
 
       notifyUser(request.requestedBy, {
@@ -631,7 +609,7 @@ router.patch(
       });
 
       const returnedSummary = summarizeRequest(request as BorrowRequestWithRelations);
-      sendEquipmentReturnedEmail(request.requester.email, buildEmailDetails(returnedSummary))
+      await sendEquipmentReturnedEmail(request.requester.email, buildEmailDetails(returnedSummary))
         .catch((err) => console.error('Email (returned) failed:', err));
 
       notifyUser(request.requestedBy, {
@@ -655,6 +633,13 @@ router.patch('/:id/cancel', authenticateToken, async (req, res) => {
       cancelBorrowRequest(tx, { id, actorId: req.user!.id, actorRole: req.user!.role })
     );
 
+    const cancelledDetails = buildEmailDetails(summarizeRequest(cancelledRequest as BorrowRequestWithRelations));
+    await sendRequestCancelledEmail(cancelledRequest.requester.email, cancelledDetails).catch(() => console.error('Cancellation email enqueue failed.'));
+    if (req.user!.role !== 'ADMIN') {
+      await sendAdminRequestEmail(cancelledDetails, 'cancelled').catch(() => console.error('Admin cancellation email enqueue failed.'));
+      void notifyAdmins({ type: NotificationType.SYSTEM_ANNOUNCEMENT, title: 'Borrow Request Cancelled',
+        message: 'A requester cancelled their borrow request. No further approval is needed.', borrowRequestId: cancelledRequest.id });
+    }
     notifyUser(cancelledRequest.requestedBy, {
       type: NotificationType.SYSTEM_ANNOUNCEMENT,
       title: 'Request Cancelled',

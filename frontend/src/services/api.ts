@@ -32,6 +32,9 @@ api.interceptors.response.use(response => response, async error => {
 
 // Auth API
 export const authApi = {
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', {email}),
+  resetPassword: (data: {token:string;password:string}) => api.post('/auth/reset-password',data),
+  requestReactivation: (data: { email: string; password: string; reason: string }) => api.post('/auth/reactivation', data),
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }),
   getMe: () => api.get('/auth/me'),
@@ -98,6 +101,8 @@ export const borrowRequestApi = {
 
 // Users API
 export const userApi = {
+  sendPasswordReset: (id:string) => api.post('/users/'+encodeURIComponent(id)+'/password-reset'),
+  getById: (id: string) => api.get('/users/' + encodeURIComponent(id)),
   getPage: (params?: Record<string, unknown>) => api.get('/users', { params }),
   getAll: (params?: Record<string, unknown>) => collectPages('/users', undefined, params),
   create: (data: JsonPayload) => api.post('/users', data),
@@ -192,7 +197,7 @@ export const conflictApi = {
 
 // Notifications API
 export const notificationApi = {
-  getAll: () => api.get('/notifications'),
+  getAll: (params?: { offset?: number; unread?: boolean }) => api.get('/notifications', { params }),
   getUnreadCount: () => api.get('/notifications/unread-count'),
   markRead: (id: string) => api.patch(`/notifications/${id}/read`),
   markAllRead: () => api.patch('/notifications/read-all'),

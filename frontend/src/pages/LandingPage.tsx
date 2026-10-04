@@ -1,5 +1,8 @@
+import { authApi } from '../services/api';
+import { toast } from '../stores/toastStore';
+import { Menu, X, ShieldCheck, Clock3, ArrowRight, LoaderCircle }  from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
 // SVG Icons as components
@@ -77,7 +80,7 @@ const EyeClosedIcon = () => (
 
 // Feature Card Component
 const FeatureCard = ({ icon: Icon, iconColor, title, description }: { icon: React.ElementType, iconColor: string, title: string, description: string }) => (
-  <article className="bg-white border border-[#e5e7eb] rounded-2xl p-8 relative overflow-hidden transition-all duration-300 hover:border-[rgba(128,0,0,0.15)] hover:shadow-[0_8px_30px_rgba(128,0,0,0.08)] hover:-translate-y-1 group">
+  <article className="bg-white border border-[#e5e7eb] rounded-2xl p-5 md:p-8 relative overflow-hidden transition-all duration-300 hover:border-[rgba(128,0,0,0.15)] hover:shadow-[0_8px_30px_rgba(128,0,0,0.08)] hover:-translate-y-1 group">
     <div className="absolute top-0 left-0 right-0 h-[3px] bg-linear-to-r from-[#800000] to-[#FFB81C] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 text-white ${iconColor}`}>
       <Icon />
@@ -89,7 +92,12 @@ const FeatureCard = ({ icon: Icon, iconColor, title, description }: { icon: Reac
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
   const { login } = useAuthStore();
+  const [appeal, setAppeal] = useState<null | { email: string; password: string; pending: boolean }>(null);
+  const [appealOpen, setAppealOpen] = useState(false);
+  const [appealReason, setAppealReason] = useState('');
+  const [appealSending, setAppealSending] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -99,17 +107,27 @@ export default function LandingPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setAppeal(null);
+    setAppealOpen(false);
     setIsLoading(true);
 
     await login(email, password);
     const state = useAuthStore.getState();
 
-    if (!state.isAuthenticated || !state.user) {
-      setError('Invalid email or password.');
+    if (state.deactivated) setAppeal({ email, password, pending: state.appealPending });
+    if (state.error || !state.isAuthenticated || !state.user) {
+      setError(state.error === 'Invalid credentials' ? 'Invalid email or password.' : state.error || 'Unable to sign in. Please try again.');
       setIsLoading(false);
       return;
     }
 
+    const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+    if (returnTo && state.user.role === 'ADMIN' && returnTo.startsWith('/admin/users?search=')) { navigate(returnTo); setIsLoading(false); return; }
+    if (returnTo && /^\/requests\/[a-zA-Z0-9_-]+$/.test(returnTo)) {
+      navigate(returnTo);
+      setIsLoading(false);
+      return;
+    }
     if (state.user.role === 'ADMIN') {
       navigate('/admin/dashboard');
     } else if (state.user.role === 'FACULTY') {
@@ -122,6 +140,7 @@ export default function LandingPage() {
   };
 
   const scrollToSection = (id: string) => {
+    setMenuOpen(false);
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -129,13 +148,13 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#faf9f7] text-[#1f2937] font-['Inter','Montserrat',sans-serif] leading-relaxed">
       {/* Header */}
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-5 md:px-20 h-[72px] bg-[rgba(250,249,247,0.92)] backdrop-blur-xl border-b border-[rgba(128,0,0,0.08)]">
-        <a href="#home" className="flex items-center gap-2.5" onClick={(e) => { e.preventDefault(); scrollToSection('home'); }}>
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 lg:px-20 h-[72px] bg-[rgba(250,249,247,0.92)] backdrop-blur-xl border-b border-[rgba(128,0,0,0.08)]">
+        <a href="#home" className="flex shrink-0 items-center gap-2.5" onClick={(e) => { e.preventDefault(); scrollToSection('home'); }}>
           <img src="/PUPLogo.png" alt="PUP Lopez Logo" className="w-[38px] h-[38px] object-contain rounded-full border-2 border-[#FFB81C] p-0.5 bg-white" />
           <h2 className="text-[#800000] font-bold text-xl tracking-tight">SmartLab</h2>
         </a>
 
-        <nav>
+        <nav aria-label="Main navigation" className="hidden lg:block">
           <ul className="flex list-none gap-2 items-center">
             <li><a href="#home" onClick={(e) => { e.preventDefault(); scrollToSection('home'); }} className="text-[#4b5563] px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all hover:text-[#800000] hover:bg-[rgba(128,0,0,0.05)]">Home</a></li>
             <li><a href="#features" onClick={(e) => { e.preventDefault(); scrollToSection('features'); }} className="text-[#4b5563] px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all hover:text-[#800000] hover:bg-[rgba(128,0,0,0.05)]">Features</a></li>
@@ -144,39 +163,46 @@ export default function LandingPage() {
             <li><a href="#login" onClick={(e) => { e.preventDefault(); scrollToSection('login'); }} className="bg-[#800000] text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all hover:bg-[#a83232]">Sign In</a></li>
           </ul>
         </nav>
+        <div className="flex items-center gap-2 lg:hidden">
+          <button type="button" onClick={() => scrollToSection('login')} className="min-h-11 whitespace-nowrap rounded-lg bg-[#800000] px-3 text-sm font-semibold text-white">Sign In</button>
+          <button type="button" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={menuOpen} aria-controls="landing-mobile-nav" onClick={() => setMenuOpen(!menuOpen)} className="flex h-11 w-11 items-center justify-center rounded-lg text-[#800000]">{menuOpen ? <X size={22} /> : <Menu size={22} />}</button>
+        </div>
+        {menuOpen && <nav id="landing-mobile-nav" aria-label="Mobile navigation" onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); document.querySelector<HTMLButtonElement>('[aria-controls="landing-mobile-nav"]')?.focus(); } }} className="absolute inset-x-0 top-full border-b border-[#ead7d3] bg-[#faf9f7] p-3 shadow-lg lg:hidden">
+          {['home','features','about'].map(id => <a key={id} href={'#' + id} onClick={event => { event.preventDefault(); scrollToSection(id); }} className="flex min-h-11 items-center rounded-lg px-4 text-sm font-medium capitalize text-[#57322d] hover:bg-[#f4e8e5]">{id}</a>)}
+        </nav>}
       </header>
 
       <main className="pt-[72px]">
         {/* Hero Section */}
-        <section id="home" className="relative flex flex-col items-center text-center px-5 pt-24 pb-32 gap-4 overflow-hidden">
+        <section id="home" className="relative flex flex-col items-center text-center px-5 pt-12 pb-14 md:pt-24 md:pb-32 gap-4 overflow-hidden">
           <div className="absolute -top-[60%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle,rgba(128,0,0,0.04)_0%,transparent_70%)] pointer-events-none" />
           
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#fef3e2] border border-[rgba(255,184,28,0.3)] rounded-full text-xs font-semibold text-[#9a7b4f] tracking-wide">
+          <div className="inline-flex justify-center items-center gap-2 px-4 py-1.5 bg-[#fef3e2] border border-[rgba(255,184,28,0.3)] rounded-full text-xs font-semibold text-[#9a7b4f] tracking-wide">
             <LayersIcon />
             PUP Lopez Campus
           </div>
 
-          <h1 className="text-4xl md:text-[52px] leading-tight text-[#800000] max-w-[900px] font-bold tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-[52px] leading-tight text-[#800000] max-w-[900px] font-bold tracking-tight">
             Smart Laboratory<br />
             <span className="bg-linear-to-br from-[#800000] to-[#a83232] bg-clip-text text-transparent">Management System</span>
           </h1>
 
-          <p className="max-w-[600px] text-lg text-[#4b5563] leading-relaxed mt-2">
+          <p className="max-w-[600px] text-base md:text-lg text-[#4b5563] leading-relaxed mt-2">
             Streamline equipment borrowing, room scheduling, and lab operations
             through one centralized platform built for students, faculty, and administrators.
           </p>
 
-          <div className="flex gap-3 mt-4 items-center">
+          <div className="flex w-full max-w-sm flex-col gap-3 mt-4 items-stretch sm:w-auto sm:max-w-none sm:flex-row sm:items-center">
             <button 
               onClick={() => scrollToSection('login')}
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-linear-to-br from-[#800000] to-[#5c0000] text-white font-semibold transition-all hover:from-[#a83232] hover:to-[#800000] hover:-translate-y-0.5 shadow-[0_4px_12px_rgba(128,0,0,0.25)] hover:shadow-[0_6px_20px_rgba(128,0,0,0.3)]"
+              className="inline-flex justify-center items-center gap-2 px-8 py-3.5 rounded-xl bg-linear-to-br from-[#800000] to-[#5c0000] text-white font-semibold transition-all hover:from-[#a83232] hover:to-[#800000] hover:-translate-y-0.5 shadow-[0_4px_12px_rgba(128,0,0,0.25)] hover:shadow-[0_6px_20px_rgba(128,0,0,0.3)]"
             >
               Get Started
               <ArrowRightIcon />
             </button>
             <button 
               onClick={() => scrollToSection('features')}
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white text-[#800000] font-semibold border border-[rgba(128,0,0,0.15)] transition-all hover:border-[#800000] hover:bg-[rgba(128,0,0,0.03)]"
+              className="inline-flex justify-center items-center gap-2 px-7 py-3.5 rounded-xl bg-white text-[#800000] font-semibold border border-[rgba(128,0,0,0.15)] transition-all hover:border-[#800000] hover:bg-[rgba(128,0,0,0.03)]"
             >
               Learn More
               <ChevronDownIcon />
@@ -185,33 +211,33 @@ export default function LandingPage() {
         </section>
 
         {/* Stats Strip */}
-        <div className="flex justify-center gap-12 py-10 bg-white border-y border-[#e5e7eb]">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 px-5 py-7 md:flex md:justify-center md:gap-12 md:py-10 bg-white border-y border-[#e5e7eb]">
           <div className="text-center">
-            <div className="text-3xl font-bold text-[#800000] leading-tight">3</div>
+            <div className="whitespace-nowrap text-2xl md:text-3xl font-bold text-[#800000] leading-tight">3</div>
             <div className="text-sm text-[#4b5563] font-medium">User Roles</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-[#800000] leading-tight">24/7</div>
+            <div className="whitespace-nowrap text-2xl md:text-3xl font-bold text-[#800000] leading-tight">24/7</div>
             <div className="text-sm text-[#4b5563] font-medium">System Access</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-[#800000] leading-tight">Real-time</div>
+            <div className="whitespace-nowrap text-2xl md:text-3xl font-bold text-[#800000] leading-tight">Real-time</div>
             <div className="text-sm text-[#4b5563] font-medium">Conflict Detection</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-[#800000] leading-tight">100%</div>
+            <div className="whitespace-nowrap text-2xl md:text-3xl font-bold text-[#800000] leading-tight">100%</div>
             <div className="text-sm text-[#4b5563] font-medium">Digital Records</div>
           </div>
         </div>
 
         {/* Features Section */}
-        <section id="features" className="py-24 px-5 md:px-20 max-w-[1200px] mx-auto">
-          <div className="text-center mb-16">
+        <section id="features" className="scroll-mt-[88px] py-12 md:py-24 px-5 md:px-20 max-w-[1200px] mx-auto">
+          <div className="text-center mb-8 md:mb-16">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#9a7b4f] uppercase tracking-wider mb-3">
               <StarIcon />
               Features
             </div>
-            <h2 className="text-4xl font-bold text-[#1f2937] leading-tight mb-3">Everything You Need to<br />Manage Your Laboratory</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-[#1f2937] leading-tight mb-3">Everything You Need to<br />Manage Your Laboratory</h2>
             <p className="text-base text-[#4b5563] max-w-[550px] mx-auto">Built to simplify every step of the lab management process — from borrowing equipment to scheduling rooms.</p>
           </div>
 
@@ -256,12 +282,12 @@ export default function LandingPage() {
         </section>
 
         {/* About Section */}
-        <section id="about" className="bg-linear-to-br from-[#5c0000] via-[#800000] to-[#a83232] text-white py-24 px-5 md:px-20 relative overflow-hidden">
+        <section id="about" className="scroll-mt-[88px] bg-linear-to-br from-[#5c0000] via-[#800000] to-[#a83232] text-white py-12 md:py-24 px-5 md:px-20 relative overflow-hidden">
           <div className="absolute -bottom-24 -right-24 w-[400px] h-[400px] rounded-full bg-[rgba(255,184,28,0.06)] pointer-events-none" />
           
-          <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-16 items-center relative z-10">
+          <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-8 md:gap-16 items-center relative z-10">
             <div>
-              <h2 className="text-4xl font-bold leading-tight mb-4">About<br />SmartLab</h2>
+              <h2 className="text-3xl md:text-4xl font-bold leading-tight mb-4">About<br />SmartLab</h2>
               <div className="w-[60px] h-[3px] bg-[#FFB81C] rounded mb-4" />
               <p className="text-sm opacity-80 leading-relaxed">
                 Polytechnic University of the Philippines<br />
@@ -285,8 +311,8 @@ export default function LandingPage() {
         </section>
 
         {/* Login Section */}
-        <section id="login" className="bg-linear-to-b from-[#faf9f7] to-[#f0ede8] py-24 px-5 flex justify-center">
-          <div className="w-full max-w-[440px] bg-white rounded-2xl p-10 shadow-[0_8px_40px_rgba(0,0,0,0.08)] border border-[#e5e7eb] relative overflow-hidden">
+        <section id="login" className="scroll-mt-[88px] bg-linear-to-b from-[#faf9f7] to-[#f0ede8] py-12 md:py-24 px-5 flex justify-center">
+          <div className="w-full max-w-[440px] bg-white rounded-2xl p-5 sm:p-10 shadow-[0_8px_40px_rgba(0,0,0,0.08)] border border-[#e5e7eb] relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-[#800000] to-[#FFB81C]" />
             
             <div className="flex justify-center mb-5">
@@ -296,15 +322,37 @@ export default function LandingPage() {
             <h2 className="text-2xl font-bold text-[#800000] text-center mb-1">Welcome Back</h2>
             <p className="text-center text-sm text-[#4b5563] mb-7">Sign in to your SmartLab account to continue.</p>
 
-            {error && (
-              <div className="flex items-center gap-2 px-3.5 py-2.5 mb-4 rounded-lg bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] text-sm">
-                <span>Invalid email or password.</span>
+            {error && !appeal && (
+              <div role="alert" className="flex items-center gap-2 px-3.5 py-2.5 mb-4 rounded-lg bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] text-sm leading-relaxed">
+                <span>{error}</span>
               </div>
             )}
 
+            {appeal && <div className="mb-5 overflow-hidden rounded-xl border border-[#ead7d3] bg-[#fffaf6] p-4 text-sm">
+              <div className="flex items-start gap-3" role={appeal.pending ? 'status' : undefined}>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f3e7df] text-[#800000]">{appeal.pending ? <Clock3 size={20} aria-hidden="true" /> : <ShieldCheck size={20} aria-hidden="true" />}</span>
+                <div className="min-w-0"><h3 className="font-semibold text-[#321d1d]">{appeal.pending ? 'Request under review' : 'Account deactivated'}</h3><p className="mt-1 text-xs leading-5 text-[#786565]">{appeal.pending ? 'Your reactivation request has been sent. We’ll email you when your account is reactivated.' : 'Need access again? Ask your laboratory administrator to reactivate your account.'}</p></div>
+              </div>
+              {!appeal.pending && (!appealOpen ? <button type="button" onClick={() => setAppealOpen(true)} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#d8b9b0] bg-white px-3 font-semibold text-[#800000] transition-colors hover:bg-[#f9eeea] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]">Request reactivation <ArrowRight size={16} aria-hidden="true" /></button> : <div className="mt-4 border-t border-[#ead7d3] pt-4">
+                <label htmlFor="appeal-reason" className="block text-xs font-semibold text-[#321d1d]">Reason <span className="font-normal text-[#786565]">(optional)</span></label>
+                <textarea autoFocus id="appeal-reason" disabled={appealSending} maxLength={1000} value={appealReason} onChange={e => setAppealReason(e.target.value)} className="mt-2 w-full resize-y rounded-lg border border-[#d8c6c0] bg-white p-3 text-sm leading-5 outline-none focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/10" rows={3} placeholder="Tell us why you need access again." />
+                <div className="flex items-center justify-between gap-3">
+                <button type="button" disabled={appealSending} onClick={() => setAppealOpen(false)} className="min-h-11 px-2 text-xs font-medium text-[#786565] hover:text-[#800000] disabled:opacity-50">Cancel</button>
+                <button type="button" disabled={appealSending} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#800000] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#680000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000] disabled:opacity-50" onClick={async () => {
+                  setAppealSending(true);
+                  try { const { data } = await authApi.requestReactivation({ email: appeal.email, password: appeal.password, reason: appealReason }); setAppeal({ ...appeal, password: '', pending: true }); setPassword(''); toast.success(data.message); }
+                  catch (err) { toast.error((err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Could not send your request. Please try again.'); }
+                  finally { setAppealSending(false); }
+                }}>{appealSending && <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />}{appealSending ? 'Sending…' : 'Send request'}</button>
+                </div>
+              </div>)}
+            </div>}
+            <div className="mb-3 text-right"><Link to="/forgot-password" className="inline-flex min-h-10 items-center text-sm font-semibold text-[#800000] hover:underline">Forgot password?</Link></div>
             <form onSubmit={handleLogin} noValidate>
-              <label className="block text-xs font-semibold text-[#1f2937] mb-1.5 tracking-wide">Email Address</label>
+              <label htmlFor="landing-email" className="block text-xs font-semibold text-[#1f2937] mb-1.5 tracking-wide">Email Address</label>
               <input
+                id="landing-email"
+                autoComplete="username"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -316,6 +364,8 @@ export default function LandingPage() {
               <label className="block text-xs font-semibold text-[#1f2937] mb-1.5 tracking-wide">Password</label>
               <div className="relative mb-4">
                 <input
+                  id="landing-password"
+                  autoComplete="current-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

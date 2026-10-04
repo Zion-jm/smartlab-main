@@ -1,4 +1,5 @@
-import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { academicPeriodApi } from '../../services/api';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import './reportDocumentStyles.css';
 
 export type PrintableReportColumn<T> = {
@@ -11,6 +12,7 @@ export type PrintableReportColumn<T> = {
 
 export type PrintableReportDefinition<T> = {
   title: string;
+  context?: string;
   columns: PrintableReportColumn<T>[];
   rows: T[];
   filename: string;
@@ -138,6 +140,7 @@ export function PrintableReportTable<T>({
         <tr>
           <th colSpan={definition.columns.length} className="print-report-table-main-header">
             {definition.title}
+            {definition.context && <span className="print-report-header-context">{definition.context}</span>}
           </th>
         </tr>
         <tr>
@@ -162,7 +165,9 @@ export function PrintableReportTable<T>({
 }
 
 export function PrintableReportDocument<T>({
-  definition,
+  definition: sourceDefinition,
+  headerPeriod,
+  headerRange,
   pages,
   rows,
   minimumRows = 0,
@@ -174,6 +179,8 @@ export function PrintableReportDocument<T>({
   tableClassName = 'print-report-table',
 }: {
   definition: PrintableReportDefinition<T>;
+  headerPeriod?: { academicYearId: string; termId: string };
+  headerRange?: { from: string; to: string };
   pages?: T[][];
   rows?: T[];
   minimumRows?: number;
@@ -184,6 +191,18 @@ export function PrintableReportDocument<T>({
   tableWrapClassName?: string;
   tableClassName?: string;
 }) {
+  const [periods, setPeriods] = useState<{ academicYears?: { id: string; year: string }[]; terms?: { id: string; name: string }[] }>({});
+  useEffect(() => {
+    let active = true;
+    academicPeriodApi.get().then(({ data }) => { if (active) setPeriods(data); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const dateLabel = (value: string) => new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const dateRange = headerRange?.from && headerRange.to ? dateLabel(headerRange.from) + ' – ' + dateLabel(headerRange.to)
+    : headerRange?.from ? 'From ' + dateLabel(headerRange.from) : headerRange?.to ? 'Through ' + dateLabel(headerRange.to) : 'All recorded dates';
+  const context = [periods.academicYears?.find(year => year.id === headerPeriod?.academicYearId)?.year,
+    periods.terms?.find(term => term.id === headerPeriod?.termId)?.name, dateRange].filter(Boolean).join(' · ');
+  const definition = { ...sourceDefinition, context };
   const sourceRows = rows ?? definition.rows;
   const measurementPageRef = useRef<HTMLDivElement>(null);
   const [measuredPages, setMeasuredPages] = useState<T[][] | null>(null);
@@ -254,7 +273,7 @@ export function PrintableReportDocument<T>({
     });
 
     return () => window.cancelAnimationFrame(measureFrame);
-  }, [createBlankRow, error, loading, minimumRows, sourceRows]);
+  }, [createBlankRow, error, loading, minimumRows, sourceRows, context, sourceDefinition.title]);
 
   const displayPages = loading || error ? [[]] : measuredPages ?? fallbackPages;
   const totalPages = Math.max(displayPages.length, 1);

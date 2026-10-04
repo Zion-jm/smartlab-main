@@ -1,3 +1,4 @@
+import DropdownField from './DropdownField';
 import { useContext } from 'react';
 import { TablePanelContext } from './tableScrollContext';
 import { TABLE_PAGE_SIZE_OPTIONS } from './tablePaginationConstants';
@@ -46,22 +47,11 @@ export default function TablePagination({
         )}
       </p>
       <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
-        <label className="flex items-center gap-2 whitespace-nowrap">
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <span className="hidden sm:inline">Rows per page</span>
           <span className="sm:hidden">Rows</span>
-          <select
-            value={pageSize}
-            onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            aria-label="Rows per page"
-            className="rounded-lg border border-[#d1d5db] bg-white px-2 py-1.5 text-xs font-semibold text-[#374151] focus:border-[#800000] focus:outline-none focus:ring-2 focus:ring-[#800000]/20"
-          >
-            {pageSizeOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+          <DropdownField portal className="table-pagination-dropdown" value={String(pageSize)} onChange={value => onPageSizeChange(Number(value))} placeholder="Rows per page" options={pageSizeOptions.map(value => ({ value: String(value), label: String(value) }))} />
+        </div>
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -83,22 +73,11 @@ export default function TablePagination({
             <span className="hidden sm:inline">Previous</span>
             <span className="sm:hidden">Prev</span>
           </button>
-          <label className="flex items-center gap-1.5 whitespace-nowrap font-semibold text-[#374151]">
+          <div className="flex items-center gap-1.5 whitespace-nowrap font-semibold text-[#374151]">
             <span className="hidden sm:inline">Page</span>
-            <select
-              value={safePage}
-              onChange={(event) => onPageChange(Number(event.target.value))}
-              aria-label="Select page"
-              className="rounded-lg border border-[#d1d5db] bg-white px-2 py-1.5 font-semibold text-[#374151] focus:border-[#800000] focus:outline-none focus:ring-2 focus:ring-[#800000]/20"
-            >
-              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-                <option key={page} value={page}>
-                  {page}
-                </option>
-              ))}
-            </select>
+            <DropdownField portal className="table-pagination-dropdown" value={String(safePage)} onChange={value => onPageChange(Number(value))} placeholder="Select page" options={Array.from({ length: totalPages }, (_, index) => ({ value: String(index + 1), label: String(index + 1) }))} />
             <span>of {totalPages}</span>
-          </label>
+          </div>
           <button
             type="button"
             onClick={() => onPageChange(safePage + 1)}

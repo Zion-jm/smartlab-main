@@ -4,7 +4,7 @@ Updated 1 October 2026 following remediation steps 1–20. Implemented behavior 
 
 ## Runtime and installation
 
-Node 22.13.0, npm 10.9.2, PostgreSQL, React/Vite frontend, Express/Prisma backend. Use the root npm workspace and package-lock.json. Run npm ci, npm run db:generate, and npm run build from the repository root. Competing JavaScript lockfiles have been retired; uv.lock is for separate optional Python tooling.
+Node 22.13.0, npm 10.9.2, PostgreSQL, React/Vite frontend, Express/Prisma backend. Use the root npm workspace and package-lock.json. Run npm ci, npm run db:generate, and npm run build from the repository root. Competing JavaScript lockfiles and unused Python tooling manifests have been retired.
 
 Development: copy backend/.env.example to backend/.env and configure DATABASE_URL and a private JWT_SECRET. Run reviewed migrations with npm run db:deploy, then npm run dev. Frontend listens on loopback port 5000; backend uses 3001. Vite caches are separated by project and OS user to avoid Windows sandbox cache ownership conflicts.
 
