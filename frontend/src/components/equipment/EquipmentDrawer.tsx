@@ -152,7 +152,7 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
   }
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="admin-mobile-drawer fixed inset-0 z-50 h-dvh">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
         <div className="px-5 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
@@ -165,7 +165,7 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
           </button>
         </div>
         {record?.retiredAt && <p className="px-5 py-3 text-sm text-amber-800 bg-amber-50">Archived. Stock edits will not restore this item; use Restore in the equipment list.</p>}
-        <form className="flex-1 overflow-y-auto px-5 py-4 space-y-4" onSubmit={handleSubmit}>
+        <form className="min-h-0 flex-1 overflow-y-auto px-5 py-4 space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-xs font-semibold text-[#374151] mb-1">Equipment name</label>
             <input

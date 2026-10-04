@@ -1,3 +1,4 @@
+import DropdownField from '../shared/DropdownField';
 import { dateToDateKey, dateKeyToPickerDate, manilaTodayForPicker } from '../../utils/dateTime';
 import { useMemo, useState } from 'react';
 import type { EquipmentItem } from '../../types/equipment';
@@ -144,10 +145,10 @@ export default function EquipmentUsageCalendar({
   }, []);
 
   const selectedDayRequests = useMemo(() => {
-    if (!selectedDate) return [];
+    const day = selectedDate ?? manilaTodayForPicker();
     return usageRequests.filter((request) => {
       const requestDate = getRequestDate(request);
-      return requestDate ? sameDay(requestDate, selectedDate) : false;
+      return requestDate ? sameDay(requestDate, day) : false;
     });
   }, [selectedDate, usageRequests]);
 
@@ -196,8 +197,8 @@ export default function EquipmentUsageCalendar({
   }
 
   return (
-    <div className="px-4 lg:px-6 py-5 space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
+    <div className="equipment-usage-calendar px-2 md:px-6 py-5 space-y-4">
+      <div className="equipment-usage-summary grid grid-cols-3 gap-2">
         <div className="rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Usage requests</p>
           <p className="text-2xl font-bold text-[#111827]">{summary.requests}</p>
@@ -224,22 +225,13 @@ export default function EquipmentUsageCalendar({
           <label htmlFor="equipment-usage-filter" className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">
             Equipment
           </label>
-          <select
-            id="equipment-usage-filter"
-            value={selectedEquipmentId}
-            onChange={(event) => setSelectedEquipmentId(event.target.value)}
-            className="max-w-[220px] rounded-xl border border-[#d1d5db] px-3 py-2 text-xs font-semibold text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#800000]"
-          >
-            <option value="">All equipment</option>
-            {equipment.map((item) => (
-              <option key={item.id} value={item.id}>{item.name}</option>
-            ))}
-          </select>
+          <DropdownField id="equipment-usage-filter" value={selectedEquipmentId} onChange={setSelectedEquipmentId} className="w-full min-w-0 md:w-56" options={[{ value: '', label: 'All equipment' }, ...equipment.map(item => ({ value: item.id, label: item.name }))]} />
           <button
             type="button"
             onClick={() => {
               const now = manilaTodayForPicker();
               setCurrentMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+              setSelectedDate(now);
             }}
             className="rounded-full border border-[#d1d5db] px-3 py-1.5 text-xs font-semibold text-[#374151] hover:border-[#9ca3af]"
           >
@@ -283,7 +275,11 @@ export default function EquipmentUsageCalendar({
       )}
 
       <div className="overflow-x-auto rounded-2xl border border-[#e5e7eb] bg-white">
-        <div className="min-w-[720px]">
+        <div className="p-2 md:hidden">
+          <div className="grid grid-cols-7 text-center text-xs text-[#786565]">{['Su','Mo','Tu','We','Th','Fr','Sa'].map(day => <span key={day} className="py-2">{day}</span>)}</div>
+          <div className="grid grid-cols-7">{calendarCells.map(cell => <button type="button" key={cell.date.toISOString()} aria-label={cell.date.toLocaleDateString('en-US', { dateStyle: 'full' }) + ', ' + cell.requests.length + ' usage requests'} aria-pressed={sameDay(cell.date, selectedDate ?? today)} onClick={() => setSelectedDate(cell.date)} className={'min-h-11 rounded-lg text-xs ' + (sameDay(cell.date, selectedDate ?? today) ? 'bg-[#800000] text-white' : cell.inCurrentMonth ? 'text-[#57322d]' : 'text-gray-400')}><span>{cell.date.getDate()}</span><span className="block h-2 text-[8px]" aria-hidden="true">{cell.requests.length ? '●' : ''}</span></button>)}</div>
+        </div>
+        <div className="hidden md:block min-w-[720px]">
           <div className="grid grid-cols-7 border-b border-[#f3f4f6] text-center text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label) => (
               <div key={label} className="py-2">{label}</div>
@@ -329,26 +325,26 @@ export default function EquipmentUsageCalendar({
         </div>
       </div>
 
-      {selectedDate && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4" onClick={() => setSelectedDate(null)}>
+      {(
+        <div className={`equipment-usage-details md:fixed md:inset-0 md:z-30 md:items-center md:justify-center md:bg-black/40 md:px-4 ${selectedDate ? 'md:flex' : 'md:hidden'}`} onClick={() => setSelectedDate(null)}>
           <div
-            className="max-h-[80vh] w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl"
+            className="md:max-h-[80vh] w-full md:max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-[#f3f4f6] px-4 py-3">
               <div>
                 <p className="text-sm font-semibold text-[#111827]">
-                  {selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                  {(selectedDate ?? today).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                 </p>
                 <p className="text-xs text-[#6b7280]">
                   {selectedDayRequests.length} usage request{selectedDayRequests.length === 1 ? '' : 's'}
                 </p>
               </div>
-              <button type="button" onClick={() => setSelectedDate(null)} className="text-[#6b7280] hover:text-[#111827]">
+              <button type="button" onClick={() => setSelectedDate(null)} className="hidden md:block text-[#6b7280] hover:text-[#111827]">
                 ✕
               </button>
             </div>
-            <div className="max-h-[60vh] space-y-3 overflow-y-auto px-4 py-4">
+            <div className="md:max-h-[60vh] space-y-3 md:overflow-y-auto px-4 py-4">
               {selectedDayRequests.length === 0 ? (
                 <p className="py-6 text-center text-xs text-[#9ca3af]">No equipment usage on this day.</p>
               ) : (
