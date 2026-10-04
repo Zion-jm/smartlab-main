@@ -39,7 +39,8 @@ app.use(cors(corsOptions(process.env)));
 // Never trust client-supplied forwarding headers by default.
 if (process.env.TRUSTED_PROXIES) app.set('trust proxy', process.env.TRUSTED_PROXIES.split(',').map(value => value.trim()));
 app.use(errorResponseContract);
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
+app.use('/api', (_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
 
 // Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {

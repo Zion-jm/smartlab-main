@@ -1,3 +1,4 @@
+import { reportLimiter } from '../middleware/requestLimiter';
 import { prisma } from '../db/prisma';
 import { sendError } from '../middleware/errors';
 import { Router } from 'express';
@@ -44,6 +45,7 @@ router.get(
   '/borrow-requests.pdf',
   authenticateToken,
   authorizeRoles(UserRole.ADMIN),
+  reportLimiter,
   async (req, res) => {
     try {
       const query = req.query as Record<string, string | undefined>;
@@ -87,6 +89,7 @@ router.get(
   '/demand-analysis.pdf',
   authenticateToken,
   authorizeRoles(UserRole.ADMIN),
+  reportLimiter,
   async (req, res) => {
     try {
       const query = req.query as Record<string, string | undefined>;
@@ -154,6 +157,7 @@ router.get(
   '/lab-schedules.pdf',
   authenticateToken,
   authorizeRoles(UserRole.ADMIN),
+  reportLimiter,
   async (req, res) => {
     try {
       const query = req.query as Record<string, string | undefined>;
@@ -218,6 +222,7 @@ router.get(
   '/equipment.pdf',
   authenticateToken,
   authorizeRoles(UserRole.ADMIN),
+  reportLimiter,
   async (req, res) => {
     try {
       const query = req.query as Record<string, string | undefined>;

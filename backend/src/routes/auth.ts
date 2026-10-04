@@ -1,3 +1,5 @@
+import { passwordChangeLimiter } from '../middleware/requestLimiter';
+import { validNewPassword, passwordPolicyMessage } from '../utils/passwordPolicy';
 import { requestPasswordReset, resetPassword } from '../services/passwordResetService';
 import { randomUUID } from 'node:crypto';
 import { accountLink, queueAccountMail } from '../services/accountReactivationService';
@@ -142,7 +144,7 @@ router.post('/reset-password', async (req,res) => {
   try {
     const {token,password}=req.body;
     if(typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) { res.status(400).json({error:'This reset link is invalid. Please request a new link.'}); return; }
-    if(typeof password !== 'string' || password.length<8 || Buffer.byteLength(password,'utf8')>72) { res.status(400).json({error:'Use at least 8 characters and no more than 72 bytes for your password.'}); return; }
+    if(!validNewPassword(password)) { res.status(400).json({error:'Use at least 8 characters and no more than 72 bytes for your password.'}); return; }
     await resetPassword(token,password);
     res.json({message:'Your password has been reset. Please sign in again.'});
   } catch(error) { sendError(error,res); }
@@ -208,7 +210,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 });
 
 // Change the authenticated user's password after verifying the current password.
-router.patch('/password', authenticateToken, async (req, res) => {
+router.patch('/password', authenticateToken, passwordChangeLimiter, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -217,8 +219,8 @@ router.patch('/password', authenticateToken, async (req, res) => {
       return;
     }
 
-    if (newPassword.length < 8) {
-      res.status(400).json({ error: 'New password must be at least 8 characters.' });
+    if (!validNewPassword(newPassword) || currentPassword.length > 1024) {
+      res.status(400).json({ error: passwordPolicyMessage });
       return;
     }
 

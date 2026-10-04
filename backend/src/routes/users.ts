@@ -1,3 +1,4 @@
+import { validNewPassword, passwordPolicyMessage } from '../utils/passwordPolicy';
 import { requestPasswordReset } from '../services/passwordResetService';
 import { accountStatusChanged } from '../services/accountReactivationService';
 import { prisma } from '../db/prisma';
@@ -149,6 +150,8 @@ router.post(
         return;
       }
 
+      if (!validNewPassword(password)) { res.status(400).json({ error: passwordPolicyMessage }); return; }
+      if (typeof gmail !== 'string' || gmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gmail)) { res.status(400).json({ error: 'Enter a valid email address.' }); return; }
       const role = ROLE_ID_TO_VALUE[Number(role_id)];
       const status = STATUS_ID_TO_VALUE[Number(status_id)];
 
@@ -345,6 +348,12 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return;
     }
 
+    if (!isAdmin && email !== existingUser.email) {
+      res.status(403).json({ error: 'Email changes must be made by an administrator.' }); return;
+    }
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ error: 'Enter a valid email address.' }); return;
+    }
     if (email !== existingUser.email) {
       const emailExists = await prisma.user.findUnique({ where: { email } });
       if (emailExists) {
