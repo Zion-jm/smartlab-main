@@ -12,7 +12,7 @@ export function requestUrl(id: string) {
 const date = (iso: string) => new Date(iso).toLocaleDateString('en-PH', { timeZone: MANILA_TIME_ZONE, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 const time = (iso: string) => new Date(iso).toLocaleTimeString('en-PH', { timeZone: MANILA_TIME_ZONE, hour: 'numeric', minute: '2-digit' });
 export function renderRequestEmail(title: string, message: string, req: RequestDetails, action: string, reason?: string, includeRequesterIdentity = false) {
-  const url = requestUrl(req.id);
+  const url = requestUrl(req.id) + (includeRequesterIdentity ? '?review=admin' : '');
   const rows = [['Request', reference(req.id)], ['Requested by', req.requesterName], ['Room / location', req.location || 'Not specified'], ['Date', date(req.dateNeeded)], ['Time', req.timeStart && req.timeEnd ? time(req.timeStart) + ' – ' + time(req.timeEnd) : 'Not specified'], ['Purpose', req.purpose || 'Not specified']];
   if (includeRequesterIdentity && req.requesterRole) {
     const role = req.requesterRole === 'STUDENT' ? 'Student' : req.requesterRole === 'FACULTY' ? 'Faculty' : req.requesterRole === 'ADMIN' ? 'Admin' : req.requesterRole;

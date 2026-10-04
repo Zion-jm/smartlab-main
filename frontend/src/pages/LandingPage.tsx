@@ -123,7 +123,7 @@ export default function LandingPage() {
 
     const returnTo = new URLSearchParams(window.location.search).get('returnTo');
     if (returnTo && state.user.role === 'ADMIN' && returnTo.startsWith('/admin/users?search=')) { navigate(returnTo); setIsLoading(false); return; }
-    if (returnTo && /^\/requests\/[a-zA-Z0-9_-]+$/.test(returnTo)) {
+    if (returnTo && /^\/requests\/[a-zA-Z0-9_-]+(?:\?review=admin)?$/.test(returnTo)) {
       navigate(returnTo);
       setIsLoading(false);
       return;
