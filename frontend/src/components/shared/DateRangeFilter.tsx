@@ -43,7 +43,7 @@ export default function DateRangeFilter({
   className = 'w-full min-w-0 md:w-3/4',
   presets = DEFAULT_PRESETS,
   actions,
-  styledDates = false,
+  styledDates = true,
   fromInputProps,
   toInputProps,
 }: DateRangeFilterProps) {
