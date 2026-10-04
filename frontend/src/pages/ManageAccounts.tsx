@@ -428,12 +428,14 @@ export default function ManageAccounts() {
                               </span>
                             </TableCell>
                             <TableCell align="center">
+                              <div className="flex min-w-max items-center justify-center gap-2">
                               <IconActionButton
                                 label={`Update ${account.name}`}
                                 onClick={() => setDrawerState({ account, mode: 'edit' })}
                                 icon="edit"
                               />
-                              <button type="button" disabled={resetSending !== null} className="ml-2 min-h-10 rounded-lg border border-[#ead7d3] px-3 text-xs font-semibold text-[#800000] disabled:opacity-50" onClick={async()=>{setResetSending(account.id);try{const {data}=await userApi.sendPasswordReset(account.id);toast.success(data.message);}catch{toast.error('Could not request a reset email. Please try again.');}finally{setResetSending(null);}}}>{resetSending===account.id ? 'Sending…' : 'Send reset link'}</button>
+                              <IconActionButton icon="resetPassword" label={`Send password reset link to ${account.name}`} disabled={resetSending !== null} busy={resetSending === account.id} onClick={async()=>{setResetSending(account.id);try{const {data}=await userApi.sendPasswordReset(account.id);toast.success(data.message);}catch{toast.error('Could not request a reset email. Please try again.');}finally{setResetSending(null);}}} />
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}

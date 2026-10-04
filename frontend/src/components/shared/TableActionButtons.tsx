@@ -1,6 +1,6 @@
-import { Archive, ArchiveRestore, Check, Eye, HandHelping, MoreHorizontal, Pencil, RotateCcw, Trash2, X, LoaderCircle } from 'lucide-react';
+import { Mail, Archive, ArchiveRestore, Check, Eye, HandHelping, MoreHorizontal, Pencil, RotateCcw, Trash2, X, LoaderCircle } from 'lucide-react';
 
-const icons = { edit: Pencil, delete: Trash2, view: Eye, archive: Archive, restore: ArchiveRestore, more: MoreHorizontal, approve: Check, borrow: HandHelping, return: RotateCcw, cancel: X };
+const icons = { resetPassword: Mail, edit: Pencil, delete: Trash2, view: Eye, archive: Archive, restore: ArchiveRestore, more: MoreHorizontal, approve: Check, borrow: HandHelping, return: RotateCcw, cancel: X };
 export type TableActionIcon = keyof typeof icons;
 type Variant = 'default' | 'primary' | 'warning' | 'danger' | 'ghost';
 export interface TextActionButtonProps {
@@ -28,7 +28,7 @@ export function TextActionButton({ label, onClick, icon = 'view', variant = 'def
 }
 
 export type IconActionButtonProps = TextActionButtonProps;
-const actionLabels: Record<TableActionIcon, string> = { edit: 'Edit', delete: 'Delete', view: 'View', archive: 'Archive', restore: 'Restore', more: 'More', approve: 'Approve', borrow: 'Borrow', return: 'Return', cancel: 'Cancel' };
+const actionLabels: Record<TableActionIcon, string> = { resetPassword: 'Send password reset link', edit: 'Edit', delete: 'Delete', view: 'View', archive: 'Archive', restore: 'Restore', more: 'More', approve: 'Approve', borrow: 'Borrow', return: 'Return', cancel: 'Cancel' };
 // Retain contextual accessible names while showing concise, consistent row actions.
 export function IconActionButton({ label, icon = 'edit', ...props }: IconActionButtonProps) {
   return <TextActionButton {...props} icon={icon} label={props.busy ? 'Saving…' : actionLabels[icon]} accessibleLabel={label} />;
