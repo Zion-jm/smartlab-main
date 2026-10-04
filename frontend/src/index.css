@@ -866,3 +866,16 @@
  .academic-directory-workspace .filter-active-chip { border-radius: .75rem; max-width: 100%; }
  .academic-directory-workspace .filter-active-chip button { min-height: 32px; min-width: 32px; }
 }
+
+.dashboard-section > div:first-child { flex-wrap: wrap; border-color: #f1e6e3; padding: 1rem; }
+.dashboard-section > div:last-child { padding: 1rem; }
+.dashboard-stat { background: linear-gradient(145deg, #fff, #fffaf7); border-color: #f1e6e3; }
+.dashboard-workspace button:focus-visible { outline: 2px solid #800000; outline-offset: 3px; }
+@media (max-width: 767px) {
+ .dashboard-stat { flex-direction: column; align-items: flex-start; gap: .75rem; }
+ .dashboard-stat > div:last-child { width: 100%; }
+ .dashboard-stat h4 { min-height: 2rem; line-height: 1.4; }
+ .dashboard-stat p { font-size: 1.75rem; }
+ .dashboard-section > div:last-child { padding: .75rem; }
+ .dashboard-workspace button { min-height: 44px; }
+}

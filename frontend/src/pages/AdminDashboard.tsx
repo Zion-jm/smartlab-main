@@ -29,7 +29,7 @@ interface StatsCardProps {
 }
 
 const StatsCard = ({ icon: Icon, iconGradient, title, value, isRed }: StatsCardProps) => (
-  <div className="flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-3 transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(128,0,0,0.12)] lg:gap-4 lg:p-4">
+  <div className="dashboard-stat flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-3 transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(128,0,0,0.12)] lg:gap-4 lg:p-4">
     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white lg:h-12 lg:w-12 ${iconGradient}`}>
       <Icon />
     </div>
@@ -41,7 +41,7 @@ const StatsCard = ({ icon: Icon, iconGradient, title, value, isRed }: StatsCardP
 );
 
 const Card = ({ title, actions, children }: { title: string; actions?: React.ReactNode; children: React.ReactNode }) => (
-  <section className="mb-3 rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
+  <section className="dashboard-section mb-5 rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
     <div className="flex items-center justify-between gap-3 border-b border-[#e5e7eb] px-3 pb-2 pt-3 lg:px-4 lg:pb-3 lg:pt-4">
       <h2 className="text-sm font-semibold text-[#1f2937]">{title}</h2>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
@@ -300,7 +300,13 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto responsive-workspace p-2 lg:p-3">
+      <div className="dashboard-workspace mx-auto responsive-workspace p-2 lg:p-3">
+        <header className="mb-5 overflow-hidden rounded-2xl bg-gradient-to-br from-[#800000] to-[#4b1111] p-5 text-white shadow-sm sm:p-7">
+          <p className="text-xs font-semibold uppercase tracking-[.18em] text-[#efd0bc]">SmartLab overview</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Your campus, at a glance</h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#f1dddd]">Monitor requests, equipment availability, and the work that needs your attention.</p>
+          <div className="mt-5 flex flex-wrap items-center gap-3"><button type="button" onClick={() => navigate('/admin/requests?status=PENDING')} className="min-h-11 rounded-xl bg-white px-4 text-xs font-semibold text-[#800000]">Review {stats.requests.pending} pending requests</button><span className="text-xs text-[#f1dddd]">{new Date().toLocaleDateString('en-US', {timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric'})}</span></div>
+        </header>
         {dashboardError && (
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#f6e8b1] bg-[#fffdf5] px-4 py-3 text-sm text-[#92400e]">
             <span>{dashboardError}</span>
@@ -331,7 +337,7 @@ export default function AdminDashboard() {
             </div>
           }
         >
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-6">
             <StatsCard icon={UsersIcon} iconGradient="bg-gradient-to-br from-[#800000] to-[#5c0000]" title="Total users" value={stats.users.total} />
             <StatsCard icon={GraduationCapIcon} iconGradient="bg-gradient-to-br from-pink-400 to-rose-500" title="Students" value={stats.users.students} />
             <StatsCard icon={TeacherIcon} iconGradient="bg-gradient-to-br from-blue-400 to-cyan-400" title="Faculty" value={stats.users.faculty} />
@@ -341,10 +347,10 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        <div aria-hidden="true" className="mb-4 h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+        
 
         <Card title="Equipment status">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <div className="rounded-lg border border-[#e2e8f0] bg-[#f8fafc] p-3">
               <div className="mb-2 flex items-center gap-2 text-[#374151]"><PackageIcon size={16} /><h3 className="text-sm font-medium">Catalog items</h3></div>
               <p className="text-2xl font-bold text-[#1f2937]">{stats.equipment.uniqueItems}</p>
@@ -368,7 +374,7 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        <div aria-hidden="true" className="mb-4 h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+        
 
         <Card title="Operations at a glance">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -395,7 +401,7 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        <div aria-hidden="true" className="mb-4 h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+        
 
         <Card title="Quick actions">
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
@@ -413,7 +419,7 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        <div aria-hidden="true" className="mb-4 h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+        
 
         <Card
           title="Needs attention"
@@ -423,7 +429,7 @@ export default function AdminDashboard() {
             </button>
           }
         >
-          <div className="max-h-[400px] space-y-1 overflow-y-auto">
+          <div className="space-y-2 md:max-h-[400px] md:overflow-y-auto">
             {activities.length > 0 ? (
               activities.map((activity) => (
                 <button
@@ -440,7 +446,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="text-sm font-semibold leading-tight text-[#374151] lg:text-base">{activity.title}</h3>
-                    <p className="mt-0.5 text-xs text-[#6b7280] lg:text-sm">{activity.meta}</p>
+                    <p className="mt-1 break-words text-xs leading-relaxed text-[#6b7280] lg:text-sm">{activity.meta}</p>
                   </div>
                   <ArrowRightIcon />
                 </button>
