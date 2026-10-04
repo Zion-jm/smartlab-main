@@ -48,7 +48,7 @@ export default function Toaster() {
 
   return (
     <div
-      className="fixed top-4 right-4 z-[1000] flex flex-col gap-2 w-full max-w-sm pointer-events-none"
+      className="fixed top-[max(1rem,env(safe-area-inset-top))] left-[max(1rem,env(safe-area-inset-left))] right-[max(1rem,env(safe-area-inset-right))] z-[1000] flex flex-col gap-2 sm:left-auto sm:w-96 sm:max-w-sm pointer-events-none"
       aria-live="polite"
       aria-atomic="true"
     >
@@ -59,10 +59,10 @@ export default function Toaster() {
           <div
             key={t.id}
             role="alert"
-            className={`pointer-events-auto flex items-start gap-3 rounded-2xl border ${style.border} ${style.bg} px-4 py-3 shadow-lg animate-in fade-in slide-in-from-top-2`}
+            className={`pointer-events-auto min-w-0 w-full flex items-start gap-3 rounded-2xl border ${style.border} ${style.bg} px-4 py-3 shadow-lg animate-in fade-in slide-in-from-top-2`}
           >
             <Icon className={`h-5 w-5 flex-shrink-0 mt-0.5 ${style.iconColor}`} />
-            <div className={`flex-1 text-sm ${style.text}`}>
+            <div className={`min-w-0 flex-1 [overflow-wrap:anywhere] text-sm ${style.text}`}>
               {t.title && <p className="font-semibold">{t.title}</p>}
               <p>{t.message}</p>
             </div>
