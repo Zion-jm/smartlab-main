@@ -1,3 +1,4 @@
+import TablePagination from '../components/shared/TablePagination';
 import TableCellDetailModal from '../components/shared/TableCellDetailModal';
 import { TextActionButton } from '../components/shared/TableActionButtons';
 import { isAxiosError } from 'axios';
@@ -208,7 +209,7 @@ export default function AdminAuditLogs() {
       </div>
 
       <div className="flex flex-col gap-2.5 md:flex-row md:items-end md:justify-start">
-        <DateRangeFilter
+        <DateRangeFilter styledDates
           value={{ from, to }}
           onChange={(range) => {
             setFrom(range.from);
@@ -290,7 +291,17 @@ export default function AdminAuditLogs() {
           <span className="text-xs text-[#6b7280]" data-testid="text-audit-log-range">{rangeLabel}</span>
         </div>
         <div className="px-4 py-5 lg:px-6">
-          <DataTable label="Administrator activity" rows={logs} rowKey={log=>log.id} rowTestId={log=>'row-audit-log-'+log.id}
+          <div className="md:hidden">
+            {loading ? <p role="status" className="py-6 text-center text-sm">Loading audit logs…</p> : error ? null : !logs.length ? <p className="py-6 text-center text-sm text-[#786565]">No audit log entries match the selected filters.</p> : <>
+              <div className="space-y-3">{logs.map(log => <article key={log.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white">
+                <header className="space-y-2 border-b border-[#f1e6e3] bg-[#fffaf7] p-3"><span className="inline-flex rounded-full bg-[#f5eae5] px-2.5 py-1 text-xs font-semibold text-[#800000]">{log.actionLabel || log.action}</span><p className="text-xs text-[#786565]">{formatDateTime(log.createdAt)}</p></header>
+                <div className="space-y-3 p-4"><div><h3 className="break-words text-sm font-semibold text-[#321d1d]">{log.actor?.name || 'Unknown actor'}</h3><p className="mt-1 break-all text-xs text-[#786565]">{log.actor?.email || 'No email'}</p></div><p className="break-words text-sm leading-relaxed text-[#514343]">{log.summary || 'No summary available.'}</p><div className="rounded-xl bg-[#faf7f5] p-3"><p className="text-xs font-semibold text-[#786565]">{log.entityLabel || log.entityType}</p><p className="mt-1 break-all text-xs text-[#514343]">{log.entityId}</p></div></div>
+                <footer className="border-t border-[#f1e6e3] p-3"><button type="button" onClick={() => setSelectedLog(log)} className="min-h-11 w-full rounded-xl border border-[#ead7d3] text-xs font-semibold text-[#800000]">View recorded changes</button></footer>
+              </article>)}</div>
+              <TablePagination currentPage={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} onPageSizeChange={handlePageSizeChange} />
+            </>}
+          </div>
+          <div className="hidden md:block"><DataTable label="Administrator activity" rows={logs} rowKey={log=>log.id} rowTestId={log=>'row-audit-log-'+log.id}
             loading={loading} error={error} onRetry={()=>void loadLogs()} emptyMessage="No audit log entries match the selected filters."
             columns={[{id:'0',header:'Actor',cell:log=><>
                         <div className="font-semibold text-[#1f2937]" data-testid={`value-audit-log-actor-${log.id}`}>{log.actor?.name || 'Unknown actor'}</div>
@@ -306,7 +317,7 @@ export default function AdminAuditLogs() {
 {id:'5',header:'Details',action:true,cell:log=><>
                         <TextActionButton label="View details" icon="view" onClick={() => setSelectedLog(log)} data-testid={`button-view-audit-log-${log.id}`} />
                       </>}]}
-            pagination={{currentPage:page,pageSize,totalItems:total,onPageChange:setPage,onPageSizeChange:handlePageSizeChange}} />
+            pagination={{currentPage:page,pageSize,totalItems:total,onPageChange:setPage,onPageSizeChange:handlePageSizeChange}} /></div>
 
         </div>
         </section>
