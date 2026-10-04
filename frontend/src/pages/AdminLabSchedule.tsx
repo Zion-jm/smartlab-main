@@ -345,7 +345,7 @@ export default function AdminLabSchedule() {
   };
 
   const filtersContent = (
-    <div className="compact-filter-panel w-full space-y-3">
+    <div className="schedule-ribbon-filters compact-filter-panel w-full min-w-0 space-y-3">
       <div className="grid grid-cols-1 items-end gap-3 lg:grid-cols-2">
         <FilterItem label="Search" className="min-w-0">
           <InputField
@@ -512,7 +512,7 @@ export default function AdminLabSchedule() {
           }}
           searchInFilters
           filters={filtersContent}
-          className="mb-1"
+          className="mobile-schedule-ribbon mb-1"
           filtersActiveCount={appliedFilters.length}
           defaultFiltersOpen={appliedFilters.length > 0}
           compactFilters
