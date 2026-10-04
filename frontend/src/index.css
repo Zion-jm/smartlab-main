@@ -748,3 +748,24 @@
 
 .record-detail-header, .record-detail-footer { flex-shrink: 0; }
 .record-detail-body { overscroll-behavior: contain; }
+
+/* Admin mobile workspace: contain wide records without clipping actions. */
+.admin-workspace { width: 100%; }
+.admin-workspace .table-scroll-container { max-width: 100%; min-width: 0; overscroll-behavior-x: contain; }
+@media (max-width: 639px) {
+  .admin-workspace .responsive-workspace { min-width: 0; max-width: 100%; }
+  .admin-workspace .table-scroll-container > table { min-width: 640px; }
+  .admin-workspace .table-scroll-container { -webkit-overflow-scrolling: touch; }
+  .admin-workspace .table-pagination button { min-height: 44px; }
+  .admin-workspace input:not([type="checkbox"]):not([type="radio"]),
+  .admin-workspace textarea,
+  .admin-mobile-drawer input:not([type="checkbox"]):not([type="radio"]),
+  .admin-mobile-drawer textarea { font-size: 16px; }
+  .admin-mobile-drawer > div:last-child { max-height: 100dvh; min-height: 0; }
+  .admin-mobile-drawer > div:last-child > div:first-child { flex-shrink: 0; }
+  .admin-mobile-drawer > div:last-child > div:last-child:not(.request-review-body) { flex-shrink: 0; }
+  .admin-mobile-drawer button { min-height: 44px; }
+  .admin-mobile-drawer .request-review-header { padding: 1rem; flex-wrap: wrap; }
+  .admin-mobile-drawer .request-review-body { padding: 1rem; }
+  .admin-mobile-drawer :is(h3, p, dd) { overflow-wrap: anywhere; }
+}

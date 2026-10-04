@@ -357,8 +357,8 @@ export default function PortalLayout({
         }`}
       >
         <header className="shrink-0 sticky top-0 z-40 bg-white border-b border-[#e5e7eb] px-4 lg:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex items-center gap-2 pt-0.5">
+          <div className="flex min-w-0 flex-1 items-start gap-2 lg:gap-4">
+            <div className="flex shrink-0 items-center gap-2 pt-0.5">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden p-2 rounded-lg hover:bg-[rgba(128,0,0,0.05)] text-[#4b5563] transition-all"
@@ -382,7 +382,7 @@ export default function PortalLayout({
               </button>
             </div>
 
-            <nav className="flex flex-col gap-0.5">
+            <nav className="flex min-w-0 flex-col gap-0.5 [overflow-wrap:anywhere]">
               <div className="flex items-center flex-wrap gap-2 text-xs lg:text-sm">
                 <span className="font-semibold text-[#800000]">SmartLab</span>
                 <span className="text-[#9ca3af]">/</span>
@@ -397,7 +397,7 @@ export default function PortalLayout({
             </nav>
           </div>
 
-          <div className="flex items-center gap-3">{rightHeaderContent ?? defaultRightActions}</div>
+          <div className="ml-2 flex shrink-0 items-center gap-3">{rightHeaderContent ?? defaultRightActions}</div>
         </header>
 
         <div

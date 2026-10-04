@@ -254,7 +254,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
   ].filter(Boolean);
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="admin-mobile-drawer fixed inset-0 z-50 h-dvh">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
       <div className="request-review-drawer absolute inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl flex flex-col">
         <div className="request-review-header flex items-center justify-between gap-3 px-6 py-4">
@@ -270,7 +270,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
           </span>
         </div>
 
-        <div className="request-review-body flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <div className="request-review-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5 space-y-5">
           {conflictParams && (
             <ConflictStatusCard
               status={conflictCheck.status}

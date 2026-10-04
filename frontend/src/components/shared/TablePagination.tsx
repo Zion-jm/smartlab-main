@@ -37,9 +37,9 @@ export default function TablePagination({
   return (
     <div
       data-table-pagination="true"
-      className={`${paginationPositionClass} flex flex-col gap-3 border-t border-[#e5e7eb] bg-white px-3 py-3 text-xs text-[#6b7280] sm:flex-row sm:items-center sm:justify-between`}
+      className={`table-pagination ${paginationPositionClass} flex flex-col gap-3 border-t border-[#e5e7eb] bg-white px-3 py-3 text-xs text-[#6b7280] sm:flex-row sm:items-center sm:justify-between`}
     >
-      <p aria-live="polite" className="whitespace-nowrap">
+      <p aria-live="polite" className="min-w-0 break-words">
         Showing <span className="font-semibold text-[#374151]">{firstItem}–{lastItem}</span> of{' '}
         <span className="font-semibold text-[#374151]">{totalItems}</span>
         {totalAvailableItems !== undefined && totalAvailableItems !== totalItems && (
@@ -52,7 +52,7 @@ export default function TablePagination({
           <span className="sm:hidden">Rows</span>
           <DropdownField portal className="table-pagination-dropdown" value={String(pageSize)} onChange={value => onPageSizeChange(Number(value))} placeholder="Rows per page" options={pageSizeOptions.map(value => ({ value: String(value), label: String(value) }))} />
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           <button
             type="button"
             onClick={() => onPageChange(1)}

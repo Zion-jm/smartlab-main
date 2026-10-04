@@ -171,7 +171,7 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
   }));
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="admin-mobile-drawer fixed inset-0 z-50 h-dvh">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="absolute inset-y-0 right-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
         <div className="px-5 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
@@ -183,7 +183,7 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
             ✕
           </button>
         </div>
-        <form className="flex-1 overflow-y-auto px-5 py-4 space-y-4" onSubmit={handleSubmit}>
+        <form className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4" onSubmit={handleSubmit}>
           {entity === 'buildings' && (
             <DrawerSection label="Building name">
               <input
