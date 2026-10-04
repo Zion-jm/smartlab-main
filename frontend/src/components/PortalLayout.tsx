@@ -221,11 +221,11 @@ export default function PortalLayout({
       {mobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />}
 
       <aside
-        className={`fixed left-0 top-0 h-screen bg-white shadow-[2px_0_10px_rgba(0,0,0,0.1)] z-50 transition-all duration-300 flex flex-col ${
+        className={`fixed left-0 top-0 h-dvh max-h-dvh bg-white shadow-[2px_0_10px_rgba(0,0,0,0.1)] z-50 transition-all duration-300 flex flex-col ${
           mobileMenuOpen ? 'translate-x-0 w-[250px]' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-[70px]' : 'lg:w-[250px]'}`}
       >
-        <div className="p-5 border-b border-[#e5e7eb]">
+        <div className="shrink-0 p-5 border-b border-[#e5e7eb]">
           <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
             <img
               src="/PUPLogo.png"
@@ -241,9 +241,9 @@ export default function PortalLayout({
           </div>
         </div>
 
-        {!isCollapsed && sidebarExtras}
+        {!isCollapsed && <div className="shrink-0">{sidebarExtras}</div>}
 
-        <nav className="flex-1 py-4 space-y-1 overflow-y-auto">
+        <nav className="min-h-0 flex-1 py-4 space-y-1 overflow-y-auto overscroll-contain">
           {resolvedNavGroups
             ? resolvedNavGroups.map((group) => (
               <div key={group.id} className="mb-3" data-testid={`sidebar-group-${group.id}`}>
@@ -262,7 +262,7 @@ export default function PortalLayout({
             ))}
         </nav>
 
-        <div ref={profileMenuRef} className="p-3 lg:p-4 border-t border-[#e5e7eb] relative">
+        <div ref={profileMenuRef} className="shrink-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:p-4 border-t border-[#e5e7eb] relative">
           <button
             onClick={() => {
               if (isCollapsed) {
