@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { prisma } from '../../db/prisma';
-import { transporter, FROM } from './transporter';
-import { emailAttachments } from './assets';
+import { sendQueuedEmail, emailDeliveryConfigured, EmailDeliveryError } from './transporter';
+
 
 type Mail = { eventKey: string; to: string; subject: string; html: string; text: string };
 type Job = { id: string; recipient: string; subject: string; html: string; text: string; attempts: number };
@@ -13,7 +13,7 @@ export async function enqueueEmail(mail: Mail): Promise<void> {
 }
 export async function deliverEmailBatch(): Promise<void> {
   // No external delivery unless explicitly enabled. Pending messages remain saved.
-  if (process.env.EMAIL_DELIVERY_ENABLED !== 'true' || !process.env.SMTP_PASS) return;
+  if (process.env.EMAIL_DELIVERY_ENABLED !== 'true' || !emailDeliveryConfigured()) return;
   for (let count = 0; count < 10; count++) {
     const jobs = await prisma.$queryRaw<Job[]>`UPDATE "EmailOutbox" SET "status"='SENDING', "lockedAt"=NOW(), "attempts"="attempts"+1
       WHERE "id"=(SELECT "id" FROM "EmailOutbox" WHERE ("status"='PENDING' AND "nextAttemptAt"<=NOW())
@@ -21,14 +21,13 @@ export async function deliverEmailBatch(): Promise<void> {
         ORDER BY "createdAt" LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING *`;
     const job = jobs[0]; if (!job) break;
     try {
-      const info = await transporter.sendMail({ from: FROM, to: job.recipient, subject: job.subject, html: job.html, text: job.text,
-        messageId: `<${job.id}@smartlab.local>`, attachments: emailAttachments(job.html) });
-      if (info.rejected?.length || !info.accepted?.length) throw new Error('SMTP did not accept the recipient');
+      await sendQueuedEmail(job);
       await prisma.$executeRaw`UPDATE "EmailOutbox" SET "status"='SENT', "sentAt"=NOW(), "lockedAt"=NULL, "lastError"=NULL WHERE "id"=${job.id}`;
-    } catch {
+    } catch (error) {
+      const safeError = error instanceof EmailDeliveryError ? error.message : "Email delivery failed; check transport configuration.";
       const status = job.attempts >= 5 ? 'FAILED' : 'PENDING';
       const next = new Date(Date.now() + Math.min(3600000, 60000 * 2 ** (job.attempts - 1)));
-      await prisma.$executeRaw`UPDATE "EmailOutbox" SET "status"=${status}, "nextAttemptAt"=${next}, "lockedAt"=NULL, "lastError"='SMTP delivery failed; check transport and recipient configuration.' WHERE "id"=${job.id}`;
+      await prisma.$executeRaw`UPDATE "EmailOutbox" SET "status"=${status}, "nextAttemptAt"=${next}, "lockedAt"=NULL, "lastError"=${safeError} WHERE "id"=${job.id}`;
     }
   }
 }

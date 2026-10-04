@@ -1,0 +1,37 @@
+const assert = require('node:assert/strict');
+process.env.EMAIL_PROVIDER = 'brevo';
+process.env.BREVO_API_KEY = 'fake-test-key';
+process.env.EMAIL_FROM_ADDRESS = 'sender@example.com';
+process.env.FRONTEND_URL = 'https://smartlab.example.com';
+process.env.EMAIL_DELIVERY_ENABLED = 'true';
+const { sendQueuedEmail, emailDeliveryConfigured } = require('../dist/services/email/transporter');
+const job = { id: 'test', recipient: 'recipient@example.com', subject: 'Test', html: '<img src="cid:pup-logo@smartlab">', text: 'Test' };
+let calls = 0;
+global.fetch = async (url, options) => {
+  calls++;
+  assert.equal(url, 'https://api.brevo.com/v3/smtp/email');
+  const body = JSON.parse(options.body);
+  assert.equal(body.sender.email, 'sender@example.com');
+  assert.equal(body.to[0].email, job.recipient);
+  assert.match(body.htmlContent, /https:\/\/smartlab.example.com\/PUPLogo.png/);
+  assert.equal(body.textContent, 'Test');
+  return { ok: true, json: async () => ({ messageId: 'accepted' }) };
+};
+(async () => {
+  assert.equal(emailDeliveryConfigured(), true);
+  await sendQueuedEmail(job);
+  assert.equal(calls, 1);
+  process.env.EMAIL_DELIVERY_ENABLED = 'false';
+  await assert.rejects(sendQueuedEmail(job), /disabled/);
+  assert.equal(calls, 1);
+  process.env.EMAIL_DELIVERY_ENABLED = 'true';
+  global.fetch = async () => ({ ok: false, status: 401 });
+  await assert.rejects(sendQueuedEmail(job), /Brevo HTTP 401/);
+  global.fetch = async () => ({ ok: true, json: async () => ({}) });
+  await assert.rejects(sendQueuedEmail(job), /no message acceptance ID/);
+  global.fetch = async () => { throw new Error('private provider data'); };
+  await assert.rejects(sendQueuedEmail(job), error => error.message === 'Brevo connection failed or timed out.');
+  delete process.env.BREVO_API_KEY;
+  assert.equal(emailDeliveryConfigured(), false);
+  console.log('Brevo mocked delivery checks passed. No email sent.');
+})().catch(error => { console.error(error); process.exitCode = 1; });
