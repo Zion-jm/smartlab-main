@@ -835,3 +835,15 @@
  .table-pagination button { min-height: 44px; border-radius: .75rem; }
  .table-pagination > div > div:last-child > button:not(.hidden) { flex: 1; }
 }
+
+@media (max-width: 767px) {
+ .table-pagination { flex-direction: row; align-items: center; justify-content: space-between; gap: .375rem; padding: .625rem .375rem; font-size: 10px; }
+ .table-pagination > p { flex: 1; text-align: left; }
+ .table-pagination > div { display: flex; flex-wrap: nowrap; gap: .375rem; }
+ .table-pagination > div > div { gap: .25rem; }
+ .table-pagination > div > div:first-child > span { display: none; }
+ .table-pagination > div > div:last-child { gap: .25rem; }
+ .table-pagination > div > div:last-child > button:not(.hidden) { flex: none; padding-inline: .375rem; }
+ .table-pagination .table-pagination-dropdown { min-width: 0; width: 44px; }
+ .table-pagination .table-pagination-dropdown button { padding-inline: .375rem; gap: .125rem; font-size: 11px; }
+}
