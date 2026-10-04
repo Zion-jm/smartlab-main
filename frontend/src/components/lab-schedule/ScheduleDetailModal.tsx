@@ -3,14 +3,14 @@ import TableCellDetailModal from '../shared/TableCellDetailModal';
 import type { LabSchedule } from '../../types/labSchedule';
 
 const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-export default function ScheduleDetailModal({ schedule, onClose }: { schedule: LabSchedule; onClose: () => void }) {
+export default function ScheduleDetailModal({ schedule, onClose, onEdit }: { schedule: LabSchedule; onClose: () => void; onEdit?: () => void }) {
   const weekly = schedule.scheduleType === 'WEEKLY';
   const day = schedule.dayOfWeekIndex != null ? weekdays[schedule.dayOfWeekIndex] : schedule.displayDay;
   const date = schedule.date ? new Date(schedule.date) : null;
   const when = weekly ? `Every ${day}` : date && !Number.isNaN(date.getTime())
     ? date.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
     : `${day}, ${schedule.displayDate}`;
-  return <TableCellDetailModal isOpen onClose={onClose} title="Schedule details" subtitle={schedule.subjectLabel || 'Laboratory booking information'} data={schedule} fields={[]}>
+  return <TableCellDetailModal isOpen onClose={onClose} title="Schedule details" subtitle={schedule.subjectLabel || 'Laboratory booking information'} data={schedule} fields={[]} actions={onEdit ? [{ label: 'Edit schedule', onClick: onEdit, variant: 'primary' }] : []}>
     <div className="schedule-detail-summary">
       <span className="inline-flex rounded-full bg-[#f5eae5] px-3 py-1 text-xs font-semibold text-[#800000]">{weekly ? 'Weekly' : 'One-time'}</span>
       <div className="mt-4 flex items-start gap-3">

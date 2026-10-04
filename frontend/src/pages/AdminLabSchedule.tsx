@@ -1,3 +1,4 @@
+import MobileScheduleExplorer from '../features/requests/MobileScheduleExplorer';
 import { normalizeSchedule } from '../components/lab-schedule/normalizeSchedule';
 import ScheduleDataTable from '../components/lab-schedule/ScheduleDataTable';
 import { CalendarView, ChartView } from '../components/lab-schedule/ScheduleViews';
@@ -106,6 +107,8 @@ export default function AdminLabSchedule() {
       )
   );
 
+  const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  useEffect(() => { const query = window.matchMedia('(max-width: 767px)'); const change = () => setMobile(query.matches); query.addEventListener('change', change); return () => query.removeEventListener('change', change); }, []);
   const requestVersion = useRef(0);
   const performFetchSchedules = useCallback(async () => {
     const version = ++requestVersion.current;
@@ -117,7 +120,7 @@ export default function AdminLabSchedule() {
         academicYearId: academicPeriod.academicYearId || undefined,
         termId: academicPeriod.termId || undefined,
       };
-      return (viewMode === 'table' ? labScheduleApi.getPage : labScheduleApi.getAll)(params).then((response) => {
+      return (!mobile && viewMode === 'table' ? labScheduleApi.getPage : labScheduleApi.getAll)(mobile ? { academicYearId: academicPeriod.academicYearId || undefined, termId: academicPeriod.termId || undefined } : params).then((response) => {
       if (version !== requestVersion.current) return;
       const count = Number(response.data.total); setServerTotal(count);
       if (schedulePage > 1 && count <= (schedulePage - 1) * schedulePageSize) setSchedulePage(Math.max(1, Math.ceil(count / schedulePageSize)));
@@ -132,10 +135,10 @@ export default function AdminLabSchedule() {
     }).finally(() => {
       if (version === requestVersion.current) setLoading(false);
     });
-  }, [schedulePage, schedulePageSize, viewMode, search, sourceFilter, scheduleTypeFilter, roomFilter, programFilter, facultyFilter, academicPeriod.academicYearId, academicPeriod.termId, dateFrom, dateTo]);
+  }, [mobile, schedulePage, schedulePageSize, viewMode, search, sourceFilter, scheduleTypeFilter, roomFilter, programFilter, facultyFilter, academicPeriod.academicYearId, academicPeriod.termId, dateFrom, dateTo]);
 
   // Automatic loads reset pending state when their query changes; refreshes reset it in the event.
-  const fetchSchedulesInputs = [schedulePage, schedulePageSize, viewMode, search, sourceFilter, scheduleTypeFilter, roomFilter, programFilter, facultyFilter, academicPeriod.academicYearId, academicPeriod.termId, dateFrom, dateTo];
+  const fetchSchedulesInputs = [mobile, schedulePage, schedulePageSize, viewMode, search, sourceFilter, scheduleTypeFilter, roomFilter, programFilter, facultyFilter, academicPeriod.academicYearId, academicPeriod.termId, dateFrom, dateTo];
   const [fetchSchedulesSource, setfetchSchedulesSource] = useState(fetchSchedulesInputs);
   if (fetchSchedulesInputs.some((value, index) => !Object.is(value, fetchSchedulesSource[index]))) {
     setfetchSchedulesSource(fetchSchedulesInputs);
@@ -501,7 +504,11 @@ export default function AdminLabSchedule() {
 
   return (
     <AdminLayout>
-      <div className="px-2 pb-2 lg:px-3 lg:pb-3 responsive-workspace mx-auto space-y-4">
+      {mobile && <MobileScheduleExplorer schedules={schedules} loading={loading} error={error} reload={fetchSchedules} computerLabNames={computerLabNames} allRooms onSelectSchedule={handleViewSchedule}
+        actions={<button type="button" onClick={openCreateModal} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#800000] px-3 text-xs font-semibold text-white"><Plus size={16} />Add Schedule</button>}
+        extraControls={<AcademicPeriodFilter compact compactDropdown value={academicPeriod} onChange={setAcademicPeriod} />}
+      />}
+      <div className="hidden md:block px-2 pb-2 lg:px-3 lg:pb-3 responsive-workspace mx-auto space-y-4">
         <FilterToolbar
           searchValue={search}
           onSearchChange={setSearch}
@@ -607,7 +614,11 @@ export default function AdminLabSchedule() {
       )}
 
       {detailsModalConfig && (
-        <ScheduleDetailModal schedule={detailsModalConfig.schedule!} onClose={() => setDetailsModalConfig(null)} />
+        <ScheduleDetailModal schedule={detailsModalConfig.schedule!} onClose={() => setDetailsModalConfig(null)} onEdit={() => {
+          const id = detailsModalConfig.schedule!.id;
+          setDetailsModalConfig(null);
+          handleEditSchedule(id);
+        }} />
       )}
     </AdminLayout>
   );
