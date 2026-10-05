@@ -99,6 +99,7 @@ export const getRequestUnits = (request: BorrowRequest) =>
   (request.items ?? []).reduce((total, item) => total + item.quantity, 0);
 
 export type RequestPrintRow = {
+  requestType: string;
   id: string;
   date: string;
   room: string;
@@ -114,8 +115,9 @@ export type RequestPrintRow = {
 export const buildRequestPrintRows = (requests: BorrowRequest[]): RequestPrintRow[] =>
   requests.map((request) => ({
     id: request.id,
+    requestType: request.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Legacy request',
     date: formatDate(request.dateNeeded),
-    room: request.location ?? '',
+    room: (request.requestType === 'EQUIPMENT' ? 'Intended use: ' : request.requestType === 'LABORATORY' ? 'Reserved lab: ' : '') + (request.location ?? ''),
     equipment: request.equipmentList ?? '',
     requester: request.requesterName,
     programYear: formatSectionLabel(request.programCode ?? request.program, request.yearLevel),

@@ -412,7 +412,8 @@ function RequestFormScaffold({
   const studentProgramId = student?.programId ?? '';
   const studentYearLevel = student?.yearLevel != null ? String(student.yearLevel) : '';
 
-  const [useLabRoom, setUseLabRoom] = useState(editingRequest ? Boolean(editingRequest.room?.id) : true);
+  const useLabRoom = false;
+
   const [selectedEquipment, setSelectedEquipment] = useState<Record<string, number>>(() =>
     (editingRequest?.items ?? []).reduce<Record<string, number>>((selected, item) => {
       selected[item.equipmentId] = item.quantity;
@@ -427,7 +428,7 @@ function RequestFormScaffold({
     dateNeeded: toDateInputValue(editingRequest?.dateNeeded),
     timeStart: toManilaTimeInputValue(editingRequest?.timeStart),
     timeEnd: toManilaTimeInputValue(editingRequest?.timeEnd),
-    location: editingRequest?.location ?? '',
+    location: editingRequest?.usageLocation ?? editingRequest?.usageRoom?.name ?? editingRequest?.location ?? '',
     labId: editingRequest?.room?.id ?? '',
     contactDetails: editingRequest?.contactDetails ?? '',
     purpose: editingRequest?.purpose ?? '',
@@ -486,7 +487,7 @@ function RequestFormScaffold({
     [roomOptions]
   );
   const generalRoomOptions = useMemo(
-    () => roomOptions.filter((room) => room.isComputerLab === false || room.isComputerLab === undefined),
+    () => roomOptions,
     [roomOptions]
   );
   const programOptions = useMemo(() => {
@@ -541,7 +542,7 @@ function RequestFormScaffold({
   }, [academicContext, editingRequest?.id, form, selectedRoomOption, timeRangeError, useLabRoom]);
 
   const conflictCheck = useScheduleConflictCheck(conflictParams);
-  const conflictBlocked = conflictCheck.status === 'danger';
+  const conflictBlocked = useLabRoom && conflictCheck.status === 'danger';
 
   const [conflictModalOpen, setConflictModalOpen] = useState(false);
 
@@ -564,7 +565,7 @@ function RequestFormScaffold({
   };
 
   const resetForm = () => {
-    setUseLabRoom(true);
+
     setSelectedEquipment({});
     setSubmitError(null);
     setSubmitSuccess(null);
@@ -605,6 +606,8 @@ function RequestFormScaffold({
       return;
     }
 
+    if (!useLabRoom && !equipmentSelections.length) { setSubmitError('Select at least one equipment item.'); return; }
+
     const timeStartIso = combineDateTime(form.dateNeeded, form.timeStart);
     const timeEndIso = combineDateTime(form.dateNeeded, form.timeEnd);
     if (!timeStartIso || !timeEndIso) {
@@ -625,7 +628,9 @@ function RequestFormScaffold({
       yearLevel: Number(form.yearLevel) || null,
       dateNeeded: form.dateNeeded,
       roomId: useLabRoom ? form.labId || null : null,
-      location: !useLabRoom && form.location.trim() ? form.location.trim() : null,
+      requestType: useLabRoom ? 'LABORATORY' : 'EQUIPMENT',
+      usageRoomId: !useLabRoom ? generalRoomOptions.find(option => option.label === form.location)?.value ?? null : null,
+      usageLocation: !useLabRoom ? form.location.trim() : null,
       timeStart: timeStartIso,
       timeEnd: timeEndIso,
       purpose: form.purpose.trim(),
@@ -694,38 +699,19 @@ function RequestFormScaffold({
         title={editingRequest ? `Edit ${formatReference(editingRequest.id)}` : 'Request details'}
         helper={editingRequest
           ? 'Update the pending request below. Changes will be sent back for administrator review.'
-          : 'Fill in the details below to reserve a room and equipment for your lab session.'}
+          : 'Select equipment, a borrowing time, and its intended usage location. Students cannot reserve laboratories.'}
       >
+        {editingRequest && (!editingRequest.requestType || editingRequest.requestType === 'LEGACY') && (
+          <p className="mb-4 rounded-xl border border-[#ead7d3] bg-[#fff8f3] p-3 text-sm text-[#800000]">This is an older request. Saving applies the new request rules. Confirm the request type, equipment, and location before submitting.</p>
+        )}
         <div className="request-form-sections rounded-2xl border border-[#f1f5f9] bg-[#fdfdfd] divide-y divide-[#f1f5f9]">
           <section className="space-y-4 p-4 lg:p-5">
             <div>
-              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestCalendarIcon size={18} aria-hidden="true" className="md:hidden" />Room & schedule</h4>
-              <p className="text-xs text-[#6b7280]">Indicate if you need a laboratory room and which equipment to reserve.</p>
+              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestCalendarIcon size={18} aria-hidden="true" className="md:hidden" />Request type & schedule</h4>
+              <p className="text-xs text-[#6b7280]">Equipment usage locations do not reserve rooms. Laboratory reservations are for faculty only.</p>
             </div>
             <div className="flex flex-col gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280] mb-2">Room preference</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: true, label: 'Use a computer lab' },
-                    { value: false, label: 'Use a general room' },
-                  ].map((option) => {
-                    const active = useLabRoom === option.value;
-                    return (
-                      <button
-                        key={String(option.value)}
-                        type="button"
-                        onClick={() => setUseLabRoom(option.value)}
-                        className={`rounded-2xl border px-3 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-[#800000] ${
-                          active ? 'bg-[#800000] text-white border-[#800000] shadow-[0_8px_16px_rgba(128,0,0,0.25)]' : 'bg-white text-[#374151] border-[#e5e7eb] hover:border-[#cbd5f5]'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <p className="rounded-xl bg-[#fff8f3] p-3 text-sm font-semibold text-[#800000]">Equipment borrowing</p>
               {useLabRoom ? (
                 <div data-field="labId">
                   <DropdownField
@@ -740,13 +726,15 @@ function RequestFormScaffold({
               ) : (
                 <div data-field="location">
                   <DropdownField
-                    label={<FieldLabel text="General-purpose room" required showMissing={missingFields.includes('location')} />}
+                    label={<FieldLabel text="Intended equipment usage location" required showMissing={missingFields.includes('location')} />}
                     value={form.location}
-                    options={generalRoomOptions.map((option) => ({ value: option.label, label: option.label }))}
-                    placeholder="Select room"
+                    options={[...generalRoomOptions.map((option) => ({ value: option.label, label: option.label })), ...(form.location && !generalRoomOptions.some(option => option.label === form.location) ? [{value: form.location, label: form.location}] : [])]}
+                    placeholder="Select usage location"
                     disabled={!generalRoomOptions.length || loading}
                     onChange={(value) => updateForm('location', value)}
                   />
+                  <label className="mt-3 block text-xs text-[#786565]">Or enter another venue / address<input maxLength={500} className="mt-1 min-h-11 w-full rounded-xl border border-[#d8c7c3] px-3 text-sm" value={form.location} onChange={event => updateForm('location', event.target.value)} /></label>
+                  <p className="mt-2 text-xs text-[#786565]">Intended usage only. This does not reserve the room.</p>
                 </div>
               )}
               {!labRoomOptions.length && useLabRoom && !loading && (
@@ -756,7 +744,7 @@ function RequestFormScaffold({
               )}
               {!generalRoomOptions.length && !useLabRoom && !loading && (
                 <p className="text-xs text-[#b45309] bg-[#fff7ed] border border-[#fde68a] rounded-lg px-3 py-2">
-                  No general-purpose rooms yet. Ask the admin to publish them via the academic directory.
+                  No rooms are listed yet. Enter your intended venue or address above.
                 </p>
               )}
             </div>

@@ -16,6 +16,7 @@ export const borrowRequestInclude = {
   },
   program: true,
   room: true,
+  usageRoom: true,
   subject: true,
   faculty: {
     include: {

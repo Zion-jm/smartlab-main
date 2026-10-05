@@ -106,6 +106,7 @@ model Building {
 }
 
 model Room {
+  equipmentUsageRequests BorrowRequest[] @relation("EquipmentUsageRoom")
   id            String   @id @default(cuid())
   buildingId    String?
   building      Building? @relation(fields: [buildingId], references: [id], onDelete: SetNull)
@@ -332,9 +333,20 @@ model LabSchedule {
 // BORROW REQUEST SYSTEM (Keep your workflow)
 // ====================================================
 
+enum BorrowRequestType {
+  LEGACY
+  LABORATORY
+  EQUIPMENT
+}
+
 model BorrowRequest {
   id              String         @id @default(cuid())
   
+  requestType BorrowRequestType @default(LEGACY)
+  usageRoomId String?
+  usageRoom Room? @relation("EquipmentUsageRoom", fields: [usageRoomId], references: [id], onDelete: SetNull)
+  usageLocation String?
+
   // Request details
   requestedBy     String         // User ID
   requester       User           @relation("RequesterUser", fields: [requestedBy], references: [id])

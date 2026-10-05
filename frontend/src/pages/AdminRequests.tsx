@@ -31,6 +31,9 @@ import FilterToolbar from '../components/FilterToolbar';
 import ResetFiltersButton from '../components/shared/ResetFiltersButton';
 
 type ApiBorrowRequest = {
+  requestType?: 'LEGACY' | 'LABORATORY' | 'EQUIPMENT';
+  usageLocation?: string | null;
+  usageRoom?: { id: string; name?: string | null; roomNumber?: string | null } | null;
   id: string;
   referenceCode?: string;
   requesterName: string;
@@ -115,6 +118,7 @@ const defaultFilters: BorrowRequestFilters = {
 };
 
 const resolveRoom = (request: ApiBorrowRequest) => {
+    if (request.requestType === 'EQUIPMENT') return request.usageRoom ? [request.usageRoom.roomNumber, request.usageRoom.name].filter(Boolean).join(' – ') : request.usageLocation || request.location || 'Not specified';
     if (request.room) {
       const roomNumber = request.room.roomNumber?.trim();
       const roomName = request.room.name?.trim();
@@ -134,8 +138,8 @@ function RequestTableRow({ request, onOpen, onSelect, onAction }: {
               const badge = statusMeta[request.status];
               const inlineActions = [
                 { label: 'Approve', action: 'approve' as const, show: request.status === 'PENDING' },
-                { label: 'Borrowed', action: 'borrow' as const, show: request.status === 'APPROVED' },
-                { label: 'Returned', action: 'return' as const, show: request.status === 'BORROWED' },
+                { label: 'Borrowed', action: 'borrow' as const, show: request.status === 'APPROVED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length)) },
+                { label: 'Returned', action: 'return' as const, show: request.status === 'BORROWED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length)) },
               ].filter((item) => item.show);
 
               return (
@@ -227,6 +231,7 @@ export default function AdminRequests() {
       if (!active) return;
       const r = data.request ?? data;
       setSelectedRequest({ ...r,
+        location: r.requestType === 'EQUIPMENT' ? (r.usageRoom ? [r.usageRoom.roomNumber, r.usageRoom.name].filter(Boolean).join(' – ') : r.usageLocation) : r.location,
         requesterName: [r.requester?.firstName, r.requester?.lastName].filter(Boolean).join(' '),
         requesterEmail: r.requester?.email || '', requesterRole: r.requester?.role || '',
         program: r.program?.name ?? null, subject: r.subject?.name ?? null,
@@ -593,7 +598,7 @@ export default function AdminRequests() {
               <h3 className="text-sm font-semibold text-[#57322d]">{request.referenceCode || request.id.slice(-6).toUpperCase()}</h3>
               <span className={'rounded-full px-2.5 py-1 text-xs font-semibold ' + statusMeta[request.status].className}>{statusMeta[request.status].label}</span>
             </header>
-            <div className="space-y-3 p-4 text-sm">
+            <div className="space-y-3 p-4 text-sm"><p className="text-xs font-semibold text-[#800000]">{request.requestType === 'EQUIPMENT' ? 'Equipment borrowing · intended usage location' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Legacy request'}</p>
               <div><p className="font-semibold text-[#321d1d]">{request.requesterName}</p><p className="break-all text-xs text-[#786565]">{request.requesterEmail}</p></div>
               <p className="flex items-start gap-2"><MapPin size={17} className="mt-0.5 shrink-0 text-[#9a7b4f]" aria-hidden="true" /><span>{resolveRoom(request)}</span></p>
               <div className="flex items-start gap-2"><CalendarDays size={17} className="mt-0.5 shrink-0 text-[#9a7b4f]" aria-hidden="true" /><p>{formatDate(request.dateNeeded)}<span className="block text-xs text-[#786565]">{formatTimeRange(request.timeStart, request.timeEnd)}</span></p></div>
@@ -609,7 +614,7 @@ export default function AdminRequests() {
           <Table>
           <TableHead>
             <TableHeaderCell>Requester</TableHeaderCell>
-            <TableHeaderCell>Room</TableHeaderCell>
+            <TableHeaderCell>Reservation / usage location</TableHeaderCell>
             <TableHeaderCell>Equipment</TableHeaderCell>
             <TableHeaderCell>Date needed</TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>

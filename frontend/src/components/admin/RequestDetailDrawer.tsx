@@ -9,6 +9,7 @@ import { formatDate, formatTimeRange, extractTimeString } from '../../utils/date
 import type { BorrowRequestStatus } from '../../types/requests';
 
 type ApiBorrowRequest = {
+  requestType?: 'LEGACY' | 'LABORATORY' | 'EQUIPMENT';
   id: string;
   referenceCode?: string;
   requesterName: string;
@@ -55,7 +56,7 @@ type ApiBorrowRequest = {
 const statusMeta: Record<BorrowRequestStatus | 'ALL', { label: string; className: string; description?: string }> = {
   ALL: { label: 'All requests', className: 'bg-[#eef2ff] text-[#312e81]' },
   PENDING: { label: 'Pending', className: 'bg-[#fef3c7] text-[#92400e]', description: 'Awaiting approval' },
-  APPROVED: { label: 'Approved', className: 'bg-[#dcfce7] text-[#166534]', description: 'Ready for pickup' },
+  APPROVED: { label: 'Approved', className: 'bg-[#dcfce7] text-[#166534]', description: 'Approved for use' },
   BORROWED: { label: 'Borrowed', className: 'bg-[#dbeafe] text-[#1d4ed8]', description: 'Currently out' },
   RETURNED: { label: 'Returned', className: 'bg-[#e0f2fe] text-[#0c4a6e]' },
   REJECTED: { label: 'Declined', className: 'bg-[#fee2e2] text-[#b91c1c]' },
@@ -79,6 +80,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
   const conflictParams = useMemo(() => {
     if (!request) return null;
 
+    if (request.requestType === 'EQUIPMENT') return null;
     let roomId = null;
     if (request.room?.id) {
       roomId = request.room.id;
@@ -169,9 +171,9 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
 
   const statusChip = statusMeta[request.status];
   const canApprove = request.status === 'PENDING';
-  const canBorrow = request.status === 'APPROVED';
-  const canReturn = request.status === 'BORROWED';
-  const canCancel = request.status === 'BORROWED';
+  const canBorrow = request.status === 'APPROVED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length));
+  const canReturn = request.status === 'BORROWED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length));
+  const canCancel = request.status === 'BORROWED' || (request.status === 'APPROVED' && Boolean(request.requestType && request.requestType !== 'LEGACY'));
   const canDecline = request.status === 'PENDING' || request.status === 'APPROVED';
 
   const handleClose = () => {
@@ -236,9 +238,9 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
         disabled={mutating}
         onClick={() => onAction('cancel')}
         className="px-4 py-2 rounded-full bg-[#4b5563] text-white text-xs font-semibold disabled:opacity-60"
-        title="Cancel this borrowed request and restore equipment to inventory"
+        title="Cancel this request and release its reservations"
       >
-        Cancel &amp; restore stock
+        {request.status === 'BORROWED' ? 'Cancel & restore stock' : 'Cancel reservation'}
       </button>
     ),
     canDecline && (
@@ -257,7 +259,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
     <div className="admin-mobile-drawer fixed inset-0 z-50 h-dvh">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
       <div className="request-review-drawer absolute inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl flex flex-col">
-        <div className="request-review-header flex items-center justify-between gap-3 px-6 py-4">
+        <p className="px-6 pt-4 text-xs font-semibold text-[#800000]">{request.requestType === 'EQUIPMENT' ? 'Equipment borrowing · location is for intended use only' : request.requestType === 'LABORATORY' ? 'Faculty laboratory reservation' : 'Legacy request'}</p><div className="request-review-header flex items-center justify-between gap-3 px-6 py-4">
           <div className="flex min-w-0 items-center gap-3">
             <span className="request-review-avatar" aria-hidden="true"><UserRound size={23} strokeWidth={1.75} /></span><div className="min-w-0">
             <p className="text-xs uppercase font-semibold text-[#9ca3af]">
@@ -338,7 +340,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
                   </div>
                 ))
               ) : (
-                <p className="text-[#6b7280]">No items specified</p>
+                <p className="text-[#6b7280]">No equipment included</p>
               )}
             </div>
           </section>

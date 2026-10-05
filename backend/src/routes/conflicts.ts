@@ -42,7 +42,7 @@ const checkScheduleConflicts = async (input: ConflictCheckInput & { excludeReque
   const linked = input.excludeScheduleId ? await prisma.labSchedule.findUnique({ where: { id: input.excludeScheduleId }, select: { borrowRequestId: true } }) : null;
   const pending = await prisma.borrowRequest.findMany({
     where: {
-      roomId: input.roomId,
+      roomId: input.roomId, requestType: { not: 'EQUIPMENT' },
       OR: [{ status: 'PENDING' }, { status: { in: ['APPROVED', 'BORROWED'] }, schedules: { none: {} } }],
       ...(input.academicYearId ? { academicYearId: input.academicYearId } : {}),
       ...(input.termId ? { termId: input.termId } : {}),

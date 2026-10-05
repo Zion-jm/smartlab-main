@@ -1,6 +1,6 @@
 import { EMAIL_LOGO_CID } from './assets';
 import { MANILA_TIME_ZONE } from '../../utils/manilaTime';
-export interface RequestDetails { id: string; requesterName: string; requesterRole?: string; programCode?: string | null; program?: string | null; yearLevel?: number | null; dateNeeded: string; timeStart?: string | null; timeEnd?: string | null; location?: string | null; purpose?: string | null; items: { name: string; quantity: number }[] }
+export interface RequestDetails { requestType?: string; id: string; requesterName: string; requesterRole?: string; programCode?: string | null; program?: string | null; yearLevel?: number | null; dateNeeded: string; timeStart?: string | null; timeEnd?: string | null; location?: string | null; purpose?: string | null; items: { name: string; quantity: number }[] }
 export const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 export const reference = (id: string) => 'REQ-' + id.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6).padStart(6, '0');
 export function requestUrl(id: string) {
@@ -13,7 +13,7 @@ const date = (iso: string) => new Date(iso).toLocaleDateString('en-PH', { timeZo
 const time = (iso: string) => new Date(iso).toLocaleTimeString('en-PH', { timeZone: MANILA_TIME_ZONE, hour: 'numeric', minute: '2-digit' });
 export function renderRequestEmail(title: string, message: string, req: RequestDetails, action: string, reason?: string, includeRequesterIdentity = false) {
   const url = requestUrl(req.id) + (includeRequesterIdentity ? '?review=admin' : '');
-  const rows = [['Request', reference(req.id)], ['Requested by', req.requesterName], ['Room / location', req.location || 'Not specified'], ['Date', date(req.dateNeeded)], ['Time', req.timeStart && req.timeEnd ? time(req.timeStart) + ' – ' + time(req.timeEnd) : 'Not specified'], ['Purpose', req.purpose || 'Not specified']];
+  const rows = [['Request', reference(req.id)], ['Requested by', req.requesterName], ['Request type', req.requestType === 'LABORATORY' ? 'Laboratory reservation' : req.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : 'Legacy request'], [req.requestType === 'EQUIPMENT' ? 'Intended usage location' : 'Room / location', req.location || 'Not specified'], ['Date', date(req.dateNeeded)], ['Time', req.timeStart && req.timeEnd ? time(req.timeStart) + ' – ' + time(req.timeEnd) : 'Not specified'], ['Purpose', req.purpose || 'Not specified']];
   if (includeRequesterIdentity && req.requesterRole) {
     const role = req.requesterRole === 'STUDENT' ? 'Student' : req.requesterRole === 'FACULTY' ? 'Faculty' : req.requesterRole === 'ADMIN' ? 'Admin' : req.requesterRole;
     const program = req.programCode || req.program;

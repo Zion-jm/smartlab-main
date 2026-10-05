@@ -14,6 +14,9 @@ export interface BorrowRequestItemSummary {
 }
 
 export interface BorrowRequest {
+  requestType?: 'LEGACY' | 'LABORATORY' | 'EQUIPMENT';
+  usageLocation?: string | null;
+  usageRoom?: { id: string; name?: string | null; roomNumber?: string | null } | null;
   id: string;
   referenceCode?: string;
   requesterId?: string;

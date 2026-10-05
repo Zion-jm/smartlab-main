@@ -20,21 +20,24 @@ export const cancelBorrowRequest = async (
     throw new RequestActionError(403, 'Access denied');
   }
   const wasBorrowed = request.status === RequestStatus.BORROWED;
-  if (request.status !== RequestStatus.PENDING && (input.pendingOnly || !isAdmin || !wasBorrowed)) {
+  const approvedNewRequest = isAdmin && request.status === RequestStatus.APPROVED && request.requestType !== 'LEGACY';
+  if (request.status !== RequestStatus.PENDING && (input.pendingOnly || !isAdmin || (!wasBorrowed && !approvedNewRequest))) {
     throw new RequestActionError(409, input.pendingOnly || !isAdmin
-      ? 'Can only cancel pending requests' : 'Can only cancel pending or borrowed requests');
+      ? 'Can only cancel pending requests' : 'Can only cancel pending, borrowed, or newly approved requests');
   }
-  ensureTransition(request.status, RequestStatus.CANCELLED);
+  if (!approvedNewRequest) ensureTransition(request.status, RequestStatus.CANCELLED);
   const claimed = await tx.borrowRequest.updateMany({
     where: { id: request.id, requestedBy: request.requestedBy, status: request.status },
     data: { status: RequestStatus.CANCELLED, cancelledAt: new Date() },
   });
   if (claimed.count !== 1) throw new RequestActionError(409, 'Request changed. Refresh and try again.');
 
+  const releasedSchedules = request.requestType !== 'LEGACY' ? await tx.labSchedule.findMany({ where: { borrowRequestId: request.id } }) : [];
+  if (request.requestType !== 'LEGACY') await tx.labSchedule.deleteMany({ where: { borrowRequestId: request.id } });
   if (wasBorrowed) await moveInventory(tx, request.items, 'restore');
   const cancelledRequest = await tx.borrowRequest.findUniqueOrThrow({
     where: { id: request.id }, include: borrowRequestInclude,
   });
-  await recordRequiredAuditLog(tx, { actorUserId: input.actorId, action: 'CANCEL', entityType: 'BorrowRequest', entityId: request.id, details: { wasBorrowed } });
+  await recordRequiredAuditLog(tx, { actorUserId: input.actorId, action: 'CANCEL', entityType: 'BorrowRequest', entityId: request.id, details: { wasBorrowed, releasedSchedules: JSON.parse(JSON.stringify(releasedSchedules)) } });
   return { cancelledRequest, wasBorrowed };
 };

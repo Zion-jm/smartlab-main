@@ -209,7 +209,8 @@ const renderRows = (rows: RequestSummary[]) =>
     .map((request) => {
       const cells = [
         formatDate(request.dateNeeded),
-        request.location || '',
+        request.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Legacy request',
+        (request.requestType === 'EQUIPMENT' ? 'Intended use: ' : request.requestType === 'LABORATORY' ? 'Reserved lab: ' : '') + (request.location || ''),
         request.equipmentList || '',
         request.requesterName,
         formatSectionLabel(request.programCode ?? request.program, request.yearLevel),
@@ -261,20 +262,21 @@ const renderPage = (
       <div class="table-wrap">
         <table>
           <colgroup>
-            <col style="width: 9%" />
-            <col style="width: 9%" />
-            <col style="width: 17%" />
-            <col style="width: 16%" />
+            <col style="width: 8%" />
+            <col style="width: 10%" />
             <col style="width: 11%" />
             <col style="width: 15%" />
+            <col style="width: 13%" />
             <col style="width: 9%" />
+            <col style="width: 12%" />
+            <col style="width: 8%" />
             <col style="width: 7%" />
             <col style="width: 7%" />
           </colgroup>
           <thead>
-            <tr><th colspan="9" class="title-row">Borrow Request Log</th></tr>
+            <tr><th colspan="10" class="title-row">Borrow Request Log</th></tr>
             <tr>
-              <th>Date</th><th>Room</th><th>Equipment</th><th>Requester</th>
+              <th>Date</th><th>Request type</th><th>Reservation / intended use</th><th>Equipment</th><th>Requester</th>
               <th>Section</th><th>Faculty-in-Charge</th><th>Time</th>
               <th>Status</th><th>Subject</th>
             </tr>

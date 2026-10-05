@@ -1,3 +1,4 @@
+import { resolveRequestIntent } from '../services/requestTypePolicy';
 import { prisma } from '../db/prisma';
 import { pagination, pageHeaders } from '../utils/pagination';
 import { requestVisibility } from '../services/requestVisibility';
@@ -197,10 +198,11 @@ router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       facultyId, programId, subjectId, yearLevel,
-      dateNeeded, roomId, location, timeStart, timeEnd,
+      dateNeeded, timeStart, timeEnd,
       purpose, contactDetails, notes, academicYearId, termId, items: rawItems,
     } = req.body;
     const items = validateRequestItems(rawItems === undefined ? [] : rawItems);
+    const intent = await resolveRequestIntent(prisma, req.body, req.user!.role, items);
     const periodSelection = await resolveAcademicPeriodSelection(
       prisma,
       { academicYearId, termId },
@@ -264,7 +266,7 @@ router.post('/', authenticateToken, async (req, res) => {
       requestedBy: req.user!.id,
       facultyId, programId: requestProgramId, subjectId, yearLevel: requestYearLevel,
       dateNeeded: manilaDayBounds(dateNeeded).start,
-      roomId, location,
+      ...intent,
       timeStart: timeStart ? parseManilaDate(timeStart) : null,
       timeEnd: timeEnd ? parseManilaDate(timeEnd) : null,
       purpose, contactDetails, notes,
@@ -282,9 +284,14 @@ router.post('/', authenticateToken, async (req, res) => {
       };
     }
 
-    const request = await prisma.borrowRequest.create({
+    const request = await inventoryTransaction(prisma, async tx => {
+    const saved = await tx.borrowRequest.create({
       data: requestData,
       include: borrowRequestInclude,
+    });
+
+    await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'CREATE', entityType: 'BorrowRequest', entityId: saved.id, details: { requestType: intent.requestType, roomId: intent.roomId, usageRoomId: intent.usageRoomId, usageLocation: intent.usageLocation } });
+    return saved;
     });
 
     const submittedDetails = buildEmailDetails(summarizeRequest(request as BorrowRequestWithRelations));
@@ -309,7 +316,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const {
       facultyId, programId, subjectId, yearLevel,
-      dateNeeded, roomId, location, timeStart, timeEnd,
+      dateNeeded, timeStart, timeEnd,
       purpose, contactDetails, notes, academicYearId, termId, items: rawItems,
     } = req.body;
 
@@ -334,6 +341,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
 
     const items = validateRequestItems(rawItems);
+    const intent = await resolveRequestIntent(prisma, req.body, req.user!.role, items);
     const periodSelection = await resolveAcademicPeriodSelection(
       prisma,
       { academicYearId, termId },
@@ -392,7 +400,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       requestYearLevel = studentProfile.yearLevel;
     }
 
-    const updatedRequest = await prisma.borrowRequest.update({
+    const updatedRequest = await inventoryTransaction(prisma, async tx => {
+    const saved = await tx.borrowRequest.update({
       where: { id, status: RequestStatus.PENDING },
       data: {
         facultyId: facultyId || null,
@@ -400,8 +409,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
         subjectId,
         yearLevel: requestYearLevel == null || requestYearLevel === '' ? null : Number(requestYearLevel),
         dateNeeded: manilaDayBounds(dateNeeded).start,
-        roomId: roomId || null,
-        location: location || null,
+        ...intent,
         timeStart: timeStart ? parseManilaDate(timeStart) : null,
         timeEnd: timeEnd ? parseManilaDate(timeEnd) : null,
         purpose: purpose.trim(),
@@ -415,6 +423,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
         },
       },
       include: borrowRequestInclude,
+    });
+    await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'UPDATE', entityType: 'BorrowRequest', entityId: saved.id, details: { requestType: intent.requestType, previousRequestType: existingRequest.requestType, roomId: intent.roomId, usageRoomId: intent.usageRoomId, usageLocation: intent.usageLocation } });
+    return saved;
     });
 
     await sendAdminRequestEmail(buildEmailDetails(summarizeRequest(updatedRequest as BorrowRequestWithRelations)), 'updated', updatedRequest.updatedAt.toISOString()).catch(() => console.error('Email enqueue failed after request edit.'));
@@ -452,7 +463,7 @@ router.patch(
         notifyUser(updatedRequest.requestedBy, {
           type: NotificationType.REQUEST_APPROVED,
           title: 'Request Approved ✓',
-          message: 'Your borrow request has been approved. Please proceed to collect the equipment.',
+          message: 'Your request has been approved. Open it to review the reservation and any equipment collection details.',
           borrowRequestId: updatedRequest.id,
         });
         res.json({
@@ -521,7 +532,7 @@ router.patch(
       const request = await inventoryTransaction(prisma, async tx => {
         const existing = await tx.borrowRequest.findUnique({
           where: { id },
-          select: { status: true },
+          select: { status: true, requestType: true },
         });
 
         if (!existing) {
@@ -542,7 +553,9 @@ router.patch(
           include: borrowRequestInclude,
         });
 
-        await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'REJECT', entityType: 'BorrowRequest', entityId: id, details: { reason } });
+        const releasedSchedules = existing.requestType !== 'LEGACY' ? await tx.labSchedule.findMany({ where: { borrowRequestId: id } }) : [];
+        if (existing.requestType !== 'LEGACY') await tx.labSchedule.deleteMany({ where: { borrowRequestId: id } });
+        await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'REJECT', entityType: 'BorrowRequest', entityId: id, details: { reason, releasedSchedules: JSON.parse(JSON.stringify(releasedSchedules)) } });
         return request;
       });
 
