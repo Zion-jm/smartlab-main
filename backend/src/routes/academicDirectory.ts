@@ -1,3 +1,4 @@
+import { normalizeSubjectText, validateSubject } from '../services/subjectValidation';
 import { prisma } from '../db/prisma';
 import { sendError } from '../middleware/errors';
 import { Router, type Response } from 'express';
@@ -347,13 +348,14 @@ router.post(
   authenticateToken,
   authorizeRoles(UserRole.ADMIN),
   async (req, res) => {
-    const code = (req.body?.code ?? '').trim().toUpperCase();
-    const name = (req.body?.name ?? '').trim();
+    const code = normalizeSubjectText(req.body?.code).toUpperCase();
+    const name = normalizeSubjectText(req.body?.name);
     if (!code || !name) {
       res.status(400).json({ error: 'Subject code and name are required.' });
       return;
     }
     try {
+      await validateSubject(prisma, code, name);
       const subject = await prisma.subject.create({ data: { code, name } });
       await recordOptionalAuditLog(prisma, {
         actorUserId: req.user!.id,
@@ -364,6 +366,9 @@ router.post(
       });
       res.status(201).json({ id: subject.id, code: subject.code, name: subject.name });
     } catch (error) {
+      if ((error as { code?: string }).code === 'P2002') {
+        try { await validateSubject(prisma, code, name, req.params.id); } catch (duplicate) { sendError(duplicate, res); return; }
+      }
       return handlePrismaError(error, res, 'Failed to create subject');
     }
   }
@@ -375,13 +380,14 @@ router.put(
   authorizeRoles(UserRole.ADMIN),
   async (req, res) => {
     const id = req.params.id;
-    const code = (req.body?.code ?? '').trim().toUpperCase();
-    const name = (req.body?.name ?? '').trim();
+    const code = normalizeSubjectText(req.body?.code).toUpperCase();
+    const name = normalizeSubjectText(req.body?.name);
     if (!code || !name) {
       res.status(400).json({ error: 'Subject code and name are required.' });
       return;
     }
     try {
+      await validateSubject(prisma, code, name, id);
       const subject = await prisma.subject.update({ where: { id }, data: { code, name } });
       await recordOptionalAuditLog(prisma, {
         actorUserId: req.user!.id,
@@ -392,6 +398,9 @@ router.put(
       });
       res.json({ id: subject.id, code: subject.code, name: subject.name });
     } catch (error) {
+      if ((error as { code?: string }).code === 'P2002') {
+        try { await validateSubject(prisma, code, name, req.params.id); } catch (duplicate) { sendError(duplicate, res); return; }
+      }
       return handlePrismaError(error, res, 'Failed to update subject');
     }
   }
