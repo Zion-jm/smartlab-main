@@ -194,7 +194,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
 // ─── POST / — Create borrow request ──────────────────────────────────────────
 
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FACULTY), async (req, res) => {
   try {
     const {
       facultyId, programId, subjectId, yearLevel,
@@ -311,7 +311,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
 // ─── PUT /:id — Owner edits a pending request ────────────────────────────────
 
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FACULTY), async (req, res) => {
   try {
     const { id } = req.params;
     const {

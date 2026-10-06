@@ -23,11 +23,13 @@ async function main(){
  }
  const api=async(role,method,route,body,status)=>{const r=await fetch('http://localhost:3137/api/borrow-requests'+route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+auths[role].token},body:body?JSON.stringify(body):undefined});const data=await r.json();assert.equal(r.status,status,method+' '+route+' '+JSON.stringify(data));return data;};
  const equipment=await db.equipment.findFirst();const base={facultyId:faculty.id,dateNeeded:'2035-06-12',timeStart:'2035-06-12T09:00:00+08:00',timeEnd:'2035-06-12T10:00:00+08:00',purpose:'Local API test',academicYearId:year.id,termId:term.id};
+ await api('ADMIN','POST','',{...base,requestType:'EQUIPMENT',usageRoomId:room.id,items:[{equipmentId:equipment.id,quantity:1}]},403);
  await api('STUDENT','POST','',{...base,requestType:'LABORATORY',roomId:room.id,items:[]},403);
  await api('STUDENT','POST','',{...base,requestType:'EQUIPMENT',usageRoomId:room.id,items:[]},400);
  const lab=await api('FACULTY','POST','',{...base,requestType:'LABORATORY',roomId:room.id,items:[]},201);
  await api('ADMIN','PATCH','/'+lab.request.id+'/approve',{},200);
  const loan=await api('STUDENT','POST','',{...base,requestType:'EQUIPMENT',usageRoomId:room.id,items:[{equipmentId:equipment.id,quantity:1}]},201);
+ await api('ADMIN','PUT','/'+loan.request.id,{...base,requestType:'EQUIPMENT',usageRoomId:room.id,items:[{equipmentId:equipment.id,quantity:1}]},403);
  assert.equal(loan.request.roomId,null);assert.equal(loan.request.usageRoomId,room.id);
  await api('STUDENT','PUT','/'+loan.request.id,{...base,requestType:'LABORATORY',roomId:room.id,items:[]},403);
  await api('ADMIN','PATCH','/'+loan.request.id+'/approve',{},200);

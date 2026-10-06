@@ -4,6 +4,7 @@ import { parseManilaDate, manilaDateKey } from '../utils/manilaTime';
 
 // New and edited requests must explicitly declare their intent. Legacy is history only.
 export async function resolveRequestIntent(db: PrismaClient, body: Record<string, any>, role: UserRole, items: { equipmentId: string; quantity: number }[]) {
+  if (role !== UserRole.FACULTY && role !== UserRole.STUDENT) throw new RequestActionError(403, 'Only students and faculty can submit or edit borrowing requests.');
   const type = body.requestType;
   if (type !== 'LABORATORY' && type !== 'EQUIPMENT') throw new RequestActionError(400, 'Select laboratory reservation or equipment borrowing. Refresh the request form if necessary.');
   if (type === 'LABORATORY' && role !== UserRole.FACULTY) throw new RequestActionError(403, 'Only faculty can reserve a computer laboratory.');

@@ -35,6 +35,8 @@ async function main() {
     const timeStart = new Date('2035-06-12T09:00:00+08:00'), timeEnd = new Date('2035-06-12T10:00:00+08:00');
     const body = {requestType:'EQUIPMENT',facultyId:profile.id,dateNeeded:dateNeeded.toISOString(),timeStart:timeStart.toISOString(),timeEnd:timeEnd.toISOString(),purpose:'Class',usageRoomId:room.id};
     const items=[{equipmentId:equipment.id,quantity:1}];
+    await assert.rejects(resolveRequestIntent(db,body,'ADMIN',items),{statusCode:403});
+    await assert.rejects(resolveRequestIntent(db,{...body,requestType:'LABORATORY',roomId:room.id},'ADMIN',[]),{statusCode:403});
     const intent = await resolveRequestIntent(db,body,'STUDENT',items);
     assert.equal(intent.roomId,null); assert.equal(intent.usageRoomId,room.id);
     await assert.rejects(resolveRequestIntent(db,{...body,requestType:'LABORATORY',roomId:room.id},'STUDENT',items),{statusCode:403});
