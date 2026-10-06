@@ -24,7 +24,7 @@ const statusTokens: Record<ConflictCheckStatus | 'waiting', { bg: string; text: 
   checking: { bg: 'bg-[#eff6ff]', text: 'text-[#1d4ed8]', icon: '🔄', label: 'Checking whether this room is available…' },
   good: { bg: 'bg-[#ecfdf3]', text: 'text-[#047857]', icon: '✔️', label: 'This room is available for your selected time.' },
   warning: { bg: 'bg-[#fff7ed]', text: 'text-[#9a3412]', icon: '⚠️', label: 'Another request is waiting for this time.' },
-  danger: { bg: 'bg-[#fef2f2]', text: 'text-[#b91c1c]', icon: '⛔', label: 'This room is already booked for this time.' },
+  danger: { bg: 'bg-[#fef2f2]', text: 'text-[#b91c1c]', icon: '⛔', label: 'This room is unavailable during the selected time.' },
   error: { bg: 'bg-[#fef2f2]', text: 'text-[#b91c1c]', icon: '❗', label: 'We couldn’t check room availability.' },
 };
 

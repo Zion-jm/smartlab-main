@@ -17,8 +17,8 @@ async function main(){
  const login=await fetch('http://localhost:3137/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:users[role].email,password})});assert.equal(login.status,200);auths[role]=await login.json();
  const context=await browser.newContext({viewport:{width:390,height:844}});await context.addInitScript(auth=>{localStorage.setItem('token',auth.token);localStorage.setItem('auth-storage',JSON.stringify({state:{...auth,isAuthenticated:true},version:0}))},auths[role]);
  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto('http://localhost:3137/'+(role==='ADMIN'?'admin/requests':role.toLowerCase()+'/panel'));await page.waitForLoadState('networkidle');
- if(role==='STUDENT'){assert.equal(await page.getByRole('button',{name:'Reserve a computer lab',exact:true}).count(),0);await page.getByText('Equipment borrowing',{exact:true}).waitFor();}
- if(role==='FACULTY'){await page.getByRole('button',{name:'Reserve a computer lab',exact:true}).click();await page.getByRole('button',{name:'Borrow equipment',exact:true}).click();}
+ if(role==='STUDENT'){assert.equal(await page.getByRole('button',{name:'Computer Lab',exact:true}).count(),0);await page.getByText('Equipment borrowing',{exact:true}).waitFor();}
+ if(role==='FACULTY'){await page.getByRole('button',{name:'Computer Lab',exact:true}).click();await page.getByRole('button',{name:'Equipment',exact:true}).click();}
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,role+' mobile overflow');await page.screenshot({path:path.join(out,role.toLowerCase()+'.png'),fullPage:true});await context.close();console.log('PASS browser:',role);
  }
  const api=async(role,method,route,body,status)=>{const r=await fetch('http://localhost:3137/api/borrow-requests'+route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+auths[role].token},body:body?JSON.stringify(body):undefined});const data=await r.json();assert.equal(r.status,status,method+' '+route+' '+JSON.stringify(data));return data;};

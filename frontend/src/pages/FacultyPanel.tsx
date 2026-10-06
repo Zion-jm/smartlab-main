@@ -1,3 +1,5 @@
+import UsageLocationField from '../features/requests/UsageLocationField';
+import RequestSubmittedDialog from '../features/requests/RequestSubmittedDialog';
 import DateRangeFilter from '../components/shared/DateRangeFilter';
 import MobileScheduleExplorer from '../features/requests/MobileScheduleExplorer';
 import { CalendarDays as RequestCalendarIcon, GraduationCap as RequestAcademicIcon, FileText as RequestPurposeIcon } from 'lucide-react';
@@ -202,6 +204,7 @@ export default function FacultyPanel() {
             error={error}
             onRetry={reload}
             onSubmitted={reloadMyRequests}
+            onViewRequests={() => setActiveTab('requests')}
           />
         )}
         {activeTab === 'requests' && editingRequest ? (
@@ -356,6 +359,7 @@ function RequestFormScaffold({
   error,
   onRetry,
   onSubmitted,
+  onViewRequests,
   editingRequest,
   onUpdated,
   onCancel,
@@ -366,6 +370,7 @@ function RequestFormScaffold({
   error: string | null;
   onRetry: () => Promise<void>;
   onSubmitted?: () => void;
+  onViewRequests?: () => void;
   editingRequest?: ApiBorrowRequest | null;
   onUpdated?: () => void | Promise<void>;
   onCancel?: () => void;
@@ -394,6 +399,8 @@ function RequestFormScaffold({
   }));
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submittedId, setSubmittedId] = useState<string | null>(null);
+  const [locationReset, setLocationReset] = useState(0);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
 
   const missingFields = useMemo<RequiredFieldKey[]>(() => {
@@ -510,6 +517,7 @@ function RequestFormScaffold({
   };
 
   const resetForm = () => {
+    setLocationReset(value => value + 1);
     setUseLabRoom(false);
     setSelectedEquipment({});
     setSubmitError(null);
@@ -595,10 +603,9 @@ function RequestFormScaffold({
         toast.success('Request updated successfully.');
         await onUpdated?.();
       } else {
-        await borrowRequestApi.create(payload);
-        setSubmitSuccess('Request submitted successfully. Expect a confirmation email shortly.');
-        toast.success('Request submitted successfully.');
+        const response = await borrowRequestApi.create(payload);
         resetForm();
+        setSubmittedId(response.data.request.id);
         onSubmitted?.();
       }
     } catch (submitErr) {
@@ -636,6 +643,7 @@ function RequestFormScaffold({
       {submitError && (
         <div className="rounded-2xl border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-xs text-[#991b1b]">{submitError}</div>
       )}
+      {submittedId && <RequestSubmittedDialog id={submittedId} onClose={() => setSubmittedId(null)} onView={() => { setSubmittedId(null); onViewRequests?.(); }} />}
       {submitSuccess && (
         <div className="rounded-2xl border border-[#bbf7d0] bg-[#ecfdf5] px-4 py-3 text-xs text-[#166534]">{submitSuccess}</div>
       )}
@@ -653,15 +661,15 @@ function RequestFormScaffold({
           <section className="space-y-4 p-4 lg:p-5">
             <div>
               <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestCalendarIcon size={18} aria-hidden="true" className="md:hidden" />Request type & schedule</h4>
-              <p className="text-xs text-[#6b7280]">Equipment usage locations do not reserve rooms. Laboratory reservations are for faculty only.</p>
+              <p className="text-xs text-[#6b7280]">Equipment usage locations do not reserve rooms. Faculty laboratory reservations can include equipment.</p>
             </div>
             <div className="flex flex-col gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280] mb-2">Request type</p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { value: true, label: 'Reserve a computer lab' },
-                    { value: false, label: 'Borrow equipment' },
+                    { value: true, label: 'Computer Lab' },
+                    { value: false, label: 'Equipment' },
                   ].map((option) => {
                     const active = useLabRoom === option.value;
                     return (
@@ -692,16 +700,7 @@ function RequestFormScaffold({
                 </div>
               ) : (
                 <div data-field="location">
-                  <DropdownField
-                    label={<FieldLabel text="Intended equipment usage location" required showMissing={missingFields.includes('location')} />}
-                    value={form.location}
-                    options={[...generalRoomOptions.map((option) => ({ value: option.label, label: option.label })), ...(form.location && !generalRoomOptions.some(option => option.label === form.location) ? [{value: form.location, label: form.location}] : [])]}
-                    placeholder="Select usage location"
-                    disabled={!generalRoomOptions.length || loading}
-                    onChange={(value) => updateForm('location', value)}
-                  />
-                  <label className="mt-3 block text-xs text-[#786565]">Or enter another venue / address<input maxLength={500} className="mt-1 min-h-11 w-full rounded-xl border border-[#d8c7c3] px-3 text-sm" value={form.location} onChange={event => updateForm('location', event.target.value)} /></label>
-                  <p className="mt-2 text-xs text-[#786565]">Intended usage only. This does not reserve the room.</p>
+                  <UsageLocationField key={locationReset} label={<FieldLabel text="Usage Location" required showMissing={missingFields.includes('location')} />} value={form.location} options={generalRoomOptions} loading={loading} onChange={value => updateForm('location', value)} />
                 </div>
               )}
               {!labRoomOptions.length && useLabRoom && !loading && (
