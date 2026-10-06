@@ -43,10 +43,11 @@ const entityMeta: Record<DirectoryEntity, { singular: string; title: string }> =
   departments: { singular: 'Department', title: 'Manage department' },
 };
 
-const DrawerSection = ({ label, children }: { label: string; children: ReactNode }) => (
+const DrawerSection = ({ label, children, error }: { label: string; children: ReactNode; error?: string | null }) => (
   <div>
     <label className="block text-xs font-semibold text-[#374151] mb-1">{label}</label>
     {children}
+    {error && <p role="alert" className="mt-1 text-xs text-red-700">{error}</p>}
   </div>
 );
 
@@ -109,11 +110,12 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
 
     setSubmitState({ loading: true, error: null });
     try {
+      let savedResponse;
       if (entity === 'buildings') {
         const payload = { name: String(formValues.name ?? '').trim() };
         if (!payload.name) return fail('Building name is required.');
-        if (mode === 'create') await directoryApi.createBuilding(payload);
-        else await directoryApi.updateBuilding((record as DirectoryBuilding).id, payload);
+        if (mode === 'create') savedResponse = await directoryApi.createBuilding(payload);
+        else savedResponse = await directoryApi.updateBuilding((record as DirectoryBuilding).id, payload);
       } else if (entity === 'rooms') {
         const roomNumber = String(formValues.roomNumber ?? '').trim();
         const roomNameValue = String(formValues.roomName ?? '').trim();
@@ -124,33 +126,34 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
           isComputerLab: Boolean(formValues.isComputerLab),
         };
         if (!payload.roomNumber && !payload.roomName) return fail('Room number or room name is required.');
-        if (mode === 'create') await directoryApi.createRoom(payload);
-        else await directoryApi.updateRoom((record as DirectoryRoom).id, payload);
+        if (mode === 'create') savedResponse = await directoryApi.createRoom(payload);
+        else savedResponse = await directoryApi.updateRoom((record as DirectoryRoom).id, payload);
       } else if (entity === 'programs') {
         const payload = {
           code: String(formValues.code ?? '').trim().toUpperCase(),
           name: String(formValues.name ?? '').trim(),
         };
         if (!payload.code || !payload.name) return fail('Program code and name are required.');
-        if (mode === 'create') await directoryApi.createProgram(payload);
-        else await directoryApi.updateProgram((record as DirectoryProgram).id, payload);
+        if (mode === 'create') savedResponse = await directoryApi.createProgram(payload);
+        else savedResponse = await directoryApi.updateProgram((record as DirectoryProgram).id, payload);
       } else if (entity === 'subjects') {
         const payload = {
           code: String(formValues.code ?? '').trim().toUpperCase(),
           name: String(formValues.name ?? '').trim(),
         };
         if (!payload.code || !payload.name) return fail('Subject code and name are required.');
-        if (mode === 'create') await directoryApi.createSubject(payload);
-        else await directoryApi.updateSubject((record as DirectorySubject).id, payload);
+        if (mode === 'create') savedResponse = await directoryApi.createSubject(payload);
+        else savedResponse = await directoryApi.updateSubject((record as DirectorySubject).id, payload);
       } else if (entity === 'departments') {
         const payload = { name: String(formValues.name ?? '').trim() };
         if (!payload.name) return fail('Department name is required.');
-        if (mode === 'create') await directoryApi.createDepartment(payload);
-        else await directoryApi.updateDepartment((record as DirectoryDepartment).id, payload);
+        if (mode === 'create') savedResponse = await directoryApi.createDepartment(payload);
+        else savedResponse = await directoryApi.updateDepartment((record as DirectoryDepartment).id, payload);
       }
 
       setSubmitState({ loading: false, error: null });
       toast.success(`${entityMeta[entity].singular} ${mode === 'create' ? 'added' : 'updated'} successfully.`);
+      for (const warning of savedResponse?.data?.warnings ?? []) toast.warning(warning, { duration: 10000 });
       onSuccess?.();
     } catch (error) {
       console.error('DirectoryDrawer submission error:', error);
@@ -164,6 +167,8 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
       toast.error(message);
     }
   };
+
+  const fieldError = (field: string) => submitState.error?.toLowerCase().includes(field) ? submitState.error : null;
 
   const buildingOptions = buildings.map((building) => ({
     label: building.name,
@@ -183,12 +188,14 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
             ✕
           </button>
         </div>
+        {mode === 'edit' && <p className="mx-5 mt-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">Renaming this record may change the label shown on linked requests, schedules, and historical reports.</p>}
         <form className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4" onSubmit={handleSubmit}>
           {entity === 'buildings' && (
-            <DrawerSection label="Building name">
+            <DrawerSection label="Building name" error={fieldError("name")}>
               <input
                 type="text"
                 value={String(formValues.name ?? '')}
+                  maxLength={150}
                 onChange={(event) => handleInput('name', event.target.value)}
                 required
                 className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
@@ -199,25 +206,27 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
 
           {entity === 'rooms' && (
             <>
-              <DrawerSection label="Room number (optional)">
+              <DrawerSection label="Room number (optional)" error={fieldError("number")}>
                 <input
                   type="text"
                   value={String(formValues.roomNumber ?? '')}
+                  maxLength={20}
                   onChange={(event) => handleInput('roomNumber', event.target.value)}
                   className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
                   placeholder="e.g., LAB-101"
                 />
               </DrawerSection>
-              <DrawerSection label="Room name (provide at least a number or a name)">
+              <DrawerSection label="Room name (provide at least a number or a name)" error={fieldError("name")}>
                 <input
                   type="text"
                   value={String(formValues.roomName ?? '')}
+                  maxLength={150}
                   onChange={(event) => handleInput('roomName', event.target.value)}
                   className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
                   placeholder="e.g., Computer Laboratory 1"
                 />
               </DrawerSection>
-              <DrawerSection label="Building">
+              <DrawerSection label="Building (optional)" error={fieldError("building")}>
                 <select
                   value={String(formValues.buildingId ?? '')}
                   onChange={(event) => handleInput('buildingId', event.target.value)}
@@ -245,21 +254,22 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
 
           {(entity === 'programs' || entity === 'subjects') && (
             <>
-              <DrawerSection label="Code">
+              <DrawerSection label="Code" error={fieldError("code")}>
                 <input
                   type="text"
                   value={String(formValues.code ?? '')}
                   onChange={(event) => handleInput('code', event.target.value)}
                   required
-                  maxLength={16}
+                  maxLength={20}
                   className="w-full uppercase rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
                   placeholder="e.g., BSIT / IT101"
                 />
               </DrawerSection>
-              <DrawerSection label="Name">
+              <DrawerSection label="Name" error={fieldError("name")}>
                 <input
                   type="text"
                   value={String(formValues.name ?? '')}
+                  maxLength={150}
                   onChange={(event) => handleInput('name', event.target.value)}
                   required
                   className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
@@ -270,10 +280,11 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
           )}
 
           {entity === 'departments' && (
-            <DrawerSection label="Department name">
+            <DrawerSection label="Department name" error={fieldError("name")}>
               <input
                 type="text"
                 value={String(formValues.name ?? '')}
+                  maxLength={150}
                 onChange={(event) => handleInput('name', event.target.value)}
                 required
                 className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
@@ -283,7 +294,7 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
           )}
 
           {submitState.error && (
-            <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{submitState.error}</p>
+            <p role="alert" className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{submitState.error}</p>
           )}
 
           <div className="flex justify-end gap-2 pt-2">
