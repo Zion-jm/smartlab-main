@@ -609,7 +609,7 @@ export default function AdminReports() {
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_auto_minmax(0,0.9fr)]">
                   <Panel
                     title="Needs attention"
-                    description="Operational items that may need an administrator's action."
+                    description="Items that need your attention."
                   >
                     <div className="grid gap-3 sm:grid-cols-2">
                       <button
@@ -675,7 +675,7 @@ export default function AdminReports() {
 
                 <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
-                <Panel title="Borrowing activity over time" description="Monthly request volume and equipment units across all request statuses.">
+                <Panel title="Borrowing activity over time" description="Requests and equipment quantities by month, including all statuses.">
                   {monthlyUsage.length === 0 ? (
                     <p className="py-8 text-center text-xs text-[#9ca3af]">No borrowing activity in this period.</p>
                   ) : (
@@ -710,7 +710,7 @@ export default function AdminReports() {
 
                 <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
-                <Panel title="Detailed reports" description="Open the full filtered log for the area you need to review.">
+                <Panel title="Detailed reports" description="Choose a report to view records, filter results, or export a copy.">
                   <div className="grid gap-3 sm:grid-cols-3">
                     {[
                       { tab: 'requests' as const, label: 'Requests', detail: 'Review request status and demand sources.' },

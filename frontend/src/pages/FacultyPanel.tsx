@@ -651,8 +651,8 @@ function RequestFormScaffold({
       <PanelSection
         title={editingRequest ? `Edit ${formatReference(editingRequest.id)}` : 'Request details'}
         helper={editingRequest
-          ? 'Update the pending request below. Changes will be sent back for administrator review.'
-          : 'Complete the fields below so we can allocate rooms, equipment, faculty, and time for your session.'}
+          ? 'Edit your request below. Your changes will be sent to the administrator for review.'
+          : 'Choose a request type and complete the details. Submit at least 3 days in advance.'}
       >
         {editingRequest && (!editingRequest.requestType || editingRequest.requestType === 'LEGACY') && (
           <p className="mb-4 rounded-xl border border-[#ead7d3] bg-[#fff8f3] p-3 text-sm text-[#800000]">This is an older request. Saving applies the new request rules. Confirm the request type, equipment, and location before submitting.</p>

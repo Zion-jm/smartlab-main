@@ -273,7 +273,7 @@ export default function ProfilePage({
           <SectionHeading
             eyebrow="Personal details"
             title="Contact information"
-            description="Update the details associated with your SmartLab account."
+            description="Update your name and contact details."
           />
           <form onSubmit={handleProfileSubmit} className="space-y-5">
             <div className="grid gap-5 sm:grid-cols-2">

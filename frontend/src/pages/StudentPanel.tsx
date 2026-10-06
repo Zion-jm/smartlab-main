@@ -60,7 +60,7 @@ const tabs = [
   {
     id: 'request',
     label: 'New Request',
-    description: 'File a lab or equipment request at least 3 days in advance.',
+    description: 'Request equipment at least 3 days in advance.',
   },
   {
     id: 'requests',
@@ -706,8 +706,8 @@ function RequestFormScaffold({
       <PanelSection
         title={editingRequest ? `Edit ${formatReference(editingRequest.id)}` : 'Request details'}
         helper={editingRequest
-          ? 'Update the pending request below. Changes will be sent back for administrator review.'
-          : 'Select equipment, a borrowing time, and its intended usage location. Students cannot reserve laboratories.'}
+          ? 'Edit your request below. Your changes will be sent to the administrator for review.'
+          : 'Choose equipment, a borrowing time, and a usage location. Submit at least 3 days in advance.'}
       >
         {editingRequest && (!editingRequest.requestType || editingRequest.requestType === 'LEGACY') && (
           <p className="mb-4 rounded-xl border border-[#ead7d3] bg-[#fff8f3] p-3 text-sm text-[#800000]">This is an older request. Saving applies the new request rules. Confirm the request type, equipment, and location before submitting.</p>
@@ -716,7 +716,7 @@ function RequestFormScaffold({
           <section className="space-y-4 p-4 lg:p-5">
             <div>
               <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestCalendarIcon size={18} aria-hidden="true" className="md:hidden" />Request type & schedule</h4>
-              <p className="text-xs text-[#6b7280]">Equipment usage locations do not reserve rooms. Faculty laboratory reservations can include equipment.</p>
+              <p className="text-xs text-[#6b7280]">Choose where you will use the equipment. This does not reserve a room.</p>
             </div>
             <div className="flex flex-col gap-3">
               <p className="rounded-xl bg-[#fff8f3] p-3 text-sm font-semibold text-[#800000]">Equipment borrowing</p>

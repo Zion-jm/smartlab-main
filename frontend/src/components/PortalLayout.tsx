@@ -140,7 +140,6 @@ export default function PortalLayout({
   portalLabel,
   portalSubLabel = 'smartlab.',
   headerTitle,
-  headerSubtitle,
   headerBadge,
   sidebarExtras,
   rightHeaderContent,
@@ -179,7 +178,6 @@ export default function PortalLayout({
 
   const currentNav = [...resolvedNavItems, ...(resolvedNavGroups?.flatMap((group) => group.items) ?? [])].find((item) => item.isActive);
   const resolvedHeaderTitle = headerTitle || currentNav?.label || portalLabel;
-  const resolvedHeaderSubtitle = headerSubtitle ?? currentNav?.description;
 
   const handleLogout = () => {
     logout();
@@ -382,19 +380,16 @@ export default function PortalLayout({
               </button>
             </div>
 
-            <nav className="flex min-w-0 flex-col gap-0.5 [overflow-wrap:anywhere]">
+            <div className="min-w-0 [overflow-wrap:anywhere]">
               <div className="flex items-center flex-wrap gap-2 text-xs lg:text-sm">
-                <span className="font-semibold text-[#800000]">SmartLab</span>
-                <span className="text-[#9ca3af]">/</span>
-                <span className="text-[#4b5563] font-medium">{resolvedHeaderTitle}</span>
+                <h1 className="text-base font-semibold text-[#321d1d] lg:text-lg">{resolvedHeaderTitle}</h1>
                 {headerBadge && (
                   <span className="px-2 py-0.5 rounded-full bg-[#fff5f5] text-[10px] font-semibold text-[#b91c1c] uppercase tracking-wide">
                     {headerBadge}
                   </span>
                 )}
               </div>
-              {resolvedHeaderSubtitle && <p className="text-xs text-[#6b7280]">{resolvedHeaderSubtitle}</p>}
-            </nav>
+            </div>
           </div>
 
           <div className="ml-2 flex shrink-0 items-center gap-3">{rightHeaderContent ?? defaultRightActions}</div>

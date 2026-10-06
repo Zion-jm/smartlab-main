@@ -107,14 +107,14 @@ function SettingsPage() {
 
         <PreferenceRow
           title="Hide ribbon controls by default"
-          description="Keep search, filters, and contextual actions collapsed when an operational page first opens."
+          description="Hide search and filters when you first open a page. Select Show controls to use them."
           checked={preferences.ribbonControlsHiddenByDefault}
           onChange={(checked) => updatePreference('ribbonControlsHiddenByDefault', checked)}
           label="Hide ribbon controls by default"
         />
         <PreferenceRow
           title="Collapse the sidebar by default"
-          description="Give the workspace more room by opening each portal with its navigation sidebar minimized."
+          description="Start with the sidebar closed to give the page more space."
           checked={preferences.sidebarCollapsedByDefault}
           onChange={(checked) => updatePreference('sidebarCollapsedByDefault', checked)}
           label="Collapse the sidebar by default"
