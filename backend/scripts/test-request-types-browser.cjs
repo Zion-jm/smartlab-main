@@ -44,6 +44,18 @@ async function main(){
  await api('ADMIN','PATCH','/'+loan.request.id+'/approve',{},200);
  assert.equal(await db.labSchedule.count({where:{borrowRequestId:loan.request.id}}),0);
  assert.equal(await db.labSchedule.count({where:{borrowRequestId:lab.request.id}}),1);
+ const mine=await api('STUDENT','GET','/my-requests',undefined,200);
+ const listed=mine.requests.find(r=>r.id===loan.request.id);
+ assert.equal(listed.requestType,'EQUIPMENT');assert.equal(listed.usageRoomId,room.id);assert.equal(listed.usageRoom.id,room.id);
+ const facultyMine=await api('FACULTY','GET','/my-requests',undefined,200);
+ assert.equal(facultyMine.requests.find(r=>r.id===lab.request.id).requestType,'LABORATORY');
+ const past={requestedBy:users.FACULTY.id,academicYearId:year.id,termId:term.id,dateNeeded:new Date('2020-01-01'),requestType:'EQUIPMENT',usageLocation:'Test'};
+ const stock=await db.equipment.findMany({take:2});
+ await db.borrowRequest.create({data:{...past,status:'BORROWED',items:{create:stock.map(e=>({equipmentId:e.id,quantity:2}))}}});
+ await db.borrowRequest.create({data:{...past,status:'APPROVED',items:{create:[{equipmentId:stock[0].id,quantity:1}]}}});
+ const statsResponse=await fetch('http://localhost:3137/api/equipment/stats/overview',{headers:{Authorization:'Bearer '+auths.ADMIN.token}});
+ assert.equal(statsResponse.status,200);const stats=await statsResponse.json();
+ assert.equal(stats.overdue.requests,1);assert.equal(stats.overdue.quantity,4);
  assert.equal(errors.length,0,errors.join('; '));console.log('PASS HTTP: student permissions, required items, faculty lab approval, equipment usage in occupied lab, edit protection.');
  }finally{if(browser)await browser.close();if(server){server.kill();await new Promise(r=>server.exitCode!==null?r():server.once('exit',r));}if(db)await db.$disconnect();await owner.$executeRawUnsafe('DROP SCHEMA IF EXISTS "'+schema+'" CASCADE');await owner.$disconnect();}
 }

@@ -326,7 +326,7 @@ export default function AdminEquipment() {
       {
         title: 'Damaged',
         value: stats.inventory?.damagedQuantity ?? 0,
-        subtext: `${stats.overdue?.requests ?? 0} overdue repairs`,
+        subtext: `${stats.overdue?.requests ?? 0} overdue returns`,
       },
       {
         title: 'Utilization',
@@ -623,7 +623,7 @@ export default function AdminEquipment() {
                   <div className="rounded-2xl border border-[#e5e7eb] p-4 bg-white">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">Overdue returns</p>
                     <p className="text-2xl font-semibold text-[#111827]">{stats.overdue?.requests ?? 0}</p>
-                    <p className="text-xs text-[#6b7280]">{stats.overdue?.quantity ?? 0} units pending</p>
+                    <p className="text-xs text-[#6b7280]">{stats.overdue?.quantity ?? 0} units overdue</p>
                   </div>
                 </div>
               )}

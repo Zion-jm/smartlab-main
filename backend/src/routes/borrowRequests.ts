@@ -118,6 +118,10 @@ router.get('/my-requests', authenticateToken, async (req, res) => {
     });
 
     const processedRequests = requests.map((request) => ({
+      requestType: request.requestType,
+      usageRoomId: request.usageRoomId,
+      usageRoom: request.usageRoom,
+      usageLocation: request.usageLocation,
       id: request.id,
       createdAt: request.createdAt.toISOString(),
       dateNeeded: request.dateNeeded.toISOString(),

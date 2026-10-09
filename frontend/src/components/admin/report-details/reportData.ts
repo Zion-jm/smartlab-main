@@ -115,7 +115,7 @@ export type RequestPrintRow = {
 export const buildRequestPrintRows = (requests: BorrowRequest[]): RequestPrintRow[] =>
   requests.map((request) => ({
     id: request.id,
-    requestType: request.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Legacy request',
+    requestType: request.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : request.requestType === 'LEGACY' ? 'Legacy request' : 'Request type unavailable',
     date: formatDate(request.dateNeeded),
     room: (request.requestType === 'EQUIPMENT' ? 'Intended use: ' : request.requestType === 'LABORATORY' ? 'Reserved lab: ' : '') + (request.location ?? ''),
     equipment: request.equipmentList ?? '',

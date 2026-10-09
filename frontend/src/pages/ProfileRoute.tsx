@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 import PortalLayout, { type PortalNavItem, type SidebarIconProps } from '../components/PortalLayout';
 import ProfilePage from './ProfilePage';
-import { authApi, userApi } from '../services/api';
+import { authApi, userApi, academicPeriodApi } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
 import { toast } from '../stores/toastStore';
 
@@ -35,6 +35,14 @@ function RoleShell({ children }: { children: ReactNode }) {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const role = user?.role;
+  const [periodLabel, setPeriodLabel] = useState('Loading academic period…');
+  useEffect(() => {
+    let mounted = true;
+    academicPeriodApi.get().then(response => {
+      if (mounted) setPeriodLabel(response.data?.current?.label || 'No active academic period');
+    }).catch(() => { if (mounted) setPeriodLabel('Academic period unavailable'); });
+    return () => { mounted = false; };
+  }, []);
 
   const navItems = useMemo<PortalNavItem[]>(
     () => [
@@ -64,7 +72,7 @@ function RoleShell({ children }: { children: ReactNode }) {
       portalSubLabel="smartlab."
       sidebarExtras={
         <div className="mx-4 mt-4 rounded-lg border border-[rgba(255,184,28,0.3)] bg-[#fef3e2] p-3">
-          <p className="text-xs font-medium text-[#9a7b4f]">2025-2026 · 1st Semester</p>
+          <p className="text-xs font-medium text-[#9a7b4f]">{periodLabel}</p>
         </div>
       }
     >

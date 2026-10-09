@@ -306,16 +306,9 @@ router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN),
           },
         },
       }),
-      prisma.borrowRequestItem.aggregate({
-        _count: { id: true },
-        _sum: { quantity: true },
-        where: {
-          borrowRequest: {
-            ...periodFilter,
-            dateNeeded: { lt: startOfToday },
-            status: { in: activeStatuses },
-          },
-        },
+      prisma.borrowRequest.findMany({
+        where: { ...periodFilter, dateNeeded: { lt: startOfToday }, status: RequestStatus.BORROWED },
+        select: { items: { select: { quantity: true } } },
       }),
     ]);
 
@@ -343,8 +336,8 @@ router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN),
         quantity: upcomingReservations._sum.quantity ?? 0,
       },
       overdue: {
-        requests: overdueReservations._count.id ?? 0,
-        quantity: overdueReservations._sum.quantity ?? 0,
+        requests: overdueReservations.length,
+        quantity: overdueReservations.reduce((total, request) => total + request.items.reduce((sum, item) => sum + item.quantity, 0), 0),
       },
     });
   } catch (error) { sendError(error, res); }
