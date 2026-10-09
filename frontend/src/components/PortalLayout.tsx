@@ -355,8 +355,8 @@ export default function PortalLayout({
         }`}
       >
         <header className="shrink-0 sticky top-0 z-40 bg-white border-b border-[#e5e7eb] px-4 lg:px-6 py-4 flex items-center justify-between">
-          <div className="flex min-w-0 flex-1 items-start gap-2 lg:gap-4">
-            <div className="flex shrink-0 items-center gap-2 pt-0.5">
+          <div className="flex min-w-0 flex-1 items-center gap-2 lg:gap-4">
+            <div className="flex shrink-0 items-center gap-2">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden p-2 rounded-lg hover:bg-[rgba(128,0,0,0.05)] text-[#4b5563] transition-all"
@@ -380,7 +380,7 @@ export default function PortalLayout({
               </button>
             </div>
 
-            <div className="min-w-0 [overflow-wrap:anywhere]">
+            <div className={`min-w-0 [overflow-wrap:anywhere] ${mobileMenuOpen && !isCollapsed ? 'hidden' : 'block'} ${isCollapsed ? 'lg:block' : 'lg:hidden'}`}>
               <div className="flex items-center flex-wrap gap-2 text-xs lg:text-sm">
                 <h1 className="text-base font-semibold text-[#321d1d] lg:text-lg">{resolvedHeaderTitle}</h1>
                 {headerBadge && (
