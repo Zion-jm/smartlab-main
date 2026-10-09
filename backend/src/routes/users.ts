@@ -1,3 +1,6 @@
+import { validNewPassword, passwordPolicyMessage } from '../utils/passwordPolicy';
+import { requestPasswordReset } from '../services/passwordResetService';
+import { accountStatusChanged } from '../services/accountReactivationService';
 import { prisma } from '../db/prisma';
 import { pagination, pageHeaders } from '../utils/pagination';
 import { sendError } from '../middleware/errors';
@@ -147,6 +150,8 @@ router.post(
         return;
       }
 
+      if (!validNewPassword(password)) { res.status(400).json({ error: passwordPolicyMessage }); return; }
+      if (typeof gmail !== 'string' || gmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gmail)) { res.status(400).json({ error: 'Enter a valid email address.' }); return; }
       const role = ROLE_ID_TO_VALUE[Number(role_id)];
       const status = STATUS_ID_TO_VALUE[Number(status_id)];
 
@@ -332,6 +337,10 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const lastNameInput = req.body.last_name ?? req.body.lastName;
     const emailInput = req.body.gmail ?? req.body.email;
     const phoneInput = req.body.phone;
+    if (phoneInput !== undefined && (typeof phoneInput !== 'string' || (phoneInput.trim() !== '' && !/^09[0-9]{9}$/.test(phoneInput.trim())))) {
+      res.status(400).json({ error: 'Enter an 11-digit mobile number starting with 09, for example 09123456789.' });
+      return;
+    }
 
     const firstName = typeof firstNameInput === 'string' && firstNameInput.trim() ? firstNameInput.trim() : existingUser.firstName;
     const lastName = typeof lastNameInput === 'string' && lastNameInput.trim() ? lastNameInput.trim() : existingUser.lastName;
@@ -343,6 +352,12 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return;
     }
 
+    if (!isAdmin && email !== existingUser.email) {
+      res.status(403).json({ error: 'Email changes must be made by an administrator.' }); return;
+    }
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ error: 'Enter a valid email address.' }); return;
+    }
     if (email !== existingUser.email) {
       const emailExists = await prisma.user.findUnique({ where: { email } });
       if (emailExists) {
@@ -510,6 +525,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       if (!isAdmin && email !== existingUser.email) {
         await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'SESSIONS_REVOKED', entityType: 'User', entityId: id, details: { reason: 'Email changed' } });
       }
+      await accountStatusChanged(tx, updatedUser, existingUser.status);
       return updatedUser;
     });
 
@@ -525,6 +541,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
   } catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') { res.status(409).json({ error: 'Account changed. Refresh and try again.' }); return; } sendError(error, res); }
 });
 
+router.post('/:id/password-reset', authenticateToken, authorizeRoles(UserRole.ADMIN), async (req,res) => {
+  try {
+    const user=await prisma.user.findUniqueOrThrow({where:{id:req.params.id},select:{email:true}});
+    await requestPasswordReset(user.email,req.user!.id);
+    res.json({message:'A reset link has been requested. If one was sent recently, ask the user to check their existing email.'});
+  } catch(error) { sendError(error,res); }
+});
 // Update user status (Admin only)
 router.patch(
   '/:id/status',
@@ -541,8 +564,9 @@ router.patch(
       }
 
       const user = await prisma.$transaction(async tx => {
+        const previous = await tx.user.findUniqueOrThrow({ where: { id } });
         const user = await tx.user.update({
-          where: { id },
+          where: { id, updatedAt: previous.updatedAt },
           data: { status: requestedStatus, sessionVersion: { increment: 1 } },
           select: {
             id: true,
@@ -559,6 +583,7 @@ router.patch(
           entityId: user.id,
           details: { label: user.email, next: user.status },
         });
+        await accountStatusChanged(tx, user, previous.status);
         return user;
       });
       res.json({

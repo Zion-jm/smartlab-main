@@ -62,6 +62,9 @@ export const summarizeRequest = (request: BorrowRequestWithRelations) => {
 
   return {
     id: request.id,
+    requestType: request.requestType,
+    usageRoomId: request.usageRoomId,
+    usageLocation: request.usageLocation,
     requesterId: request.requester.id,
     requesterName: `${request.requester.firstName} ${request.requester.lastName}`.trim(),
     requesterEmail: request.requester.email,
@@ -69,12 +72,13 @@ export const summarizeRequest = (request: BorrowRequestWithRelations) => {
     requesterAvatar: null,
     facultyId: request.faculty?.id ?? null,
     program: request.program?.name ?? null,
+    programCode: request.program?.code ?? null,
     programId: request.program?.id ?? null,
     yearLevel: request.yearLevel,
     facultyName: request.faculty?.user
       ? `${request.faculty.user.firstName} ${request.faculty.user.lastName}`.trim()
       : null,
-    location: formatLocation(request),
+    location: request.requestType === 'EQUIPMENT' ? (request.usageRoom ? [request.usageRoom.roomNumber, request.usageRoom.name].filter(Boolean).join(' – ') : request.usageLocation) : formatLocation(request),
     roomId: request.room?.id ?? null,
     isComputerLab: request.room?.isComputerLab ?? null,
     room: request.room,
@@ -109,7 +113,12 @@ export type RequestSummary = ReturnType<typeof summarizeRequest>;
 
 export const buildEmailDetails = (summary: RequestSummary) => ({
   id: summary.id,
+  requestType: summary.requestType,
   requesterName: summary.requesterName,
+  requesterRole: summary.requesterRole,
+  programCode: summary.programCode,
+  program: summary.program,
+  yearLevel: summary.yearLevel,
   dateNeeded: summary.dateNeeded,
   timeStart: summary.timeStart,
   timeEnd: summary.timeEnd,
@@ -124,7 +133,7 @@ export const mapRoleFilter = (role?: string | null): UserRole | null => {
   if (!role || role === 'ALL') return null;
   if (role === 'FACULTY') return UserRole.FACULTY;
   if (role === 'STUDENT') return UserRole.STUDENT;
-  if (role === 'ADMIN' || role === 'STAFF') return UserRole.ADMIN;
+  if (role === 'ADMIN') return UserRole.ADMIN;
   return null;
 };
 

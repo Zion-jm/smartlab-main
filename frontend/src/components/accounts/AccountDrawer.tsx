@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import { useMemo, useState } from 'react';
 import type { Account } from '../../types/account';
 import DropdownField from '../shared/DropdownField';
@@ -66,6 +67,12 @@ export default function AccountDrawer({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isCreate = mode === 'create';
+  const passwordError = formValues.password.length < 8
+    ? 'Use at least 8 characters for the temporary password.'
+    : new TextEncoder().encode(formValues.password).length > 72
+      ? 'This password is too long. Use no more than 72 bytes (some symbols use multiple bytes).'
+      : null;
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const isEdit = mode === 'edit';
   const isView = mode === 'view';
   const isFacultyRole = formValues.role === 'FACULTY';
@@ -100,8 +107,9 @@ export default function AccountDrawer({
       return;
     }
 
-    if (isCreate && !formValues.password) {
-      setSubmitError('Provide a temporary password for the new account.');
+    if (isCreate && passwordError) {
+      setPasswordTouched(true);
+      setSubmitError(passwordError);
       return;
     }
 
@@ -158,9 +166,10 @@ export default function AccountDrawer({
     } catch (error: unknown) {
       const fallbackMessage = isCreate ? 'Failed to create account. Please try again.' : 'Failed to update account. Please try again.';
       let message = fallbackMessage;
-      if (typeof error === 'object' && error && 'response' in error) {
-        const apiError = error as { response?: { data?: { message?: string } } };
-        message = apiError.response?.data?.message ?? fallbackMessage;
+      if (isAxiosError(error)) {
+        const data = error.response?.data;
+        const detail = data?.error ?? data?.message;
+        if (typeof detail === 'string' && detail.trim()) message = detail;
       }
       setSubmitError(message);
       toast.error(message);
@@ -178,7 +187,7 @@ export default function AccountDrawer({
   const subLabel = isCreate ? 'Invite a new user to SmartLab.' : account?.email ?? '';
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="admin-mobile-drawer fixed inset-0 z-50 h-dvh">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="absolute inset-y-0 right-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
         <div className="px-5 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
@@ -190,7 +199,7 @@ export default function AccountDrawer({
             ✕
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
           {isView ? (
             <div className="space-y-4 text-sm text-[#374151]">
               <div>
@@ -306,15 +315,23 @@ export default function AccountDrawer({
               )}
               {isCreate && (
                 <div>
-                  <label className="block text-xs font-semibold text-[#374151] mb-1">Temporary password</label>
+                  <label htmlFor="account-temporary-password" className="block text-xs font-semibold text-[#374151] mb-1">Temporary password</label>
                   <input
                     type="text"
+                    id="account-temporary-password"
                     name="password"
+                    autoComplete="new-password"
+                    onBlur={() => setPasswordTouched(true)}
+                    aria-describedby="account-password-help"
+                    aria-invalid={passwordTouched && !!passwordError}
                     value={formValues.password}
                     onChange={handleChange}
-                    placeholder="Enter a password to share with the user"
+                    placeholder="At least 8 characters"
                     className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
                   />
+                  <p id="account-password-help" aria-live="polite" className={`mt-1 text-xs ${passwordTouched && passwordError ? 'text-red-600' : 'text-[#6b7280]'}`}>
+                    {passwordTouched && passwordError ? passwordError : 'Use at least 8 characters. Maximum 72 bytes; some symbols count as multiple bytes.'}
+                  </p>
                 </div>
               )}
               {isFacultyRole && (

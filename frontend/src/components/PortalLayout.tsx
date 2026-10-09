@@ -140,7 +140,6 @@ export default function PortalLayout({
   portalLabel,
   portalSubLabel = 'smartlab.',
   headerTitle,
-  headerSubtitle,
   headerBadge,
   sidebarExtras,
   rightHeaderContent,
@@ -149,6 +148,7 @@ export default function PortalLayout({
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const userId = user?.id ?? 'anonymous';
+  const setPreference = usePreferencesStore((state) => state.setPreference);
   const preferencesByUser = usePreferencesStore((state) => state.preferencesByUser);
   const sidebarCollapsedByDefault = getUserPreferences(preferencesByUser, userId).sidebarCollapsedByDefault;
   const [isCollapsed, setIsCollapsed] = useState(sidebarCollapsedByDefault);
@@ -178,7 +178,6 @@ export default function PortalLayout({
 
   const currentNav = [...resolvedNavItems, ...(resolvedNavGroups?.flatMap((group) => group.items) ?? [])].find((item) => item.isActive);
   const resolvedHeaderTitle = headerTitle || currentNav?.label || portalLabel;
-  const resolvedHeaderSubtitle = headerSubtitle ?? currentNav?.description;
 
   const handleLogout = () => {
     logout();
@@ -216,15 +215,15 @@ export default function PortalLayout({
   const roleLabel = user?.role === 'ADMIN' ? 'Admin Portal' : user?.role === 'FACULTY' ? 'Faculty Portal' : 'Student Portal';
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] font-['Inter',sans-serif]">
+    <div className="min-h-dvh lg:min-h-screen bg-[#f8f9fa] font-['Inter',sans-serif]">
       {mobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />}
 
       <aside
-        className={`fixed left-0 top-0 h-screen bg-white shadow-[2px_0_10px_rgba(0,0,0,0.1)] z-50 transition-all duration-300 flex flex-col ${
+        className={`fixed left-0 top-0 h-dvh max-h-dvh bg-white shadow-[2px_0_10px_rgba(0,0,0,0.1)] z-50 transition-all duration-300 flex flex-col ${
           mobileMenuOpen ? 'translate-x-0 w-[250px]' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-[70px]' : 'lg:w-[250px]'}`}
       >
-        <div className="p-5 border-b border-[#e5e7eb]">
+        <div className="shrink-0 p-5 border-b border-[#e5e7eb]">
           <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
             <img
               src="/PUPLogo.png"
@@ -240,9 +239,9 @@ export default function PortalLayout({
           </div>
         </div>
 
-        {!isCollapsed && sidebarExtras}
+        {!isCollapsed && <div className="shrink-0">{sidebarExtras}</div>}
 
-        <nav className="flex-1 py-4 space-y-1 overflow-y-auto">
+        <nav className="min-h-0 flex-1 py-4 space-y-1 overflow-y-auto overscroll-contain">
           {resolvedNavGroups
             ? resolvedNavGroups.map((group) => (
               <div key={group.id} className="mb-3" data-testid={`sidebar-group-${group.id}`}>
@@ -261,7 +260,7 @@ export default function PortalLayout({
             ))}
         </nav>
 
-        <div ref={profileMenuRef} className="p-3 lg:p-4 border-t border-[#e5e7eb] relative">
+        <div ref={profileMenuRef} className="shrink-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:p-4 border-t border-[#e5e7eb] relative">
           <button
             onClick={() => {
               if (isCollapsed) {
@@ -321,6 +320,7 @@ export default function PortalLayout({
                   <UserAvatarIcon />
                   My Profile
                 </button>
+                {user?.role === 'ADMIN' && (
                 <button
                   type="button"
                   role="menuitem"
@@ -333,6 +333,7 @@ export default function PortalLayout({
                   <SettingsIcon />
                   Settings
                 </button>
+                )}
                 <button
                   type="button"
                   role="menuitem"
@@ -349,13 +350,13 @@ export default function PortalLayout({
       </aside>
 
       <main
-        className={`min-h-screen min-w-0 max-h-screen transition-all duration-300 overflow-hidden flex flex-col ${
+        className={`h-dvh min-h-0 lg:min-h-screen min-w-0 max-h-dvh lg:max-h-screen transition-all duration-300 overflow-hidden flex flex-col ${
           isCollapsed ? 'lg:ml-[70px] lg:w-[calc(100%-70px)]' : 'lg:ml-[250px] lg:w-[calc(100%-250px)]'
         }`}
       >
-        <header className="sticky top-0 z-40 bg-white border-b border-[#e5e7eb] px-4 lg:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex items-center gap-2 pt-0.5">
+        <header className="shrink-0 sticky top-0 z-40 bg-white border-b border-[#e5e7eb] px-4 lg:px-6 py-4 flex items-center justify-between">
+          <div className="flex min-w-0 flex-1 items-center gap-2 lg:gap-4">
+            <div className="flex shrink-0 items-center gap-2">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden p-2 rounded-lg hover:bg-[rgba(128,0,0,0.05)] text-[#4b5563] transition-all"
@@ -365,7 +366,13 @@ export default function PortalLayout({
               </button>
 
               <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
+                onClick={() => {
+                  const next = !isCollapsed;
+                  setIsCollapsed(next);
+                  if (user?.role === 'STUDENT' || user?.role === 'FACULTY') {
+                    setPreference(userId, 'sidebarCollapsedByDefault', next);
+                  }
+                }}
                 className="hidden lg:inline-flex p-2 rounded-lg hover:bg-[rgba(128,0,0,0.05)] text-[#4b5563] transition-all"
                 aria-label="Toggle sidebar"
               >
@@ -373,27 +380,24 @@ export default function PortalLayout({
               </button>
             </div>
 
-            <nav className="flex flex-col gap-0.5">
+            <div className={`min-w-0 [overflow-wrap:anywhere] ${mobileMenuOpen && !isCollapsed ? 'hidden' : 'block'} ${isCollapsed ? 'lg:block' : 'lg:hidden'}`}>
               <div className="flex items-center flex-wrap gap-2 text-xs lg:text-sm">
-                <span className="font-semibold text-[#800000]">SmartLab</span>
-                <span className="text-[#9ca3af]">/</span>
-                <span className="text-[#4b5563] font-medium">{resolvedHeaderTitle}</span>
+                <h1 className="text-base font-semibold text-[#321d1d] lg:text-lg">{resolvedHeaderTitle}</h1>
                 {headerBadge && (
                   <span className="px-2 py-0.5 rounded-full bg-[#fff5f5] text-[10px] font-semibold text-[#b91c1c] uppercase tracking-wide">
                     {headerBadge}
                   </span>
                 )}
               </div>
-              {resolvedHeaderSubtitle && <p className="text-xs text-[#6b7280]">{resolvedHeaderSubtitle}</p>}
-            </nav>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">{rightHeaderContent ?? defaultRightActions}</div>
+          <div className="ml-2 flex shrink-0 items-center gap-3">{rightHeaderContent ?? defaultRightActions}</div>
         </header>
 
         <div
           ref={setTableScrollRoot}
-          className="portal-content min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#f8f9fa] p-2 lg:p-4"
+          className="portal-content min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#f8f9fa] p-2 lg:p-4"
         >
           <TableScrollContext.Provider value={{root:tableScrollRoot,inset:tableStickyInset,setInset:setTableStickyInset}}>{children}</TableScrollContext.Provider>
         </div>

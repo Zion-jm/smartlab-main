@@ -1,7 +1,8 @@
+import { CalendarDays, Clock, MapPin, UserRound } from 'lucide-react';
 import type { EquipmentAvailabilitySummary } from '../components/equipment/EquipmentConflictChecker';
 import { useRef } from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 import { borrowRequestApi } from '../services/api';
 import api from '../services/api';
@@ -30,6 +31,9 @@ import FilterToolbar from '../components/FilterToolbar';
 import ResetFiltersButton from '../components/shared/ResetFiltersButton';
 
 type ApiBorrowRequest = {
+  requestType?: 'LEGACY' | 'LABORATORY' | 'EQUIPMENT';
+  usageLocation?: string | null;
+  usageRoom?: { id: string; name?: string | null; roomNumber?: string | null } | null;
   id: string;
   referenceCode?: string;
   requesterName: string;
@@ -37,6 +41,7 @@ type ApiBorrowRequest = {
   requesterRole: string;
   requesterAvatar?: string | null;
   program?: string | null;
+  programCode?: string | null;
   yearLevel?: number | null;
   subject?: string | null;
   room?: {
@@ -91,7 +96,6 @@ const roleOptions: Array<{ value: BorrowRequestRoleFilter; label: string }> = [
   { value: 'ALL', label: 'All roles' },
   { value: 'FACULTY', label: 'Faculty' },
   { value: 'STUDENT', label: 'Student' },
-  { value: 'STAFF', label: 'Staff' },
 ];
 
 const sortOptions: Array<{ value: BorrowRequestSort; label: string }> = [
@@ -113,6 +117,7 @@ const defaultFilters: BorrowRequestFilters = {
 };
 
 const resolveRoom = (request: ApiBorrowRequest) => {
+    if (request.requestType === 'EQUIPMENT') return request.usageRoom ? [request.usageRoom.roomNumber, request.usageRoom.name].filter(Boolean).join(' – ') : request.usageLocation || request.location || 'Not specified';
     if (request.room) {
       const roomNumber = request.room.roomNumber?.trim();
       const roomName = request.room.name?.trim();
@@ -132,8 +137,8 @@ function RequestTableRow({ request, onOpen, onSelect, onAction }: {
               const badge = statusMeta[request.status];
               const inlineActions = [
                 { label: 'Approve', action: 'approve' as const, show: request.status === 'PENDING' },
-                { label: 'Borrowed', action: 'borrow' as const, show: request.status === 'APPROVED' },
-                { label: 'Returned', action: 'return' as const, show: request.status === 'BORROWED' },
+                { label: 'Borrowed', action: 'borrow' as const, show: request.status === 'APPROVED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length)) },
+                { label: 'Returned', action: 'return' as const, show: request.status === 'BORROWED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length)) },
               ].filter((item) => item.show);
 
               return (
@@ -170,8 +175,9 @@ function RequestTableRow({ request, onOpen, onSelect, onAction }: {
                   <TableCell align="right">
                     <TableActionGroup
                       actions={[
+                        { label: 'View', icon: 'view', accessibleLabel: `View request from ${request.requesterName}`, onClick: () => onOpen(request) },
                         ...inlineActions.map((item) => ({
-                          label: item.label,
+                          label: item.label, icon: item.action,
                           onClick: item.action === 'approve'
                             ? () => { onSelect(request); }
                             : () => onAction(request, item.action),
@@ -214,6 +220,25 @@ export default function AdminRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<ApiBorrowRequest | null>(null);
+  const location = useLocation();
+  const reviewRequestId = location.state?.reviewRequestId;
+  const reviewToken = location.state?.reviewToken;
+  useEffect(() => {
+    if (typeof reviewRequestId !== 'string') return;
+    let active = true;
+    borrowRequestApi.getById(reviewRequestId).then(({ data }) => {
+      if (!active) return;
+      const r = data.request ?? data;
+      setSelectedRequest({ ...r,
+        location: r.requestType === 'EQUIPMENT' ? (r.usageRoom ? [r.usageRoom.roomNumber, r.usageRoom.name].filter(Boolean).join(' – ') : r.usageLocation) : r.location,
+        requesterName: [r.requester?.firstName, r.requester?.lastName].filter(Boolean).join(' '),
+        requesterEmail: r.requester?.email || '', requesterRole: r.requester?.role || '',
+        program: r.program?.name ?? null, subject: r.subject?.name ?? null,
+        items: (r.items ?? []).map((item: { equipment?: { name?: string } }) => ({ ...item, equipmentName: item.equipment?.name || 'Equipment' })),
+      });
+    }).catch(() => { if (active) toast.error('Could not open this request. It may no longer be available in the active academic period.'); });
+    return () => { active = false; };
+  }, [reviewRequestId, reviewToken]);
   const [mutatingId, setMutatingId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [detailModalRequest, setDetailModalRequest] = useState<ApiBorrowRequest | null>(null);
@@ -337,7 +362,7 @@ export default function AdminRequests() {
     if (filters.toDate) next.set('toDate', filters.toDate);
     if (academicPeriod.academicYearId) next.set('academicYearId', academicPeriod.academicYearId);
     if (academicPeriod.termId) next.set('termId', academicPeriod.termId);
-    setSearchParams(next, { replace: true });
+    setSearchParams(next, { replace: true, state: location.state });
   }, [academicPeriod, filters, setSearchParams]);
 
   const handleFilterChange = (field: keyof BorrowRequestFilters, value: string) => {
@@ -412,7 +437,7 @@ export default function AdminRequests() {
       </div>
 
       <div className="flex flex-col gap-2.5 md:flex-row md:items-end md:justify-start">
-        <DateRangeFilter
+        <DateRangeFilter styledDates
           value={{ from: filters.fromDate, to: filters.toDate }}
           onChange={(range) => setFilters((previous) => ({
             ...previous,
@@ -566,11 +591,29 @@ export default function AdminRequests() {
         />
       ) : (
       <>
-        <TableContainer>
+        <div className="space-y-3 md:hidden">
+          {requests.map(request => <article key={request.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
+            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f1e6e3] bg-[#fffaf7] p-3">
+              <h3 className="text-sm font-semibold text-[#57322d]">{request.referenceCode || request.id.slice(-6).toUpperCase()}</h3>
+              <span className={'rounded-full px-2.5 py-1 text-xs font-semibold ' + statusMeta[request.status].className}>{statusMeta[request.status].label}</span>
+            </header>
+            <div className="space-y-3 p-4 text-sm"><p className="text-xs font-semibold text-[#800000]">{request.requestType === 'EQUIPMENT' ? 'Equipment borrowing · intended usage location' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Legacy request'}</p>
+              <div><p className="font-semibold text-[#321d1d]">{request.requesterName}</p><p className="break-all text-xs text-[#786565]">{request.requesterEmail}</p></div>
+              <p className="flex items-start gap-2"><MapPin size={17} className="mt-0.5 shrink-0 text-[#9a7b4f]" aria-hidden="true" /><span>{resolveRoom(request)}</span></p>
+              <div className="flex items-start gap-2"><CalendarDays size={17} className="mt-0.5 shrink-0 text-[#9a7b4f]" aria-hidden="true" /><p>{formatDate(request.dateNeeded)}<span className="block text-xs text-[#786565]">{formatTimeRange(request.timeStart, request.timeEnd)}</span></p></div>
+              <div className="rounded-xl bg-[#faf7f5] p-3"><p className="mb-2 text-xs font-semibold text-[#786565]">Equipment</p><ul className="space-y-1.5 text-xs leading-relaxed">{request.items?.length ? request.items.map(item => <li key={item.id} className="flex items-start justify-between gap-3"><span className="min-w-0 break-words">{item.equipmentName || item.equipment?.name || 'Equipment'}</span><span className="shrink-0 font-semibold">×{item.quantity}</span></li>) : <li>No equipment requested</li>}</ul></div>
+            </div>
+            <footer className="grid grid-cols-2 gap-2 border-t border-[#f1e6e3] p-3">
+              <button type="button" onClick={() => handleOpenDetailModal(request)} className="min-h-11 rounded-xl border border-[#ead7d3] text-xs font-semibold text-[#800000]">View details</button>
+              <button type="button" onClick={() => setSelectedRequest(request)} className="min-h-11 rounded-xl bg-[#800000] text-xs font-semibold text-white">{request.status === 'PENDING' ? 'Review request' : 'Manage request'}</button>
+            </footer>
+          </article>)}
+        </div>
+        <div className="hidden md:block"><TableContainer>
           <Table>
           <TableHead>
             <TableHeaderCell>Requester</TableHeaderCell>
-            <TableHeaderCell>Room</TableHeaderCell>
+            <TableHeaderCell>Reservation / usage location</TableHeaderCell>
             <TableHeaderCell>Equipment</TableHeaderCell>
             <TableHeaderCell>Date needed</TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>
@@ -579,7 +622,7 @@ export default function AdminRequests() {
             <TableBody>
             {requests.map(request => <RequestTableRow key={request.id} request={request} onOpen={handleOpenDetailModal} onSelect={setSelectedRequest} onAction={handleAction} />)}            </TableBody>
           </Table>
-        </TableContainer>
+        </TableContainer></div>
         <TablePagination
           currentPage={requestPage}
           pageSize={requestPageSize}
@@ -595,7 +638,7 @@ export default function AdminRequests() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-7xl space-y-4 p-2 lg:p-3">
+      <div className="admin-requests-workspace mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         <FilterToolbar
           searchValue={filters.search}
           onSearchChange={(value) => handleFilterChange('search', value)}
@@ -634,35 +677,10 @@ export default function AdminRequests() {
         <TableCellDetailModal
           isOpen={isDetailModalOpen}
           onClose={handleCloseDetailModal}
-          title="Request Details"
-          subtitle={`#${detailModalRequest.referenceCode ?? detailModalRequest.id.slice(-6)}`}
-          status={detailModalRequest.status}
-          statusBadge={detailModalRequest.status}
-          data={detailModalRequest}
-          fields={[
-            { label: 'Location', key: 'location' },
-            { label: 'Subject', key: 'subject' },
-            { label: 'Date Needed', key: 'dateNeeded', formatter: (value) => formatDate(value as string) },
-            { label: 'Time', key: 'timeStart', formatter: (_, data) => {
-              const requestData = data as ApiBorrowRequest;
-              return formatTimeRange(requestData.timeStart, requestData.timeEnd);
-            }},
-            { label: 'Program & Year', key: 'program', formatter: (_, data) => {
-              const requestData = data as ApiBorrowRequest;
-              const program = requestData.program;
-              const year = requestData.yearLevel;
-              return program && year ? `${program} - Year ${year}` : program || '—';
-            }},
-            { label: 'Purpose', key: 'purpose', fullWidth: true },
-            { label: 'Equipment', key: 'items', formatter: (items) => {
-              if (!items || !Array.isArray(items) || items.length === 0) return '—';
-              return items.map((item) => `${item.equipmentName} (x${item.quantity})`).join(', ');
-            }, fullWidth: true },
-            { label: 'Date Created', key: 'createdAt', formatter: (value) => formatDate(value as string) },
-            { label: 'Date Approved', key: 'approvedAt', formatter: (value) => value ? formatDate(value as string) : '—' },
-            { label: 'Date Borrowed', key: 'borrowedAt', formatter: (value) => value ? formatDate(value as string) : '—' },
-            { label: 'Date Returned', key: 'returnedAt', formatter: (value) => value ? formatDate(value as string) : '—' },
-          ]}
+          title={detailModalRequest.referenceCode || `REQ-${detailModalRequest.id.slice(-6).toUpperCase()}`}
+          subtitle="Request details"
+          data={{}}
+          fields={[]}
           actions={[
             {
               label: 'View Full Request',
@@ -673,7 +691,36 @@ export default function AdminRequests() {
               variant: 'primary',
             },
           ]}
-        />
+        >
+          <div className="space-y-5 text-sm text-[#514343]">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusMeta[detailModalRequest.status].className}`}>{statusMeta[detailModalRequest.status].label}</span>
+              <span className="text-xs text-[#786565]">{statusMeta[detailModalRequest.status].description}</span>
+            </div>
+            <section className="flex items-start gap-3 rounded-xl bg-[#fff8f3] p-4" aria-label="Requester">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f3e6df] text-[#800000]"><UserRound size={20} aria-hidden="true" /></span>
+              <div className="min-w-0"><p className="text-xs text-[#786565]">Requested by</p><p className="mt-1 font-semibold text-[#321d1d]">{detailModalRequest.requesterName}</p><p className="mt-1 break-words text-xs text-[#786565]">{detailModalRequest.requesterRole === 'FACULTY' ? 'Faculty' : detailModalRequest.requesterRole === 'STUDENT' ? 'Student' : 'Administrator'} · {detailModalRequest.requesterEmail}</p></div>
+            </section>
+            <section aria-label="Booking summary">
+              <h3 className="flex items-start gap-2 text-lg font-semibold text-[#321d1d]"><MapPin size={20} className="mt-1 shrink-0 text-[#800000]" aria-hidden="true" />{detailModalRequest.location || [detailModalRequest.room?.roomNumber, detailModalRequest.room?.name].filter(Boolean).join(' – ') || 'No lab reserved'}</h3>
+              <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2"><p className="flex items-center gap-2"><CalendarDays size={17} className="text-[#9d6a4e]" aria-hidden="true" />{formatDate(detailModalRequest.dateNeeded)}</p><p className="flex items-center gap-2"><Clock size={17} className="text-[#9d6a4e]" aria-hidden="true" />{formatTimeRange(detailModalRequest.timeStart, detailModalRequest.timeEnd)}</p></div>
+              <dl className="mt-4 grid gap-4 sm:grid-cols-2"><div><dt className="text-xs text-[#786565]">Subject</dt><dd className="mt-1 break-words">{detailModalRequest.subject || 'Not specified'}</dd></div><div><dt className="text-xs text-[#786565]">Program & year</dt><dd className="mt-1 break-words">{[detailModalRequest.programCode || detailModalRequest.program, detailModalRequest.yearLevel].filter(Boolean).join(' - ') || 'Not specified'}</dd></div></dl>
+            </section>
+            <section className="border-t border-[#ead7d3] pt-4"><h3 className="font-semibold text-[#321d1d]">Equipment <span className="font-normal text-[#786565]">· {detailModalRequest.items?.length || 0} items</span></h3>
+              {detailModalRequest.items?.length ? <ul className="mt-2 divide-y divide-[#f1e8e4]">{detailModalRequest.items.map(item => <li key={item.id} className="flex items-start justify-between gap-4 py-2.5"><span className="min-w-0 break-words">{item.equipmentName || item.equipment?.name || 'Equipment'}</span><span className="shrink-0 rounded-md bg-[#f8f2ec] px-2 py-1 text-xs font-semibold text-[#800000]">×{item.quantity}</span></li>)}</ul> : <p className="mt-2 text-[#786565]">No equipment requested</p>}
+            </section>
+            <section className="border-t border-[#ead7d3] pt-4"><h3 className="font-semibold text-[#321d1d]">Purpose</h3><p className="mt-2 whitespace-pre-wrap break-words">{detailModalRequest.purpose || 'Not specified'}</p></section>
+            {(detailModalRequest.rejectionNote || detailModalRequest.notes) && <section className="rounded-xl bg-[#fff8f3] p-4"><h3 className="font-semibold text-[#321d1d]">{detailModalRequest.status === 'REJECTED' ? 'Decline reason' : 'Notes'}</h3><p className="mt-2 whitespace-pre-wrap break-words">{detailModalRequest.rejectionNote || detailModalRequest.notes}</p></section>}
+            <section className="border-t border-[#ead7d3] pt-4"><h3 className="font-semibold text-[#321d1d]">Request activity</h3><ol className="mt-3 grid gap-3 sm:grid-cols-2">{[
+              { label: 'Submitted', date: detailModalRequest.createdAt },
+              { label: 'Approved', date: detailModalRequest.approvedAt },
+              { label: 'Borrowed', date: detailModalRequest.borrowedAt },
+              { label: 'Returned', date: detailModalRequest.returnedAt },
+              { label: 'Declined', date: detailModalRequest.declinedAt },
+              { label: 'Cancelled', date: detailModalRequest.cancelledAt },
+            ].filter(event => event.date).sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime()).map(event => <li key={event.label} className="border-l-2 border-[#c5ab78] pl-3"><p className="text-xs font-medium text-[#786565]">{event.label}</p><p className="mt-1">{formatDate(event.date!)}</p></li>)}</ol></section>
+          </div>
+        </TableCellDetailModal>
       )}
     </AdminLayout>
   );

@@ -1,3 +1,5 @@
+import PasswordRecoveryPage from './pages/PasswordRecoveryPage'
+import RequestLinkPage from './pages/RequestLinkPage'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
@@ -24,6 +26,9 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Toaster />
       <Routes>
+        <Route path="/forgot-password" element={<PasswordRecoveryPage key="forgot" />} />
+        <Route path="/reset-password" element={<PasswordRecoveryPage key="reset" reset />} />
+        <Route path="/requests/:id" element={<RequestLinkPage />} />
         <Route path="/" element={<LandingPage />} />
         {/* Keep old bookmarks working while using the official branded login page. */}
         <Route path="/login" element={<Navigate to="/" replace />} />

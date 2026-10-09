@@ -1,3 +1,4 @@
+import { equipmentText, assertEquipmentName, assertEquipmentVersion } from '../services/equipmentValidation';
 import { prisma } from '../db/prisma';
 import { pagination, pageHeaders } from '../utils/pagination';
 import { requestVisibility } from '../services/requestVisibility';
@@ -129,11 +130,11 @@ router.post(
   authorizeRoles(UserRole.ADMIN),
   async (req, res) => {
     try {
-      const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
-      const description = req.body?.description ? String(req.body.description).trim() : null;
-      const totalQuantity = req.body?.totalQuantity ?? 0;
-      const borrowedQuantity = req.body?.borrowedQuantity ?? 0;
-      const damagedQuantity = req.body?.damagedQuantity ?? 0;
+      const name = equipmentText(req.body?.name, 'Equipment name', 150, true)!;
+      const description = equipmentText(req.body?.description, 'Description', 1000);
+      const totalQuantity = req.body?.totalQuantity === undefined ? 0 : req.body.totalQuantity;
+      const borrowedQuantity = req.body?.borrowedQuantity === undefined ? 0 : req.body.borrowedQuantity;
+      const damagedQuantity = req.body?.damagedQuantity === undefined ? 0 : req.body.damagedQuantity;
       const requestedStatus = req.body?.status as EquipmentStatus | undefined;
 
       if (!name) {
@@ -149,6 +150,7 @@ router.post(
       const status = effectiveStatus({ retiredAt, availableQuantity: totalQuantity - borrowedQuantity - damagedQuantity, borrowedQuantity, damagedQuantity });
 
       const equipment = await inventoryTransaction(prisma, async tx => {
+        await assertEquipmentName(tx, name);
         const equipment = await tx.equipment.create({
           data: {
             name,
@@ -189,11 +191,16 @@ router.put(
       const { equipment } = await inventoryTransaction(prisma, async tx => {
         const previous = await tx.equipment.findUnique({ where: { id } });
         if (!previous) throw new RequestActionError(404, 'Equipment record not found.');
-        const name = req.body.name === undefined ? previous.name : typeof req.body.name === 'string' ? req.body.name.trim() : '';
+        assertEquipmentVersion(req.body.expectedUpdatedAt, previous.updatedAt);
+        const name = equipmentText(req.body.name === undefined ? previous.name : req.body.name, 'Equipment name', 150, true)!;
+        const description = equipmentText(req.body.description === undefined ? previous.description : req.body.description, 'Description', 1000);
+        await assertEquipmentName(tx, name, id);
         if (!name) throw new RequestActionError(400, 'Equipment name is required.');
-        const totalQuantity = req.body.totalQuantity ?? previous.totalQuantity;
-        const damagedQuantity = req.body.damagedQuantity ?? previous.damagedQuantity;
+        const totalQuantity = req.body.totalQuantity === undefined ? previous.totalQuantity : req.body.totalQuantity;
+        const damagedQuantity = req.body.damagedQuantity === undefined ? previous.damagedQuantity : req.body.damagedQuantity;
         const borrowedQuantity = previous.borrowedQuantity;
+        const stockChanged = totalQuantity !== previous.totalQuantity || damagedQuantity !== previous.damagedQuantity;
+        const adjustmentReason = equipmentText(req.body.adjustmentReason, 'Stock adjustment reason', 500, stockChanged);
         if (req.body.borrowedQuantity !== undefined && req.body.borrowedQuantity !== borrowedQuantity)
           throw new RequestActionError(409, 'Borrowed quantity is managed by checkout, return and cancellation. Refresh the equipment record.');
         if ([totalQuantity, damagedQuantity].some(q => !Number.isInteger(q) || q < 0 || q > MAX_QUANTITY) || borrowedQuantity + damagedQuantity > totalQuantity)
@@ -206,7 +213,7 @@ router.put(
           throw new RequestActionError(409, 'Inventory does not match outstanding loans. Inventory review is required.');
         const equipment = await tx.equipment.update({
           where: { id }, data: {
-            name, description: req.body.description === undefined ? previous.description : req.body.description ? String(req.body.description).trim() : null,
+            name, description, updatedAt: new Date(Math.max(Date.now(), previous.updatedAt.getTime() + 1)),
             totalQuantity, damagedQuantity, availableQuantity: totalQuantity - borrowedQuantity - damagedQuantity, status,
           }
         });
@@ -216,7 +223,7 @@ router.put(
           action: 'UPDATE',
           entityType: 'Equipment',
           entityId: equipment.id,
-          details: { label: equipment.name, previous, next: { totalQuantity: equipment.totalQuantity, borrowedQuantity: equipment.borrowedQuantity, damagedQuantity: equipment.damagedQuantity, status: equipment.status } },
+          details: { label: equipment.name, adjustmentReason, previous, next: { name: equipment.name, description: equipment.description, totalQuantity: equipment.totalQuantity, borrowedQuantity: equipment.borrowedQuantity, damagedQuantity: equipment.damagedQuantity, status: equipment.status } },
         });
         return { previous, equipment };
       });

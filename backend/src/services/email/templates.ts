@@ -1,170 +1,49 @@
+import { EMAIL_LOGO_CID } from './assets';
 import { MANILA_TIME_ZONE } from '../../utils/manilaTime';
-// ─── Shared layout ────────────────────────────────────────────────────────────
-
-export const wrap = (bodyHtml: string) => `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SmartLab Notification</title>
-</head>
-<body style="margin:0;padding:0;background:#f4f0eb;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f0eb;padding:40px 0;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.10);">
-
-          <!-- Header -->
-          <tr>
-            <td style="background:#7a0c2e;padding:32px 40px 28px;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td>
-                    <div style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">
-                      &#9728; SmartLab
-                    </div>
-                    <div style="font-size:12px;color:#f5c6d0;margin-top:2px;letter-spacing:0.3px;">
-                      PUP Lopez Campus — Laboratory Management System
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Body -->
-          <tr>
-            <td style="padding:36px 40px 24px;">
-              ${bodyHtml}
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background:#f9f6f2;border-top:1px solid #ede8e0;padding:20px 40px;">
-              <p style="margin:0;font-size:12px;color:#9a8c7e;line-height:1.6;">
-                This is an automated message from <strong>SmartLab 2.0</strong>. Please do not reply to this email.
-                For assistance, contact the lab administrator at
-                <a href="mailto:pupsmartlab@gmail.com" style="color:#7a0c2e;text-decoration:none;">pupsmartlab@gmail.com</a>.
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-`;
-
-// ─── Status badge ─────────────────────────────────────────────────────────────
-
-const BADGE_STYLES: Record<string, string> = {
-  PENDING:  'background:#fff3cd;color:#856404;',
-  APPROVED: 'background:#d1e7dd;color:#0a5c36;',
-  REJECTED: 'background:#f8d7da;color:#842029;',
-  BORROWED: 'background:#cfe2ff;color:#084298;',
-  RETURNED: 'background:#e2e3e5;color:#383d41;',
-};
-
-export const badge = (label: string, status: string) => {
-  const style = BADGE_STYLES[status] || 'background:#e2e3e5;color:#383d41;';
-  return `<span style="${style}font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px;display:inline-block;">${label}</span>`;
-};
-
-// ─── Equipment table ───────────────────────────────────────────────────────────
-
-export interface EquipmentItem {
-  name: string;
-  quantity: number;
+export interface RequestDetails { requestType?: string; id: string; requesterName: string; requesterRole?: string; programCode?: string | null; program?: string | null; yearLevel?: number | null; dateNeeded: string; timeStart?: string | null; timeEnd?: string | null; location?: string | null; purpose?: string | null; items: { name: string; quantity: number }[] }
+export const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+export const reference = (id: string) => 'REQ-' + id.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6).padStart(6, '0');
+export function requestUrl(id: string) {
+  const origin = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5000');
+  const url = new URL(origin);
+  if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Invalid frontend URL');
+  return new URL('/requests/' + encodeURIComponent(id), url.origin).toString();
 }
-
-export const equipmentTable = (items: EquipmentItem[]) => {
-  if (!items.length) return '';
-  const rows = items
-    .map(
-      (item) => `
-      <tr>
-        <td style="padding:10px 14px;font-size:14px;color:#2d2d2d;border-bottom:1px solid #f0ebe4;">${item.name}</td>
-        <td style="padding:10px 14px;font-size:14px;color:#2d2d2d;text-align:center;border-bottom:1px solid #f0ebe4;font-weight:600;">${item.quantity}</td>
-      </tr>`
-    )
-    .join('');
-
-  return `
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;border:1px solid #ede8e0;border-radius:8px;overflow:hidden;">
-      <tr style="background:#f9f6f2;">
-        <th style="padding:10px 14px;font-size:12px;color:#7a7068;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Equipment</th>
-        <th style="padding:10px 14px;font-size:12px;color:#7a7068;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Qty</th>
-      </tr>
-      ${rows}
-    </table>`;
-};
-
-// ─── Info row helper ───────────────────────────────────────────────────────────
-
-export const infoRow = (label: string, value: string | null | undefined) => {
-  if (!value) return '';
-  return `
-    <tr>
-      <td style="padding:6px 0;font-size:13px;color:#7a7068;width:130px;vertical-align:top;">${label}</td>
-      <td style="padding:6px 0;font-size:13px;color:#2d2d2d;font-weight:500;">${value}</td>
-    </tr>`;
-};
-
-// ─── CTA button ────────────────────────────────────────────────────────────────
-
-export const ctaButton = (text: string) => `
-  <div style="margin-top:28px;">
-    <a href="https://${process.env.REPLIT_DEV_DOMAIN || 'localhost:5000'}/login"
-       style="display:inline-block;background:#7a0c2e;color:#ffffff;font-size:14px;font-weight:600;
-              padding:12px 28px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">
-      ${text}
-    </a>
-  </div>`;
-
-// ─── Shared request detail block ───────────────────────────────────────────────
-
-export interface RequestDetails {
-  id: string;
-  requesterName: string;
-  dateNeeded: string;
-  timeStart?: string | null;
-  timeEnd?: string | null;
-  location?: string | null;
-  purpose?: string | null;
-  items: EquipmentItem[];
+const date = (iso: string) => new Date(iso).toLocaleDateString('en-PH', { timeZone: MANILA_TIME_ZONE, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+const time = (iso: string) => new Date(iso).toLocaleTimeString('en-PH', { timeZone: MANILA_TIME_ZONE, hour: 'numeric', minute: '2-digit' });
+export function renderRequestEmail(title: string, message: string, req: RequestDetails, action: string, reason?: string, includeRequesterIdentity = false) {
+  const url = requestUrl(req.id) + (includeRequesterIdentity ? '?review=admin' : '');
+  const rows = [['Request', reference(req.id)], ['Requested by', req.requesterName], ['Request type', req.requestType === 'LABORATORY' ? 'Laboratory reservation' : req.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : 'Legacy request'], [req.requestType === 'EQUIPMENT' ? 'Intended usage location' : 'Room / location', req.location || 'Not specified'], ['Date', date(req.dateNeeded)], ['Time', req.timeStart && req.timeEnd ? time(req.timeStart) + ' – ' + time(req.timeEnd) : 'Not specified'], ['Purpose', req.purpose || 'Not specified']];
+  if (includeRequesterIdentity && req.requesterRole) {
+    const role = req.requesterRole === 'STUDENT' ? 'Student' : req.requesterRole === 'FACULTY' ? 'Faculty' : req.requesterRole === 'ADMIN' ? 'Admin' : req.requesterRole;
+    const program = req.programCode || req.program;
+    const studentSection = req.requesterRole === 'STUDENT'
+      ? [program, req.yearLevel != null ? String(req.yearLevel) : null].filter(Boolean).join(' - ')
+      : '';
+    rows.splice(2, 0, ['Requester role', studentSection ? role + ' · ' + studentSection : role]);
+  }
+  const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>@media(max-width:480px){.content{padding:22px 18px!important}.header{padding:20px 18px!important}.detail-label,.detail-value{display:block!important;width:auto!important}.detail-label{padding:12px 0 2px!important;border-bottom:0!important}.detail-value{padding:0 0 12px!important}.title{font-size:24px!important}}</style></head>
+<body style="margin:0;padding:0;background:#f5f3f1;font-family:Arial,Helvetica,sans-serif;color:#321d1d">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all">${escapeHtml(title)} · ${escapeHtml(reference(req.id))}</div>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:24px 10px">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;table-layout:fixed;background:#ffffff;border:1px solid #ead7d3;border-top:4px solid #800000;border-radius:12px">
+<tr><td class="header" style="padding:24px 28px;background:#fffaf6;border-bottom:1px solid #ead7d3">
+<table role="presentation" cellspacing="0" cellpadding="0"><tr><td width="64" style="vertical-align:middle"><img src="cid:${EMAIL_LOGO_CID}" width="48" height="48" alt="PUP seal" style="display:block;border:0;background:#ffffff;border-radius:50%"></td><td style="vertical-align:middle"><strong style="font-size:22px;color:#800000">SmartLab</strong><div style="font-size:12px;line-height:20px;color:#786565">PUP Lopez Campus</div></td></tr></table>
+</td></tr>
+<tr><td class="content" style="padding:28px">
+<p style="margin:0 0 10px;font-size:11px;line-height:18px;letter-spacing:1.4px;color:#986d3d;font-weight:bold;text-transform:uppercase">Request update</p>
+<h1 class="title" style="font-size:28px;line-height:1.25;margin:0 0 14px;color:#800000">${escapeHtml(title)}</h1>
+<p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#594747">${escapeHtml(message)}</p>
+${reason ? `<div style="margin:0 0 24px;padding:14px 16px;background:#fff5f3;border-left:3px solid #800000;border-radius:4px"><strong style="font-size:13px;color:#800000">Reason</strong><p style="margin:6px 0 0;font-size:14px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere">${escapeHtml(reason)}</p></div>` : ''}
+<h2 style="font-size:15px;margin:0;padding:0 0 10px;border-bottom:2px solid #caa88c;color:#321d1d">Request details</h2>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="table-layout:fixed;font-size:14px;line-height:1.6">${rows.map(([label,value])=>`<tr><td class="detail-label" style="width:125px;padding:12px 12px 12px 0;vertical-align:top;color:#786565;border-bottom:1px solid #eee6e2">${escapeHtml(label)}</td><td class="detail-value" style="padding:12px 0;vertical-align:top;border-bottom:1px solid #eee6e2;overflow-wrap:anywhere;word-wrap:break-word">${escapeHtml(value)}</td></tr>`).join('')}</table>
+${req.items.length ? `<h2 style="font-size:15px;margin:26px 0 12px;color:#321d1d">Equipment <span style="font-size:12px;font-weight:normal;color:#786565">· ${req.items.length} item type${req.items.length === 1 ? '' : 's'}</span></h2><table width="100%" cellspacing="0" cellpadding="0" style="table-layout:fixed;border-collapse:collapse;font-size:14px;line-height:1.5"><tr><th scope="col" style="text-align:left;padding:10px 12px;background:#faf3ef;color:#800000;font-size:12px">Item</th><th scope="col" width="48" style="padding:10px 8px;background:#faf3ef;color:#800000;font-size:12px">Qty</th></tr>${req.items.map(i=>`<tr><td style="padding:12px;border-bottom:1px solid #eee6e2;overflow-wrap:anywhere">${escapeHtml(i.name)}</td><td style="padding:12px 8px;text-align:center;border-bottom:1px solid #eee6e2;font-weight:bold">${escapeHtml(i.quantity)}</td></tr>`).join('')}</table>` : ''}
+<table role="presentation" cellspacing="0" cellpadding="0" style="margin:28px 0 16px"><tr><td bgcolor="#800000" style="border-radius:8px;text-align:center"><a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 22px;border:1px solid #800000;border-radius:8px;font-size:14px;line-height:20px;font-weight:bold;color:#ffffff;text-decoration:none">${escapeHtml(action)} &rarr;</a></td></tr></table>
+<p style="margin:0;font-size:12px;line-height:1.6;color:#786565">Sign in with your SmartLab account to view current details.<br>All schedule times are in Philippine time.</p>
+</td></tr><tr><td style="padding:18px 24px;background:#faf7f5;border-top:1px solid #eadfd9;font-size:12px;line-height:1.6;color:#786565"><strong style="color:#594747">SmartLab · PUP Lopez Campus</strong><br>This is an automated notification. For assistance, contact your laboratory administrator.</td></tr>
+</table></td></tr></table></body></html>`;
+  const text = [title,message,reason ? 'Reason: '+reason : '',...rows.map(([k,v])=>k+': '+v),...req.items.map(i=>i.name+' ×'+i.quantity),action+': '+url,'Times are Philippine time.'].filter(Boolean).join('\n');
+  return { html, text };
 }
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-PH', {
-    timeZone: MANILA_TIME_ZONE,
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
-
-const formatTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString('en-PH', { timeZone: MANILA_TIME_ZONE, hour: '2-digit', minute: '2-digit' });
-
-export const requestDetailBlock = (req: RequestDetails) => {
-  const timeStr =
-    req.timeStart && req.timeEnd
-      ? `${formatTime(req.timeStart)} – ${formatTime(req.timeEnd)}`
-      : null;
-
-  return `
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px;">
-      ${infoRow('Request ID', `#${req.id.slice(-8).toUpperCase()}`)}
-      ${infoRow('Requested by', req.requesterName)}
-      ${infoRow('Date needed', formatDate(req.dateNeeded))}
-      ${timeStr ? infoRow('Time slot', timeStr) : ''}
-      ${infoRow('Location', req.location)}
-      ${infoRow('Purpose', req.purpose)}
-    </table>
-    ${req.items.length ? `<p style="margin:20px 0 6px;font-size:13px;color:#7a7068;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Equipment Requested</p>${equipmentTable(req.items)}` : ''}`;
-};
-
-// ─── Divider ───────────────────────────────────────────────────────────────────
-
-export const divider = `<hr style="border:none;border-top:1px solid #ede8e0;margin:24px 0;" />`;

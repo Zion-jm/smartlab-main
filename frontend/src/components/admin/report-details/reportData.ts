@@ -81,7 +81,7 @@ export const downloadCsv = (filename: string, headers: string[], rows: unknown[]
 };
 
 export const formatSectionLabel = (program: string | null | undefined, yearLevel: number | null | undefined) =>
-  [program?.trim(), yearLevel != null ? String(yearLevel) : ''].filter(Boolean).join(' ') || 'Unassigned program/year';
+  [program?.trim(), yearLevel != null ? String(yearLevel) : ''].filter(Boolean).join(' - ') || 'Unassigned section';
 
 export const formatPeriodLabel = ({ from, to }: DateRange) => {
   if (!from && !to) return 'All recorded dates';
@@ -99,6 +99,7 @@ export const getRequestUnits = (request: BorrowRequest) =>
   (request.items ?? []).reduce((total, item) => total + item.quantity, 0);
 
 export type RequestPrintRow = {
+  requestType: string;
   id: string;
   date: string;
   room: string;
@@ -114,11 +115,12 @@ export type RequestPrintRow = {
 export const buildRequestPrintRows = (requests: BorrowRequest[]): RequestPrintRow[] =>
   requests.map((request) => ({
     id: request.id,
+    requestType: request.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Legacy request',
     date: formatDate(request.dateNeeded),
-    room: request.location ?? '',
+    room: (request.requestType === 'EQUIPMENT' ? 'Intended use: ' : request.requestType === 'LABORATORY' ? 'Reserved lab: ' : '') + (request.location ?? ''),
     equipment: request.equipmentList ?? '',
     requester: request.requesterName,
-    programYear: formatSectionLabel(request.program, request.yearLevel),
+    programYear: formatSectionLabel(request.programCode ?? request.program, request.yearLevel),
     faculty: request.facultyName ?? '',
     time: formatTimeRange(request.timeStart, request.timeEnd),
     status: statusLabels[request.status],
@@ -136,7 +138,7 @@ export const buildSectionDemand = (
   >();
 
   requests.forEach((request) => {
-    const section = formatSectionLabel(request.program, request.yearLevel);
+    const section = formatSectionLabel(request.programCode ?? request.program, request.yearLevel);
     const current = grouped.get(section) ?? { requests: 0, units: 0, equipment: new Map() };
     current.requests += 1;
     current.units += getRequestUnits(request);
@@ -191,7 +193,7 @@ export type DemandRow = {
 export const demandGroupLabels: Record<DemandGroupBy, string> = {
   faculty: 'Faculty in charge',
   submittedBy: 'Submitted by',
-  program: 'Program and year level',
+  program: 'Section',
   subject: 'Subject',
   room: 'Requested room',
 };
@@ -245,9 +247,9 @@ export const getDemandGroup = (request: BorrowRequest, groupBy: DemandGroupBy) =
     return {
       key: request.programId
         ? `program:${request.programId}:year:${yearKey}`
-        : `program:${formatSectionLabel(request.program, request.yearLevel)}`,
-      label: formatSectionLabel(request.program, request.yearLevel),
-      detail: 'Program and year level',
+        : `program:${formatSectionLabel(request.programCode ?? request.program, request.yearLevel)}`,
+      label: formatSectionLabel(request.programCode ?? request.program, request.yearLevel),
+      detail: 'Section',
     };
   }
 
@@ -399,7 +401,7 @@ export type ScheduleDemandGroupBy = 'program' | 'subject' | 'room' | 'faculty';
 export type ScheduleDemandSortBy = 'entries' | 'rooms';
 
 export const scheduleDemandGroupLabels: Record<ScheduleDemandGroupBy, string> = {
-  program: 'Program / year level',
+  program: 'Section',
   subject: 'Subject',
   room: 'Room',
   faculty: 'Faculty-in-charge',

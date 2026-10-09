@@ -173,6 +173,11 @@ export default function ProfilePage({
       return;
     }
 
+    if (profile.phone.trim() && !/^09[0-9]{9}$/.test(profile.phone.trim())) {
+      setProfileNotice('Enter an 11-digit mobile number starting with 09, for example 09123456789.');
+      return;
+    }
+
     if (onProfileSubmit) {
       await onProfileSubmit({
         firstName: profile.firstName.trim(),
@@ -237,21 +242,21 @@ export default function ProfilePage({
   }, [role, user]);
 
   return (
-    <div className="mx-auto w-full max-w-[1180px] px-2 py-4 sm:px-4 sm:py-7 lg:px-6">
-      <div className="mb-7 flex flex-col justify-between gap-5 border-b border-[#e8ddd8] pb-7 sm:flex-row sm:items-end">
-        <div>
-          <div className="mb-3 flex items-center gap-2 text-xs font-medium text-[#9a8985]">
+    <div className={`profile-page ${role !== 'ADMIN' ? 'profile-page--portal' : ''} mx-auto w-full max-w-[1180px] px-2 py-4 sm:px-4 sm:py-7 lg:px-6`}>
+      <div className="profile-page__header mb-7 flex flex-col justify-between gap-5 border-b border-[#e8ddd8] pb-7 sm:flex-row sm:items-end">
+        <div className="profile-page__introduction">
+          <div className="profile-page__breadcrumb mb-3 flex items-center gap-2 text-xs font-medium text-[#9a8985]">
             <span>SmartLab</span>
             <ChevronIcon />
             <span className="text-[#7a1d20]">Profile</span>
           </div>
-          <h1 className="text-[clamp(1.8rem,4vw,2.65rem)] font-semibold tracking-[-0.04em] text-[#321d1d]">Your profile</h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-[#756969]">
+          {role === 'ADMIN' && (<h1 className="text-[clamp(1.8rem,4vw,2.65rem)] font-semibold tracking-[-0.04em] text-[#321d1d]">Your profile</h1>)}
+          <p className="profile-page__intro mt-2 max-w-xl text-sm leading-6 text-[#756969]">
             Keep your contact details current so the SmartLab team can reach you when it matters.
           </p>
         </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-[#eadfd9] bg-[#fffdfb] px-4 py-3 shadow-[0_5px_18px_rgba(76,37,24,0.04)]">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${roleAccent[role]}`}>
+        <div className="profile-page__identity flex items-center gap-3 rounded-2xl border border-[#eadfd9] bg-[#fffdfb] px-4 py-3 shadow-[0_5px_18px_rgba(76,37,24,0.04)]">
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${roleAccent[role]}`}>
             {initialsFor(user)}
           </div>
           <div className="min-w-0">
@@ -273,7 +278,7 @@ export default function ProfilePage({
           <SectionHeading
             eyebrow="Personal details"
             title="Contact information"
-            description="Update the details associated with your SmartLab account."
+            description="Update your name and contact details."
           />
           <form onSubmit={handleProfileSubmit} className="space-y-5">
             <div className="grid gap-5 sm:grid-cols-2">
@@ -308,7 +313,12 @@ export default function ProfilePage({
               label="Phone number"
               value={profile.phone}
               onChange={(event) => setProfile((current) => ({ ...current, phone: event.target.value }))}
-              helper="Optional. Used for important SmartLab account notices."
+              helper="Optional. Enter exactly 11 digits starting with 09 (e.g., 09123456789)."
+              pattern="09[0-9]{9}"
+              maxLength={11}
+              inputMode="numeric"
+              placeholder="09123456789"
+              title="Enter exactly 11 digits starting with 09."
               type="tel"
               autoComplete="tel"
               disabled={!user}

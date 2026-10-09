@@ -6,7 +6,7 @@ Updated 1 October 2026.
 
 ## Install and build
 
-Use Node 22.13.0 and npm 10.9.2. The root `package-lock.json` is the sole JavaScript lockfile; install from the repository root with `npm ci`. Nested npm locks and the pnpm lock were retired. `uv.lock` remains for optional Python/PDF tooling, not the web application.
+Use Node 22.13.0 and npm 10.9.2. The root `package-lock.json` is the sole JavaScript lockfile; install from the repository root with `npm ci`. Nested npm locks and the pnpm lock were retired. Unused Python tooling manifests have also been removed; application verification uses Node.js.
 
 ```text
 npm ci

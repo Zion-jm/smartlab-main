@@ -192,7 +192,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       portalSubLabel="smartlab."
       sidebarExtras={sidebarExtras}
     >
-      {children}
+      <div className="admin-workspace min-w-0 max-w-full">{children}</div>
     </PortalLayout>
   );
 }

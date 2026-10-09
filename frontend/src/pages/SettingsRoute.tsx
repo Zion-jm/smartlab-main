@@ -1,18 +1,8 @@
-import { useMemo, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
-import PortalLayout, { type PortalNavItem, type SidebarIconProps } from '../components/PortalLayout';
+import type { SidebarIconProps } from '../components/PortalLayout';
 import { useAuthStore } from '../stores/authStore';
 import { getUserPreferences, usePreferencesStore, type UserPreferences } from '../stores/preferencesStore';
-
-const WorkspaceIcon = ({ size = 18 }: SidebarIconProps) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="3" width="7" height="7" />
-    <rect x="14" y="3" width="7" height="7" />
-    <rect x="3" y="14" width="7" height="7" />
-    <rect x="14" y="14" width="7" height="7" />
-  </svg>
-);
 
 const SettingsNavIcon = ({ size = 18 }: SidebarIconProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -117,14 +107,14 @@ function SettingsPage() {
 
         <PreferenceRow
           title="Hide ribbon controls by default"
-          description="Keep search, filters, and contextual actions collapsed when an operational page first opens."
+          description="Hide search and filters when you first open a page. Select Show controls to use them."
           checked={preferences.ribbonControlsHiddenByDefault}
           onChange={(checked) => updatePreference('ribbonControlsHiddenByDefault', checked)}
           label="Hide ribbon controls by default"
         />
         <PreferenceRow
           title="Collapse the sidebar by default"
-          description="Give the workspace more room by opening each portal with its navigation sidebar minimized."
+          description="Start with the sidebar closed to give the page more space."
           checked={preferences.sidebarCollapsedByDefault}
           onChange={(checked) => updatePreference('sidebarCollapsedByDefault', checked)}
           label="Collapse the sidebar by default"
@@ -145,47 +135,6 @@ function SettingsPage() {
   );
 }
 
-function RoleShell({ children }: { children: ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-  const navigate = useNavigate();
-  const role = user?.role;
-  const navItems = useMemo<PortalNavItem[]>(
-    () => [
-      {
-        id: 'workspace',
-        label: 'Workspace',
-        icon: WorkspaceIcon,
-        to: role === 'FACULTY' ? '/faculty/panel' : '/student/panel',
-        description: 'Return to your SmartLab workspace.',
-      },
-      {
-        id: 'settings',
-        label: 'Settings',
-        icon: SettingsNavIcon,
-        isActive: true,
-        onClick: () => navigate('/settings'),
-        description: 'Set your workspace defaults and interface preferences.',
-      },
-    ],
-    [navigate, role],
-  );
-
-  return (
-    <PortalLayout
-      navItems={navItems}
-      portalLabel={role === 'FACULTY' ? 'Faculty Portal' : 'Student Portal'}
-      portalSubLabel="smartlab."
-      sidebarExtras={
-        <div className="mx-4 mt-4 rounded-lg border border-[rgba(255,184,28,0.3)] bg-[#fef3e2] p-3">
-          <p className="text-xs font-medium text-[#9a7b4f]">2025-2026 · 1st Semester</p>
-        </div>
-      }
-    >
-      {children}
-    </PortalLayout>
-  );
-}
-
 export default function SettingsRoute() {
   const user = useAuthStore((state) => state.user);
   const content = <SettingsPage />;
@@ -194,5 +143,5 @@ export default function SettingsRoute() {
     return <AdminLayout>{content}</AdminLayout>;
   }
 
-  return <RoleShell>{content}</RoleShell>;
+  return <Navigate to="/profile" replace />;
 }

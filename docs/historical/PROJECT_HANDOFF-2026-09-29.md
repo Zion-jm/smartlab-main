@@ -1,3 +1,5 @@
+> Historical snapshot. Platform-specific configuration has since been retired; use the root README.md for current setup.
+
 # Historical handoff — superseded
 
 Snapshot predating remediation steps 1–20. Commands, counts, security assumptions, and proposed work below are historical and must not be used as current setup instructions. See ../../PROJECT_HANDOFF.md and ../reproducible-verification.md.
@@ -109,8 +111,8 @@ logs, and report generation.
 
 - Root npm workspaces: `backend` and `frontend`
 - Root orchestration: `concurrently`
-- Replit modules: Node.js 20, web, and Python 3.12
-- Replit development channel: stable NixOS channel
+- the previous hosted development environment modules: Node.js 20, web, and Python 3.12
+- the previous hosted development environment development channel: stable NixOS channel
 - Python is present for repository utilities, including the borrower-log
   rendering helper, but the main application is Node/TypeScript.
 
@@ -170,8 +172,8 @@ logs, and report generation.
 │   └── tsconfig*.json
 ├── screenshots/                UI/reference screenshots
 ├── .env                        Local environment template/configuration
-├── .replit                     Replit workflows, ports, and deployment config
-├── REPLIT.md                   Replit onboarding and operating notes
+├── [retired platform configuration]   Historical workflows and port mapping
+├── [retired platform guide]           Historical onboarding notes
 ├── package.json                Root workspace scripts
 ├── package-lock.json
 ├── pnpm-lock.yaml
@@ -552,7 +554,7 @@ localStorage and clears the frontend auth state.
 Security considerations for future production work:
 
 - Keep `DATABASE_URL`, `JWT_SECRET`, SMTP passwords, and any other credentials
-  in Replit Secrets or an equivalent secret manager.
+  in environment secrets or an equivalent secret manager.
 - Do not commit real SMTP passwords or production JWT values.
 - Restrict CORS origins for production; the current server intentionally allows
   all origins in development.
@@ -571,7 +573,7 @@ document.
 
 | Variable | Used by | Purpose |
 | --- | --- | --- |
-| `DATABASE_URL` | Backend/Prisma | PostgreSQL connection string; normally injected by Replit Database |
+| `DATABASE_URL` | Backend/Prisma | PostgreSQL connection string; normally injected by the database provider |
 | `PORT` | Backend | Express port; development default is 3001 |
 | `NODE_ENV` | Backend | Runtime environment |
 | `JWT_SECRET` | Backend | JWT signing and verification |
@@ -600,8 +602,8 @@ notifications are disabled; in-app notifications still remain available.
 | `FRONTEND_PUBLIC_DIR` | Optional output/static directory used by report rendering |
 | `RESET_TEST_DATABASE` | Test/reset behavior flag used by test helpers |
 
-The development Replit configuration points Chromium at
-`/repl/tools/bin/chromium`. If that path is not available in another
+The development the previous hosted development environment configuration points Chromium at
+`/usr/bin/chromium`. If that path is not available in another
 environment, set `CHROMIUM_PATH` to an installed Chromium executable.
 
 ---
@@ -612,7 +614,7 @@ environment, set `CHROMIUM_PATH` to an installed Chromium executable.
 
 - Node.js 20
 - npm
-- PostgreSQL, normally supplied through Replit Database
+- PostgreSQL, normally supplied through the database provider
 - Chromium for PDF report export
 - SMTP credentials only if email delivery is needed
 
@@ -649,7 +651,7 @@ This runs:
 - Backend: `cd backend && npm run dev`
 - Frontend: `cd frontend && npm run dev`
 
-The configured Replit `Project` workflow runs the frontend and backend in
+The configured the previous hosted development environment `Project` workflow runs the frontend and backend in
 parallel. The individual workflows are:
 
 - **Start application** — installs frontend dependencies and starts Vite on
@@ -676,7 +678,7 @@ Build steps:
 1. Compile the backend with TypeScript into `backend/dist`.
 2. Build the frontend with TypeScript and Vite into its frontend build output.
 
-The Replit deployment configuration builds both packages but starts
+The the previous hosted development environment deployment configuration builds both packages but starts
 `backend/dist/server.js`. Confirm the production serving/static-file strategy
 before publishing if the backend is expected to serve the built frontend from
 the same process; the development setup is explicitly two-process.
@@ -814,7 +816,7 @@ administrative reports.
 
 | File | Contents |
 | --- | --- |
-| `REPLIT.md` | Replit setup, workflows, environment, PDF notes, and project onboarding |
+| `README.md` | the previous hosted development environment setup, workflows, environment, PDF notes, and project onboarding |
 | `backend/API.md` | Existing endpoint reference; verify against route source for current details |
 | `docs/development-guide.md` | General architecture, styling, workflow, and development guidance |
 | `docs/component-guide.md` | Component conventions and design guidance |

@@ -1,4 +1,5 @@
 import './config/loadEnvironment';
+import { startEmailWorker, stopEmailWorker } from './services/email/outbox';
 import { createShutdown } from './services/shutdown';
 import { drainNotifications } from './services/notificationService';
 import { prisma } from './db/prisma';
@@ -38,7 +39,8 @@ app.use(cors(corsOptions(process.env)));
 // Never trust client-supplied forwarding headers by default.
 if (process.env.TRUSTED_PROXIES) app.set('trust proxy', process.env.TRUSTED_PROXIES.split(',').map(value => value.trim()));
 app.use(errorResponseContract);
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
+app.use('/api', (_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
 
 // Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {
@@ -101,6 +103,7 @@ async function start() {
   server = app.listen(PORT, () => {
     console.log('SmartLab listening on port ' + PORT + ' (' + (process.env.NODE_ENV || 'development') + ')');
     verifyEmailTransport();
+    startEmailWorker();
   });
 }
 const started = start().catch(async () => {
@@ -117,7 +120,7 @@ const shutdown = createShutdown({
       server!.closeIdleConnections();
     });
   },
-  drain: drainNotifications,
+  drain: async () => { await drainNotifications(); await stopEmailWorker(); },
   disconnect: () => prisma.$disconnect(),
   exit: code => process.exit(code),
 });

@@ -118,7 +118,7 @@ export default function AcademicPeriodFilter({
   if (compact) {
     if (compactDropdown) {
       return (
-        <div className={`academic-period-filter--compact min-h-10 rounded-xl border border-[#ead7d3] bg-transparent px-3 ${className}`}>
+        <div className={`academic-period-filter--compact academic-period-filter--dropdown min-h-10 rounded-xl border border-[#ead7d3] bg-transparent px-3 ${className}`}>
           <div className="flex min-h-10 flex-wrap items-center gap-2">
             {showCompactDropdownLabel && (
               <span className="shrink-0 whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-[#800000]">

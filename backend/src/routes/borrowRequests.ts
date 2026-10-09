@@ -1,17 +1,20 @@
+import { resolveRequestIntent } from '../services/requestTypePolicy';
 import { prisma } from '../db/prisma';
 import { pagination, pageHeaders } from '../utils/pagination';
 import { requestVisibility } from '../services/requestVisibility';
 import { sendError } from '../middleware/errors';
 import { validateRequestItems } from '../services/inventoryCapacityService';
 import { manilaDayBounds, parseManilaDate } from '../utils/manilaTime';
-import { approveRequest } from '../services/approvalService';
+import { approveRequest, assertRoomAvailable } from '../services/approvalService';
 import { inventoryTransaction } from '../services/inventoryTransaction';
 import { changeLoanStatus } from '../services/inventoryMovementService';
 import { Router } from 'express';
 import { cancelBorrowRequest, RequestActionError } from '../services/cancelBorrowRequestService';
-import { Prisma, RequestStatus, UserRole, NotificationType } from '@prisma/client';
+import { Prisma, RequestStatus, UserRole, NotificationType, ScheduleType } from '@prisma/client';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import {
+  sendRequestCancelledEmail,
+  sendAdminRequestEmail,
   sendRequestSubmittedEmail,
   sendRequestApprovedEmail,
   sendRequestRejectedEmail,
@@ -168,18 +171,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         AND: [requestVisibility(req.user!)],
         ...academicPeriodWhere(periodSelection),
       },
-      include: {
-        requester: {
-          select: { id: true, firstName: true, lastName: true, email: true },
-        },
-        faculty: {
-          include: {
-            user: { select: { firstName: true, lastName: true } },
-          },
-        },
-        items: { include: { equipment: true } },
-        reviewer: { select: { firstName: true, lastName: true } },
-      },
+      include: { ...borrowRequestInclude, reviewer: { select: { firstName: true, lastName: true } } },
     });
 
     if (!request) {
@@ -202,14 +194,15 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
 // ─── POST / — Create borrow request ──────────────────────────────────────────
 
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FACULTY), async (req, res) => {
   try {
     const {
       facultyId, programId, subjectId, yearLevel,
-      dateNeeded, roomId, location, timeStart, timeEnd,
+      dateNeeded, timeStart, timeEnd,
       purpose, contactDetails, notes, academicYearId, termId, items: rawItems,
     } = req.body;
     const items = validateRequestItems(rawItems === undefined ? [] : rawItems);
+    const intent = await resolveRequestIntent(prisma, req.body, req.user!.role, items);
     const periodSelection = await resolveAcademicPeriodSelection(
       prisma,
       { academicYearId, termId },
@@ -273,7 +266,7 @@ router.post('/', authenticateToken, async (req, res) => {
       requestedBy: req.user!.id,
       facultyId, programId: requestProgramId, subjectId, yearLevel: requestYearLevel,
       dateNeeded: manilaDayBounds(dateNeeded).start,
-      roomId, location,
+      ...intent,
       timeStart: timeStart ? parseManilaDate(timeStart) : null,
       timeEnd: timeEnd ? parseManilaDate(timeEnd) : null,
       purpose, contactDetails, notes,
@@ -291,28 +284,31 @@ router.post('/', authenticateToken, async (req, res) => {
       };
     }
 
-    const request = await prisma.borrowRequest.create({
+    const request = await inventoryTransaction(prisma, async tx => {
+    const saved = await tx.borrowRequest.create({
       data: requestData,
-      include: {
-        items: {
-          include: { equipment: { select: { id: true, name: true } } },
-        },
-      },
+      include: borrowRequestInclude,
     });
 
-    sendRequestSubmittedEmail(req.user!.email, {
-      id: request.id,
-      requesterName: `${req.user!.firstName} ${req.user!.lastName}`.trim(),
-      dateNeeded: request.dateNeeded.toISOString(),
-      timeStart: request.timeStart?.toISOString() ?? null,
-      timeEnd: request.timeEnd?.toISOString() ?? null,
-      location: null,
-      purpose: request.purpose ?? null,
-      items: request.items.map((item) => ({
-        name: item.equipment?.name ?? 'Unknown',
-        quantity: item.quantity,
-      })),
-    }).catch((err) => console.error('Email (submitted) failed:', err));
+    // Validate within the write transaction so a conflict rolls back the request and items.
+    if (saved.requestType !== 'EQUIPMENT' && saved.roomId) {
+      if (!saved.timeStart || !saved.timeEnd || saved.timeEnd <= saved.timeStart) {
+        throw new RequestActionError(400, 'A valid room reservation time range is required.');
+      }
+      await assertRoomAvailable(tx, {
+        roomId: saved.roomId, academicYearId: saved.academicYearId, termId: saved.termId,
+        scheduleType: ScheduleType.ONE_TIME, scheduleDate: saved.dateNeeded,
+        timeStart: saved.timeStart, timeEnd: saved.timeEnd,
+      }, saved.id);
+    }
+
+    await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'CREATE', entityType: 'BorrowRequest', entityId: saved.id, details: { requestType: intent.requestType, roomId: intent.roomId, usageRoomId: intent.usageRoomId, usageLocation: intent.usageLocation } });
+    return saved;
+    });
+
+    const submittedDetails = buildEmailDetails(summarizeRequest(request as BorrowRequestWithRelations));
+    await Promise.all([sendRequestSubmittedEmail(req.user!.email, submittedDetails), sendAdminRequestEmail(submittedDetails, 'submitted')])
+      .catch(() => console.error('Email enqueue failed after request submission.'));
 
     notifyAdmins({
       type: NotificationType.REQUEST_PENDING,
@@ -327,12 +323,12 @@ router.post('/', authenticateToken, async (req, res) => {
 
 // ─── PUT /:id — Owner edits a pending request ────────────────────────────────
 
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FACULTY), async (req, res) => {
   try {
     const { id } = req.params;
     const {
       facultyId, programId, subjectId, yearLevel,
-      dateNeeded, roomId, location, timeStart, timeEnd,
+      dateNeeded, timeStart, timeEnd,
       purpose, contactDetails, notes, academicYearId, termId, items: rawItems,
     } = req.body;
 
@@ -357,6 +353,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
 
     const items = validateRequestItems(rawItems);
+    const intent = await resolveRequestIntent(prisma, req.body, req.user!.role, items);
     const periodSelection = await resolveAcademicPeriodSelection(
       prisma,
       { academicYearId, termId },
@@ -415,7 +412,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       requestYearLevel = studentProfile.yearLevel;
     }
 
-    const updatedRequest = await prisma.borrowRequest.update({
+    const updatedRequest = await inventoryTransaction(prisma, async tx => {
+    const saved = await tx.borrowRequest.update({
       where: { id, status: RequestStatus.PENDING },
       data: {
         facultyId: facultyId || null,
@@ -423,8 +421,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
         subjectId,
         yearLevel: requestYearLevel == null || requestYearLevel === '' ? null : Number(requestYearLevel),
         dateNeeded: manilaDayBounds(dateNeeded).start,
-        roomId: roomId || null,
-        location: location || null,
+        ...intent,
         timeStart: timeStart ? parseManilaDate(timeStart) : null,
         timeEnd: timeEnd ? parseManilaDate(timeEnd) : null,
         purpose: purpose.trim(),
@@ -439,7 +436,23 @@ router.put('/:id', authenticateToken, async (req, res) => {
       },
       include: borrowRequestInclude,
     });
+    // Validate within the write transaction so a conflict rolls back the request and items.
+    if (saved.requestType !== 'EQUIPMENT' && saved.roomId) {
+      if (!saved.timeStart || !saved.timeEnd || saved.timeEnd <= saved.timeStart) {
+        throw new RequestActionError(400, 'A valid room reservation time range is required.');
+      }
+      await assertRoomAvailable(tx, {
+        roomId: saved.roomId, academicYearId: saved.academicYearId, termId: saved.termId,
+        scheduleType: ScheduleType.ONE_TIME, scheduleDate: saved.dateNeeded,
+        timeStart: saved.timeStart, timeEnd: saved.timeEnd,
+      }, saved.id);
+    }
 
+    await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'UPDATE', entityType: 'BorrowRequest', entityId: saved.id, details: { requestType: intent.requestType, previousRequestType: existingRequest.requestType, roomId: intent.roomId, usageRoomId: intent.usageRoomId, usageLocation: intent.usageLocation } });
+    return saved;
+    });
+
+    await sendAdminRequestEmail(buildEmailDetails(summarizeRequest(updatedRequest as BorrowRequestWithRelations)), 'updated', updatedRequest.updatedAt.toISOString()).catch(() => console.error('Email enqueue failed after request edit.'));
     notifyAdmins({
       type: NotificationType.REQUEST_PENDING,
       title: 'Borrow Request Updated',
@@ -468,13 +481,13 @@ router.patch(
       const { request: updatedRequest, schedule } = await approveRequest(prisma, { id, actorId: adminId, actorRole: req.user!.role });
       if (schedule) {
         const approvedSummary = summarizeRequest(updatedRequest);
-        sendRequestApprovedEmail(updatedRequest.requester.email, buildEmailDetails(approvedSummary))
+        await sendRequestApprovedEmail(updatedRequest.requester.email, buildEmailDetails(approvedSummary))
           .catch((err) => console.error('Email (approved) failed:', err));
 
         notifyUser(updatedRequest.requestedBy, {
           type: NotificationType.REQUEST_APPROVED,
           title: 'Request Approved ✓',
-          message: 'Your borrow request has been approved. Please proceed to collect the equipment.',
+          message: 'Your request has been approved. Open it to review the reservation and any equipment collection details.',
           borrowRequestId: updatedRequest.id,
         });
         res.json({
@@ -509,7 +522,7 @@ router.patch(
         const request = updatedRequest;
 
         const regularApprovedSummary = summarizeRequest(request);
-        sendRequestApprovedEmail(request.requester.email, buildEmailDetails(regularApprovedSummary))
+        await sendRequestApprovedEmail(request.requester.email, buildEmailDetails(regularApprovedSummary))
           .catch((err) => console.error('Email (approved) failed:', err));
 
         notifyUser(request.requestedBy, {
@@ -543,7 +556,7 @@ router.patch(
       const request = await inventoryTransaction(prisma, async tx => {
         const existing = await tx.borrowRequest.findUnique({
           where: { id },
-          select: { status: true },
+          select: { status: true, requestType: true },
         });
 
         if (!existing) {
@@ -564,12 +577,14 @@ router.patch(
           include: borrowRequestInclude,
         });
 
-        await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'REJECT', entityType: 'BorrowRequest', entityId: id, details: { reason } });
+        const releasedSchedules = existing.requestType !== 'LEGACY' ? await tx.labSchedule.findMany({ where: { borrowRequestId: id } }) : [];
+        if (existing.requestType !== 'LEGACY') await tx.labSchedule.deleteMany({ where: { borrowRequestId: id } });
+        await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'REJECT', entityType: 'BorrowRequest', entityId: id, details: { reason, releasedSchedules: JSON.parse(JSON.stringify(releasedSchedules)) } });
         return request;
       });
 
       const rejectedSummary = summarizeRequest(request);
-      sendRequestRejectedEmail(request.requester.email, buildEmailDetails(rejectedSummary), reason)
+      await sendRequestRejectedEmail(request.requester.email, buildEmailDetails(rejectedSummary), reason)
         .catch((err) => console.error('Email (rejected) failed:', err));
 
       notifyUser(request.requestedBy, {
@@ -600,7 +615,7 @@ router.patch(
       });
 
       const borrowedSummary = summarizeRequest(request as BorrowRequestWithRelations);
-      sendEquipmentBorrowedEmail(request.requester.email, buildEmailDetails(borrowedSummary))
+      await sendEquipmentBorrowedEmail(request.requester.email, buildEmailDetails(borrowedSummary))
         .catch((err) => console.error('Email (borrowed) failed:', err));
 
       notifyUser(request.requestedBy, {
@@ -631,7 +646,7 @@ router.patch(
       });
 
       const returnedSummary = summarizeRequest(request as BorrowRequestWithRelations);
-      sendEquipmentReturnedEmail(request.requester.email, buildEmailDetails(returnedSummary))
+      await sendEquipmentReturnedEmail(request.requester.email, buildEmailDetails(returnedSummary))
         .catch((err) => console.error('Email (returned) failed:', err));
 
       notifyUser(request.requestedBy, {
@@ -655,6 +670,13 @@ router.patch('/:id/cancel', authenticateToken, async (req, res) => {
       cancelBorrowRequest(tx, { id, actorId: req.user!.id, actorRole: req.user!.role })
     );
 
+    const cancelledDetails = buildEmailDetails(summarizeRequest(cancelledRequest as BorrowRequestWithRelations));
+    await sendRequestCancelledEmail(cancelledRequest.requester.email, cancelledDetails).catch(() => console.error('Cancellation email enqueue failed.'));
+    if (req.user!.role !== 'ADMIN') {
+      await sendAdminRequestEmail(cancelledDetails, 'cancelled').catch(() => console.error('Admin cancellation email enqueue failed.'));
+      void notifyAdmins({ type: NotificationType.SYSTEM_ANNOUNCEMENT, title: 'Borrow Request Cancelled',
+        message: 'A requester cancelled their borrow request. No further approval is needed.', borrowRequestId: cancelledRequest.id });
+    }
     notifyUser(cancelledRequest.requestedBy, {
       type: NotificationType.SYSTEM_ANNOUNCEMENT,
       title: 'Request Cancelled',

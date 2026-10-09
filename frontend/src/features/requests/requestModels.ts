@@ -60,6 +60,10 @@ export type ApiBorrowRequestItem = {
 };
 
 export type ApiBorrowRequest = {
+  requestType?: 'LEGACY' | 'LABORATORY' | 'EQUIPMENT';
+  usageRoomId?: string | null;
+  usageRoom?: { id: string; name?: string | null; roomNumber?: string | null } | null;
+  usageLocation?: string | null;
   id: string;
   createdAt: string;
   dateNeeded: string;
@@ -79,6 +83,7 @@ export type ApiBorrowRequest = {
   } | null;
   purpose?: string | null;
   notes?: string | null;
+  rejectionNote?: string | null;
   room?: {
     id: string;
     name?: string | null;
@@ -144,7 +149,8 @@ export const normalizeBorrowRequest = (request: ApiBorrowRequest): RequestRow =>
   const roomName = request.room?.name?.trim();
   const compositeRoom = [roomNumber, roomName].filter(Boolean).join(' – ');
   // Check for room first, then location, then fallback
-  const roomLabel = compositeRoom || roomNumber || roomName || request.location || 'No lab reserved';
+  const usageLabel = request.usageRoom ? [request.usageRoom.roomNumber, request.usageRoom.name].filter(Boolean).join(' – ') : request.usageLocation;
+  const roomLabel = (request.requestType === 'EQUIPMENT' ? usageLabel : compositeRoom || roomNumber || roomName) || request.location || 'No lab reserved';
   return {
     id: request.id,
     reference: formatReference(request.id),

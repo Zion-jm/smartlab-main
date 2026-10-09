@@ -16,10 +16,15 @@ describe('portable configuration (run backend build first)', () => {
   test('accepts explicitly confirmed test database', () => expect(() => assertDemoDatabase(seed)).not.toThrow());
   test('accepts explicitly confirmed remote development database', () => expect(() => assertDemoDatabase({ ...seed, NODE_ENV: 'development', DATABASE_URL: 'postgresql://user:pass@dev.example.invalid/smartlab_test' })).not.toThrow());
   test.each([{ NODE_ENV: 'production' }, { NODE_ENV: '' }, { ALLOW_DEMO_SEED: '' }, { DEMO_DATABASE_NAME: '' }, { DEMO_DATABASE_NAME: 'wrong' }, { DATABASE_URL: 'invalid' }])('rejects unsafe seed %p', override => expect(() => assertDemoDatabase({ ...seed, ...override })).toThrow());
-  test('run workflows contain no automatic installation or data changes', () => {
-    const config = fs.readFileSync(path.join(__dirname, '../../.replit'), 'utf8');
-    const args = config.split('\n').filter(line => line.trim().startsWith('args =')).join('\n');
-    expect(args).not.toMatch(/npm install|db push|db:seed/);
+  test('development startup contains no automatic installation or data changes', () => {
+    const root = JSON.parse(fs.readFileSync(path.join(__dirname, '../../package.json'), 'utf8'));
+    const backend = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
+    const frontend = JSON.parse(fs.readFileSync(path.join(__dirname, '../../frontend/package.json'), 'utf8'));
+    const commands = [root.scripts.dev, root.scripts['dev:backend'], root.scripts['dev:frontend'], backend.scripts.dev, frontend.scripts.dev];
+    for (const command of commands) {
+      expect(typeof command).toBe('string');
+      expect(command).not.toMatch(/npm (install|ci)|db[: ]push|db:seed|db:reset|migrate/);
+    }
   });
   test('email without credentials renders locally without SMTP', async () => {
     const old = process.env.SMTP_PASS;

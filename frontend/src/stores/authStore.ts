@@ -9,6 +9,8 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  deactivated: boolean;
+  appealPending: boolean;
   login: (email: string, password: string) => Promise<void>;
   refreshUser: () => Promise<void>;
   logout: () => void;
@@ -23,9 +25,11 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      deactivated: false,
+      appealPending: false,
 
       login: async (email: string, password: string) => {
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null, deactivated: false, appealPending: false });
         try {
           const response = await authApi.login(email, password);
           const { user, token } = response.data;
@@ -37,6 +41,8 @@ export const useAuthStore = create<AuthState>()(
               ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
               : null;
           set({
+            deactivated: (error as { response?: { data?: { code?: string } } })?.response?.data?.code === 'ACCOUNT_DEACTIVATED',
+            appealPending: (error as { response?: { data?: { appealPending?: boolean } } })?.response?.data?.appealPending === true,
             error: apiError || 'Login failed',
             isLoading: false,
           });

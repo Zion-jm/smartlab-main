@@ -1,3 +1,4 @@
+import { buildDemandHighlights } from '../components/admin/report-details/demandHighlights';
 import { dateToDateKey } from '../utils/dateTime';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -199,10 +200,14 @@ export default function AdminReports() {
   const [equipment, setEquipment] = useState<EquipmentItem[]>([]);
   const [schedules, setSchedules] = useState<ApiLabSchedule[]>([]);
   const [reportCatalog, setReportCatalog] = useState<ReportCatalog>(defaultReportCatalog);
-  const [activeTab, setActiveTab] = useState<ReportTab>(() => {
-    const requestedTab = searchParams.get('reportTab');
-    return isReportTab(requestedTab) ? requestedTab : 'overview';
-  });
+  const requestedTab = searchParams.get('reportTab');
+  const activeTab: ReportTab = isReportTab(requestedTab) ? requestedTab : 'overview';
+  const setActiveTab = (tab: ReportTab) => {
+    const next = new URLSearchParams(searchParams);
+    if (tab === 'overview') next.delete('reportTab'); else next.set('reportTab', tab);
+    next.delete('reportBreakdown');
+    setSearchParams(next, { replace: true });
+  };
   const [reportPrimaryFilterPortalTarget, setReportPrimaryFilterPortalTarget] = useState<HTMLDivElement | null>(null);
   const [reportAdvancedFilterPortalTarget, setReportAdvancedFilterPortalTarget] = useState<HTMLDivElement | null>(null);
   const [reportBottomControlPortalTarget, setReportBottomControlPortalTarget] = useState<HTMLDivElement | null>(null);
@@ -217,6 +222,7 @@ export default function AdminReports() {
   }));
 
   useEffect(() => {
+    if ((searchParams.get('from') ?? '') === range.from && (searchParams.get('to') ?? '') === range.to && (searchParams.get('academicYearId') ?? '') === academicPeriod.academicYearId && (searchParams.get('termId') ?? '') === academicPeriod.termId) return;
     setSearchParams((previous) => {
       const next = new URLSearchParams(previous);
       const setOrDelete = (key: string, value: string) => {
@@ -227,10 +233,10 @@ export default function AdminReports() {
       setOrDelete('to', range.to);
       setOrDelete('academicYearId', academicPeriod.academicYearId);
       setOrDelete('termId', academicPeriod.termId);
-      setOrDelete('reportTab', activeTab === 'overview' ? '' : activeTab);
+
       return next;
     }, { replace: true });
-  }, [academicPeriod, activeTab, range, setSearchParams]);
+  }, [academicPeriod, range, searchParams, setSearchParams]);
 
   const performLoadReportData = useCallback(async () => {
 
@@ -318,6 +324,8 @@ export default function AdminReports() {
     () => filteredRequests.filter((request) => reportableStatuses.has(request.status)),
     [filteredRequests]
   );
+
+  const demandHighlights = useMemo(() => buildDemandHighlights(filteredRequests), [filteredRequests]);
 
   const summary = useMemo(() => {
     const totalUnits = filteredRequests.reduce(
@@ -415,6 +423,32 @@ export default function AdminReports() {
     range.from || range.to
       ? `${range.from ? formatReportDate(range.from) : 'Beginning'} – ${range.to ? formatReportDate(range.to) : 'Present'}`
       : 'All recorded dates';
+  const openDemandBreakdown = (index: number) => {
+    const tab: ReportTab = index === 2 || index === 4 ? 'equipment' : 'requests';
+    const next = new URLSearchParams(searchParams);
+    // Clear old detail filters so the shortcut starts with the overview's scope.
+    for (const key of Array.from(next.keys())) {
+      if (key.startsWith('request') || key.startsWith('equipment')) next.delete(key);
+    }
+    next.set('reportTab', tab);
+    next.set('reportBreakdown', String(index));
+    if (tab === 'requests') {
+      next.set('requestDemandGroup', index === 0 ? 'room' : index === 1 ? 'program' : 'faculty');
+      next.set('requestDemandStatus', 'ALL');
+      if (index === 0 || index === 1) next.set('requestDemandRoomType', 'COMPUTER_LAB');
+    } else {
+      next.set('equipmentView', 'USAGE');
+      next.set('equipmentDemandGroup', 'program');
+      next.set('equipmentDemandStatus', 'ALL');
+      next.set('equipmentDemandSort', 'requests');
+    }
+    setSearchParams(next, { replace: true });
+
+  };
+  const returnToOverview = () => {
+    setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete('reportBreakdown'); next.delete('reportTab'); return next; }, { replace: true });
+
+  };
   const reportTabLabel = reportTabs.find((tab) => tab.id === activeTab)?.label ?? 'Overview';
   const reportRibbonSummary = [
     `Date range: ${reportRangeLabel}`,
@@ -462,7 +496,7 @@ export default function AdminReports() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-7xl space-y-4 p-2 lg:p-3">
+      <div className="reports-mobile-workspace mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         <FilterToolbar
           searchValue=""
           onSearchChange={() => undefined}
@@ -498,6 +532,14 @@ export default function AdminReports() {
           />
         </div>
 
+        {activeTab !== 'overview' && (
+          <div className="flex flex-wrap items-center gap-3 print:hidden">
+            <button type="button" onClick={returnToOverview} className="min-h-10 rounded-lg border border-[#d8b5b0] bg-white px-3 text-xs font-semibold text-[#800000] hover:bg-[#fff0ed]">← Back to overview</button>
+            {searchParams.get('reportBreakdown') === '4' && activeTab === 'equipment' && <button type="button" onClick={() => document.getElementById('equipment-request-ranking')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="min-h-10 rounded-lg border border-[#d8b5b0] bg-white px-3 text-xs font-semibold text-[#800000] hover:bg-[#fff0ed]">Jump to equipment ranking ↓</button>}
+            {searchParams.has('reportBreakdown') && <p className="text-xs text-[#756969]">Overview breakdown · All statuses initially selected. Unassigned groups may appear here but are excluded from the overview winners.</p>}
+          </div>
+        )}
+
         {error && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#fecaca] bg-[#fff7f7] px-4 py-3 text-sm text-[#b91c1c]">
             <span>{error}</span>
@@ -529,7 +571,31 @@ export default function AdminReports() {
               <>
                 <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                <section aria-labelledby="demand-highlights-title" className="space-y-3">
+                  <div>
+                    <h2 id="demand-highlights-title" className="text-sm font-semibold text-[#800000]">Demand highlights</h2>
+                    <p className="mt-1 text-xs leading-5 text-[#6b7280]">Selected academic period · {reportRangeLabel}. Counts include all request statuses, including declined and cancelled; they show demand, not confirmed usage.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+                    {demandHighlights.map((highlight, index) => (
+                      <article key={highlight.title} className="flex min-w-0 flex-col rounded-2xl border border-[#eadfd9] bg-[#fffdfb] p-4">
+                        <h3 className="text-xs font-medium text-[#756969]">{highlight.title}</h3>
+                        <p className="mt-3 break-words text-base font-semibold text-[#321d1d]">{highlight.leaders.length ? highlight.leaders.slice(0, 2).join(' / ') : 'No matching requests'}</p>
+                        {highlight.leaders.length > 2 && <details className="mt-2 text-xs text-[#800000]"><summary className="cursor-pointer">{highlight.leaders.length - 2} more tied</summary><p className="mt-1 break-words">{highlight.leaders.slice(2).join(', ')}</p></details>}
+                        {highlight.count > 0 && <p className="mt-2 text-sm font-semibold text-[#800000]">{highlight.count} {highlight.count === 1 ? 'request' : 'requests'}{highlight.leaders.length > 1 ? ' each · tied' : ''}</p>}
+                        <div className="mt-auto pt-4">
+                          <button type="button" onClick={() => openDemandBreakdown(index)} aria-label={'View breakdown: ' + highlight.title}
+                            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#d8b5b0] px-3 text-xs font-semibold text-[#800000] transition hover:bg-[#fff0ed] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]">
+                            View breakdown <span aria-hidden="true" className="ml-2">→</span>
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                  <p className="text-xs text-[#756969]">Equipment is counted once per request, regardless of quantity. Faculty refers to the supervising faculty; records without a section or faculty assignment are excluded from those rankings.</p>
+                </section>
+
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
                   <MetricCard label="Borrow requests" value={summary.totalRequests} detail="Within this period" tone="maroon" />
                   <MetricCard label="Units requested" value={summary.totalUnits} detail="Approved, borrowed, or returned" tone="blue" />
                   <MetricCard label="Returned requests" value={summary.returnedRequests} detail="Completed equipment returns" tone="green" />
@@ -543,7 +609,7 @@ export default function AdminReports() {
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_auto_minmax(0,0.9fr)]">
                   <Panel
                     title="Needs attention"
-                    description="Operational items that may need an administrator's action."
+                    description="Items that need your attention."
                   >
                     <div className="grid gap-3 sm:grid-cols-2">
                       <button
@@ -609,7 +675,7 @@ export default function AdminReports() {
 
                 <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
-                <Panel title="Borrowing activity over time" description="Monthly request volume and equipment units across all request statuses.">
+                <Panel title="Borrowing activity over time" description="Requests and equipment quantities by month, including all statuses.">
                   {monthlyUsage.length === 0 ? (
                     <p className="py-8 text-center text-xs text-[#9ca3af]">No borrowing activity in this period.</p>
                   ) : (
@@ -644,7 +710,7 @@ export default function AdminReports() {
 
                 <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
-                <Panel title="Detailed reports" description="Open the full filtered log for the area you need to review.">
+                <Panel title="Detailed reports" description="Choose a report to view records, filter results, or export a copy.">
                   <div className="grid gap-3 sm:grid-cols-3">
                     {[
                       { tab: 'requests' as const, label: 'Requests', detail: 'Review request status and demand sources.' },

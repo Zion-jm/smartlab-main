@@ -11,7 +11,7 @@ export async function assertRoomAvailable(tx: Prisma.TransactionClient, input: C
   if ((await checkScheduleConflicts(input, tx)).length) throw new RequestActionError(409, 'Room schedule conflict. Refresh and choose another time.');
   const reservations = await tx.borrowRequest.findMany({
     where: {
-      roomId: input.roomId, status: { in: [RequestStatus.APPROVED, RequestStatus.BORROWED] },
+      roomId: input.roomId, requestType: { not: 'EQUIPMENT' }, status: { in: [RequestStatus.APPROVED, RequestStatus.BORROWED] },
       ...(input.academicYearId ? { academicYearId: input.academicYearId } : {}),
       ...(input.termId ? { termId: input.termId } : {}),
       ...(excludeRequestId ? { id: { not: excludeRequestId } } : {}),
@@ -31,9 +31,12 @@ export async function approveRequest(prisma: PrismaClient, input: { id: string; 
     const request = await tx.borrowRequest.findUnique({ where: { id: input.id }, include: borrowRequestInclude });
     if (!request) throw new RequestActionError(404, 'Request not found');
     if (request.status !== RequestStatus.PENDING) throw new RequestActionError(409, 'Only pending requests can be approved.');
-    const createSchedule = !!request.room?.isComputerLab || !!input.requireSchedule;
+    if (request.requestType === 'LABORATORY' && request.requester.role !== UserRole.FACULTY) throw new RequestActionError(403, 'Only faculty can reserve a computer laboratory.');
+    if (request.requestType === 'EQUIPMENT' && input.requireSchedule) throw new RequestActionError(400, 'Equipment-only requests cannot create a laboratory schedule.');
+    const createSchedule = request.requestType === 'LABORATORY' || (request.requestType !== 'EQUIPMENT' && (!!request.room?.isComputerLab || !!input.requireSchedule));
+    if (createSchedule && request.requester.role !== UserRole.FACULTY) throw new RequestActionError(403, 'Only faculty can reserve a computer laboratory.');
     if (createSchedule && (!request.roomId || !request.facultyId || !request.timeStart || !request.timeEnd)) throw new RequestActionError(400, 'Room, faculty and time range are required for a schedule.');
-    if (request.roomId) {
+    if (request.roomId && request.requestType !== 'EQUIPMENT') {
       if (!request.timeStart || !request.timeEnd || minutesFromDate(request.timeEnd) <= minutesFromDate(request.timeStart)) throw new RequestActionError(400, 'A valid same-day time range is required for a room.');
       await assertRoomAvailable(tx, { roomId: request.roomId, academicYearId: request.academicYearId, termId: request.termId, scheduleType: ScheduleType.ONE_TIME, scheduleDate: request.dateNeeded, timeStart: request.timeStart, timeEnd: request.timeEnd }, request.id);
     }

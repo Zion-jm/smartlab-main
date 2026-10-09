@@ -1,3 +1,4 @@
+import { accountApiLimiter, writeLimiter } from './requestLimiter';
 import { prisma } from '../db/prisma';
 import { sendError } from './errors';
 import { Request, Response, NextFunction } from 'express';
@@ -70,7 +71,11 @@ export const authenticateToken = async (
       return;
     }
     req.user = user;
-    next();
+    res.setHeader('Cache-Control', 'no-store');
+    accountApiLimiter(req, res, () => {
+      if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) writeLimiter(req, res, next);
+      else next();
+    });
   } catch (error) {
     sendError(error, res);
   }

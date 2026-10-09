@@ -228,5 +228,6 @@ export function useEquipmentAvailability({
     conflicts,
     timeValidation,
     getEquipmentAvailability,
+    retryAvailability: fetchAvailability,
   };
 }

@@ -45,6 +45,8 @@ export default function ControlRibbon({
     return () => { observer.disconnect(); setInset(0); };
   }, [setInset]);
   const userId = useAuthStore((state) => state.user?.id ?? 'anonymous');
+  const role = useAuthStore((state) => state.user?.role);
+  const setPreference = usePreferencesStore((state) => state.setPreference);
   const preferencesByUser = usePreferencesStore((state) => state.preferencesByUser);
   const ribbonExpandedByDefault = !getUserPreferences(preferencesByUser, userId).ribbonControlsHiddenByDefault;
   const [expanded, setExpanded] = useState(defaultExpanded ?? ribbonExpandedByDefault);
@@ -85,14 +87,15 @@ export default function ControlRibbon({
           <div className="page-control-ribbon__summary">
             {activeSummary ?? 'No active search or filters'}
           </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {onRefresh && (
-            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-              <span role="status" aria-live="polite" className="whitespace-nowrap px-1 text-xs text-[#6b7280]">
+          {onRefresh && (              <span role="status" aria-live="polite" className="page-control-ribbon__updated text-xs text-[#6b7280]">
                 Updated{' '}
                 {displayedLastUpdated?.toLocaleTimeString([], { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' }) ?? '—'}
-              </span>
+              </span>)}
+        </div>
+        <div className="page-control-ribbon__actions flex shrink-0 items-center gap-2">
+          {onRefresh && (
+            <div className="page-control-ribbon__refresh flex min-w-0 items-center gap-1.5 sm:gap-2">
+
               <button
                 type="button"
                 onClick={handleRefresh}
@@ -110,8 +113,14 @@ export default function ControlRibbon({
             type="button"
             aria-expanded={expanded}
             aria-controls={contentId}
-            onClick={() => setExpanded((current) => !current)}
-            className="page-control-ribbon__toggle"
+            onClick={() => {
+              const next = !expanded;
+              setExpanded(next);
+              if (role === 'STUDENT' || role === 'FACULTY') {
+                setPreference(userId, 'ribbonControlsHiddenByDefault', !next);
+              }
+                }}
+                className="page-control-ribbon__toggle"
           >
             <span>{expanded ? 'Hide controls' : 'Show controls'}</span>
             <svg

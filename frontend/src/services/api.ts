@@ -9,16 +9,28 @@ const api = axios.create({
   },
 });
 
+// A stale tab must never send a request using another tab's newly signed-in account.
+let tabToken = localStorage.getItem('token');
+window.addEventListener('storage', event => {
+  if ((event.key === 'token' || event.key === null) && localStorage.getItem('token') !== tabToken) window.location.reload();
+});
 // Add auth token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
+  if (token !== tabToken && config.url !== '/auth/login') {
+    window.location.reload();
+    return Promise.reject(new Error('Your sign-in session changed. Refresh before continuing.'));
+  }
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-api.interceptors.response.use(response => response, async error => {
+api.interceptors.response.use(response => {
+  if (response.config.url === '/auth/login' && response.data?.token) tabToken = response.data.token;
+  return response;
+}, async error => {
   if (error.response?.data instanceof Blob && error.response.data.type.includes('json')) {
     try { error.response.data = JSON.parse(await error.response.data.text()); } catch { /* Preserve original error if decoding fails. */ }
   }
@@ -32,6 +44,9 @@ api.interceptors.response.use(response => response, async error => {
 
 // Auth API
 export const authApi = {
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', {email}),
+  resetPassword: (data: {token:string;password:string}) => api.post('/auth/reset-password',data),
+  requestReactivation: (data: { email: string; password: string; reason: string }) => api.post('/auth/reactivation', data),
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }),
   getMe: () => api.get('/auth/me'),
@@ -98,6 +113,8 @@ export const borrowRequestApi = {
 
 // Users API
 export const userApi = {
+  sendPasswordReset: (id:string) => api.post('/users/'+encodeURIComponent(id)+'/password-reset'),
+  getById: (id: string) => api.get('/users/' + encodeURIComponent(id)),
   getPage: (params?: Record<string, unknown>) => api.get('/users', { params }),
   getAll: (params?: Record<string, unknown>) => collectPages('/users', undefined, params),
   create: (data: JsonPayload) => api.post('/users', data),
@@ -192,7 +209,7 @@ export const conflictApi = {
 
 // Notifications API
 export const notificationApi = {
-  getAll: () => api.get('/notifications'),
+  getAll: (params?: { offset?: number; unread?: boolean }) => api.get('/notifications', { params }),
   getUnreadCount: () => api.get('/notifications/unread-count'),
   markRead: (id: string) => api.patch(`/notifications/${id}/read`),
   markAllRead: () => api.patch('/notifications/read-all'),

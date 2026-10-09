@@ -1,3 +1,4 @@
+import { downloadReportSpreadsheet } from '../printableReportUtils';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -17,7 +18,7 @@ import {
 PrintableReportDocument,
 type PrintableReportDefinition,
 } from '../PrintableReportDocument';
-import { downloadPrintableReport } from '../printableReportUtils';
+
 import '../reportDocumentStyles.css';
 import { buildDemandRows, buildRequestPrintRows, demandGroupDescriptions, demandGroupLabels, demandRoomLabels, demandSourceLabels, demandStatusScopeLabels, formatDate, formatSectionLabel, getRequestUnits, inDateRange, reportableStatuses, reportYearLevels, statusLabels, type DateRange, type DemandGroupBy, type DemandRoomFilter, type DemandRow, type DemandSortBy, type DemandSourceFilter, type DemandStatusScope, type ReportCatalog, type RequestPrintRow } from './reportData';
 import { FormalReportFrame, RequestReportOutputMenu } from './ReportOutput';
@@ -304,13 +305,14 @@ export function RequestReportView({
       }.csv`,
       rows: filteredPrintRows,
       columns: [
-        { key: 'date', label: 'Date', width: '9%' },
-        { key: 'room', label: 'Room', width: '9%' },
-        { key: 'equipment', label: 'Equipment', width: '17%' },
-        { key: 'requester', label: 'Requester', width: '16%' },
-        { key: 'programYear', label: 'Program / Year', width: '11%' },
-        { key: 'faculty', label: 'Faculty-in-Charge', width: '15%' },
-        { key: 'time', label: 'Time', width: '9%' },
+        { key: 'date', label: 'Date', width: '8%' },
+        { key: 'requestType', label: 'Request type', width: '10%' },
+        { key: 'room', label: 'Reservation / intended use', width: '11%' },
+        { key: 'equipment', label: 'Equipment', width: '15%' },
+        { key: 'requester', label: 'Requester', width: '13%' },
+        { key: 'programYear', label: 'Section', width: '9%' },
+        { key: 'faculty', label: 'Faculty-in-Charge', width: '12%' },
+        { key: 'time', label: 'Time', width: '8%' },
         { key: 'status', label: 'Status', width: '7%' },
         { key: 'subject', label: 'Subject', width: '7%' },
       ],
@@ -422,7 +424,7 @@ export function RequestReportView({
   }, [demandGroupBy, demandRoomType, demandSource, demandStatusScope, filteredRequests]);
   const demandAnalysisDefinition = useMemo<PrintableReportDefinition<DemandRow>>(
     () => ({
-      title: `Request Demand Analysis — ${demandGroupLabels[demandGroupBy]}`,
+      title: `Request Demand Analysis – ${demandGroupLabels[demandGroupBy]}`,
       filename: `smartlab-request-demand-analysis-${demandGroupBy}.csv`,
       rows: demandRows,
       columns: [
@@ -437,7 +439,7 @@ export function RequestReportView({
     [demandGroupBy, demandRows]
   );
   const handleExport = () => {
-    downloadPrintableReport(requestLogDefinition);
+    void downloadReportSpreadsheet(requestLogDefinition, { academicPeriod, range, filters: appliedFilters.map(filter => filter.label) });
   };
 
   const exportRequestPdf = async (scope: 'period' | 'filtered') => {
@@ -827,7 +829,7 @@ export function RequestReportView({
             </p>
           </div>
           <TableContainer className="rounded-xl border border-[#e5e7eb]">
-            <Table className="report-print-table min-w-[1020px]">
+            <Table className="request-mobile-report report-print-table min-w-[1020px]">
               <TableHead>
                 <TableHeaderCell>Date / status</TableHeaderCell>
                 <TableHeaderCell>Room / time</TableHeaderCell>
@@ -904,12 +906,12 @@ export function RequestReportView({
       </FormalReportFrame>
       <div className="request-report-print-document">
         {printMode === 'demand' ? (
-          <PrintableReportDocument
+          <PrintableReportDocument headerPeriod={academicPeriod} headerRange={range}
             definition={demandAnalysisDefinition}
             rows={demandRows}
           />
         ) : (
-          <PrintableReportDocument
+          <PrintableReportDocument headerPeriod={academicPeriod} headerRange={range}
             definition={printableDefinition}
             rows={printableRows}
           />

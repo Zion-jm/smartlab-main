@@ -479,7 +479,7 @@ Exercise the real controls, not only their appearance:
   | `AdminLabSchedule` | **FAIL** | **BLOCKED** |
 
 - **Carried findings:** Equipment Usage Calendar touch targets; AdminLabSchedule Chart/Calendar touch targets; AdminLabSchedule Chart View lab-label association; and the missing authenticated admin browser prerequisite. Each finding and blocker is documented in the page-specific results above.
-- **Checkpoint:** The suggested `CP4B — Equipment and lab schedule review complete` label is not manually saved here; Replit manages checkpoints automatically. This review record contains FAIL/BLOCKED outcomes and must not be treated as a passed quality gate.
+- **Checkpoint:** The suggested `CP4B — Equipment and lab schedule review complete` label is not manually saved here; the previous hosted development environment manages checkpoints automatically. This review record contains FAIL/BLOCKED outcomes and must not be treated as a passed quality gate.
 
 ### Recorded result — AdminRequests responsive review (Phase 4C.1)
 
@@ -540,7 +540,7 @@ Exercise the real controls, not only their appearance:
 
 - **Carried findings:** The Requests date-range error has no live announcement (see 4C.2); the Academic Directory tab row leaks horizontal overflow to the document at 390px (see 4C.4). Both remain unresolved; neither failed row is converted to a pass.
 - **Blockers and captures:** No 4C checks were blocked for lack of an authenticated admin session. The required captures exist at `screenshots/phase-4c-admin-requests-1280.jpg` and `screenshots/phase-4c-admin-requests-390.jpg`.
-- **Checkpoint:** Replit manages checkpoints automatically; no manually named `CP4C` checkpoint is claimed. This review record is complete, but the overall Phase 4C outcome is FAIL.
+- **Checkpoint:** the previous hosted development environment manages checkpoints automatically; no manually named `CP4C` checkpoint is claimed. This review record is complete, but the overall Phase 4C outcome is FAIL.
 - **Scope boundary:** Consolidation only. No page-by-page checks were repeated and no application code was changed.
 
 ### Recorded result — AdminAuditLogs review (Phase 4D.1)

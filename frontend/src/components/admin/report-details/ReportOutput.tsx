@@ -6,6 +6,7 @@ import { formatPeriodLabel, type DateRange } from './reportData';
 export type FixedOutputMenuPosition = {
   top: number;
   right: number;
+  maxHeight: number;
 };
 
 function useFixedOutputMenuPosition(
@@ -23,9 +24,13 @@ function useFixedOutputMenuPosition(
       const anchor = anchorRef.current;
       if (!anchor) return;
       const rect = anchor.getBoundingClientRect();
+      const mobile = window.innerWidth < 768;
+      const top = mobile ? Math.max(16, Math.min(rect.bottom + 8, window.innerHeight - 320)) : rect.bottom + 8;
+      const width = Math.min(976, window.innerWidth - 32);
       setPosition({
-        top: rect.bottom + 8,
-        right: Math.max(16, window.innerWidth - rect.right),
+        top,
+        right: mobile ? 16 : Math.max(16, Math.min(window.innerWidth - rect.right, window.innerWidth - width - 16)),
+        maxHeight: Math.max(80, window.innerHeight - top - 16),
       });
     };
 
@@ -231,8 +236,8 @@ export function RequestReportOutputMenu({
           ref={menuPanelRef}
           role="menu"
           aria-label="Request report output options"
-          style={{ top: menuPosition.top, right: menuPosition.right }}
-          className="fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
+          style={{ top: menuPosition.top, right: menuPosition.right, maxHeight: menuPosition.maxHeight, overflowY: 'auto' }}
+          className="report-export-menu fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
         >
           <div className="grid grid-cols-1 divide-y divide-[#f1e9e7] md:grid-cols-3 md:divide-x md:divide-y-0">
             <div className="min-w-0 px-4 py-4 lg:px-6">
@@ -535,8 +540,8 @@ export function EquipmentReportOutputMenu({
           ref={menuPanelRef}
           role="menu"
           aria-label="Equipment report output options"
-          style={{ top: menuPosition.top, right: menuPosition.right }}
-          className="fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
+          style={{ top: menuPosition.top, right: menuPosition.right, maxHeight: menuPosition.maxHeight, overflowY: 'auto' }}
+          className="report-export-menu fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
         >
           <div className="grid grid-cols-1 divide-y divide-[#f1e9e7] md:grid-cols-3 md:divide-x md:divide-y-0">
             <div className="min-w-0 px-4 py-4 lg:px-6">
@@ -786,8 +791,8 @@ export function ScheduleReportOutputMenu({
           ref={menuPanelRef}
           role="menu"
           aria-label="Schedule report output options"
-          style={{ top: menuPosition.top, right: menuPosition.right }}
-          className="fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
+          style={{ top: menuPosition.top, right: menuPosition.right, maxHeight: menuPosition.maxHeight, overflowY: 'auto' }}
+          className="report-export-menu fixed z-[60] w-[min(61rem,calc(100vw-2rem))] overflow-hidden rounded-[1.25rem] border border-[#eadfdd] bg-white text-left shadow-[0_18px_45px_rgba(63,43,38,0.16)]"
         >
           <div className="grid grid-cols-1 divide-y divide-[#f1e9e7] md:grid-cols-3 md:divide-x md:divide-y-0">
             <div className="min-w-0 px-4 py-4 lg:px-6">

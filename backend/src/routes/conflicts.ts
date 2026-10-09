@@ -1,3 +1,4 @@
+import { assertRequestVisible } from '../services/requestVisibility';
 import { prisma } from '../db/prisma';
 import { DomainError } from '../services/domainError';
 import { sendError } from '../middleware/errors';
@@ -36,16 +37,16 @@ const formatTime = (value: Date | null | undefined) => {
 };
 
 // Pending requests are advisory; unscheduled approved room reservations also block.
-const checkScheduleConflicts = async (input: ConflictCheckInput): Promise<any[]> => {
-  const schedules = await findScheduleConflicts(input);
+const checkScheduleConflicts = async (input: ConflictCheckInput & { excludeRequestId?: string }): Promise<any[]> => {
+  const schedules = (await findScheduleConflicts(input)).filter(schedule => !input.excludeRequestId || schedule.borrowRequestId !== input.excludeRequestId);
   const linked = input.excludeScheduleId ? await prisma.labSchedule.findUnique({ where: { id: input.excludeScheduleId }, select: { borrowRequestId: true } }) : null;
   const pending = await prisma.borrowRequest.findMany({
     where: {
-      roomId: input.roomId,
+      roomId: input.roomId, requestType: { not: 'EQUIPMENT' },
       OR: [{ status: 'PENDING' }, { status: { in: ['APPROVED', 'BORROWED'] }, schedules: { none: {} } }],
       ...(input.academicYearId ? { academicYearId: input.academicYearId } : {}),
       ...(input.termId ? { termId: input.termId } : {}),
-      ...(linked?.borrowRequestId ? { id: { not: linked.borrowRequestId } } : {}),
+      ...((input.excludeRequestId || linked?.borrowRequestId) ? { id: { notIn: [input.excludeRequestId, linked?.borrowRequestId].filter((id): id is string => Boolean(id)) } } : {}),
     }, include: { requester: { select: { firstName: true, lastName: true, email: true } }, room: true, subject: true, program: true }
   });
   return [...schedules, ...pending.filter(r =>
@@ -69,6 +70,7 @@ router.post(
         timeStart,
         timeEnd,
         excludeScheduleId,
+        excludeRequestId,
       } = req.body;
 
       const scheduleType = resolveScheduleType(scheduleTypeInput);
@@ -109,6 +111,8 @@ router.post(
         const owned = await prisma.labSchedule.findFirst({ where: { id: excludeScheduleId, faculty: { userId: req.user!.id } }, select: { id: true } });
         if (!owned) throw new DomainError(403, 'Access denied');
       }
+      if (excludeRequestId != null && typeof excludeRequestId !== 'string') throw new DomainError(400, 'Invalid excluded request ID.');
+      await assertRequestVisible(prisma, req.user!, excludeRequestId);
       const conflicts = await checkScheduleConflicts({
         roomId,
         academicYearId,
@@ -119,6 +123,7 @@ router.post(
         timeStart: timeStartValue,
         timeEnd: timeEndValue,
         excludeScheduleId,
+        excludeRequestId,
       });
 
       const conflictSummaries = conflicts.map((conflict, index) => {

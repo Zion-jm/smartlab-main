@@ -14,6 +14,9 @@ export interface BorrowRequestItemSummary {
 }
 
 export interface BorrowRequest {
+  requestType?: 'LEGACY' | 'LABORATORY' | 'EQUIPMENT';
+  usageLocation?: string | null;
+  usageRoom?: { id: string; name?: string | null; roomNumber?: string | null } | null;
   id: string;
   referenceCode?: string;
   requesterId?: string;
@@ -23,6 +26,7 @@ export interface BorrowRequest {
   requesterAvatar?: string | null;
   program?: string | null;
   programId?: string | null;
+  programCode?: string | null;
   yearLevel?: number | null;
   facultyId?: string | null;
   facultyName?: string | null;
@@ -48,7 +52,7 @@ export interface BorrowRequest {
   items?: BorrowRequestItemSummary[];
 }
 
-export type BorrowRequestRoleFilter = 'ALL' | 'FACULTY' | 'STUDENT' | 'STAFF';
+export type BorrowRequestRoleFilter = 'ALL' | 'FACULTY' | 'STUDENT';
 
 export type BorrowRequestSort = 'newest' | 'oldest' | 'date-asc' | 'date-desc' | 'name-asc' | 'name-desc';
 

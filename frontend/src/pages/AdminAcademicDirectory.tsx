@@ -575,7 +575,22 @@ export default function AdminAcademicDirectory() {
           ) : (
             <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
               <div className="px-4 py-5 lg:px-6">
-                <TableContainer>{renderTable()}</TableContainer>
+                <div className="space-y-3 md:hidden">
+                  {paginatedData && paginatedData[activeTab].map(record => {
+                    const title = 'roomNumber' in record ? [record.roomNumber, record.roomName].filter(Boolean).join(' · ') || 'Unnamed room' : 'name' in record ? record.name : 'Directory record';
+                    return <article key={record.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white">
+                      <header className="flex items-start justify-between gap-3 border-b border-[#f1e6e3] bg-[#fffaf7] p-3"><div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-wide text-[#786565]">{tabDefinitions[activeTab].label}</p><h3 className="mt-1 break-words text-sm font-semibold text-[#321d1d]">{title}</h3></div><IconActionButton label={'Edit ' + title} icon="edit" onClick={() => openDrawer(activeTab, 'edit', record)} /></header>
+                      <dl className="space-y-2 p-3 text-sm text-[#514343]">
+                        {'code' in record && <div><dt className="text-xs text-[#786565]">Code</dt><dd className="mt-1 font-semibold">{record.code || 'Not assigned'}</dd></div>}
+                        {'roomCount' in record && <div className="flex items-center justify-between"><dt>Rooms</dt><dd className="rounded-lg bg-[#faf7f5] px-3 py-1 font-semibold">{record.roomCount}</dd></div>}
+                        {'buildingName' in record && <div><dt className="text-xs text-[#786565]">Building</dt><dd className="mt-1 break-words">{record.buildingName || 'Unassigned'}</dd></div>}
+                        {'isComputerLab' in record && <div><dt className="sr-only">Room type</dt><dd className="inline-flex rounded-full bg-[#f5eae5] px-2.5 py-1 text-xs font-semibold text-[#800000]">{record.isComputerLab ? 'Computer lab' : 'Standard room'}</dd></div>}
+                        {activeTab === 'departments' && <p className="text-xs text-[#786565]">Academic department</p>}
+                      </dl>
+                    </article>;
+                  })}
+                </div>
+                <div className="hidden md:block"><TableContainer>{renderTable()}</TableContainer></div>
                 <TablePagination
                   currentPage={directoryPage}
                   pageSize={directoryPageSize}
@@ -596,7 +611,7 @@ export default function AdminAcademicDirectory() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-7xl space-y-4 p-2 lg:p-3">
+      <div className="academic-directory-workspace mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         {data && renderDirectoryControls()}
         <div className="page-control-ribbon--flush px-0 pt-3 pb-0">
           <PageTabGroup

@@ -1,3 +1,4 @@
+import { CircleCheck, TriangleAlert, CircleAlert, Clock3, LoaderCircle } from 'lucide-react';
 import type { ConflictCheckStatus } from '../../hooks/useScheduleConflictCheck';
 
 
@@ -23,7 +24,7 @@ const statusTokens: Record<ConflictCheckStatus | 'waiting', { bg: string; text: 
   checking: { bg: 'bg-[#eff6ff]', text: 'text-[#1d4ed8]', icon: '🔄', label: 'Checking whether this room is available…' },
   good: { bg: 'bg-[#ecfdf3]', text: 'text-[#047857]', icon: '✔️', label: 'This room is available for your selected time.' },
   warning: { bg: 'bg-[#fff7ed]', text: 'text-[#9a3412]', icon: '⚠️', label: 'Another request is waiting for this time.' },
-  danger: { bg: 'bg-[#fef2f2]', text: 'text-[#b91c1c]', icon: '⛔', label: 'This room is already booked for this time.' },
+  danger: { bg: 'bg-[#fef2f2]', text: 'text-[#b91c1c]', icon: '⛔', label: 'This room is unavailable during the selected time.' },
   error: { bg: 'bg-[#fef2f2]', text: 'text-[#b91c1c]', icon: '❗', label: 'We couldn’t check room availability.' },
 };
 
@@ -35,12 +36,14 @@ export function ConflictStatusCard({ status, ready, loading, error, hasDetails, 
     good: 'No conflicts detected.', warning: 'Pending requests overlap this slot.',
     danger: 'Active schedule conflict detected.', error: 'Unable to check conflicts. Try again.',
   };
+  const state = ready ? status : 'waiting';
+  const Icon = loading ? LoaderCircle : state === 'good' ? CircleCheck : state === 'warning' ? TriangleAlert : ['danger', 'error'].includes(state) ? CircleAlert : Clock3;
   return (
-    <div className={`rounded-2xl border border-[#e5e7eb] px-4 py-3 flex items-center justify-between gap-4 ${token.bg}`}>
+    <div className={`availability-card availability-card--${state} flex flex-wrap items-center justify-between gap-3`}>
       <div className={`flex items-start gap-2 text-sm font-semibold ${token.text}`}>
-        <span aria-hidden>{token.icon}</span>
+        <span className="availability-card-icon"><Icon size={20} strokeWidth={1.75} aria-hidden="true" className={loading ? "animate-spin motion-reduce:animate-none" : undefined} /></span>
         <div>
-          <p>{requestGuidance ? token.label : labels[ready ? status : 'waiting']}</p>
+          <p className="availability-card-title">{requestGuidance ? token.label : labels[ready ? status : 'waiting']}</p>
           {requestGuidance && status === 'warning' && <p className="mt-1 text-xs font-normal opacity-90">You may continue, but an administrator will review the request.</p>}
           {requestGuidance && status === 'danger' && <p className="mt-1 text-xs font-normal opacity-90">Choose a different room or time before submitting.</p>}
           {status === 'error' && error && <p className="mt-1 text-xs font-normal opacity-90">{error}</p>}

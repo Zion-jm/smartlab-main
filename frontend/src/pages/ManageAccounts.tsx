@@ -1,3 +1,4 @@
+import { toast } from '../stores/toastStore';
 import { useRef } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -92,6 +93,7 @@ type DrawerState =
 
 export default function ManageAccounts() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [resetSending, setResetSending] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [accountsError, setAccountsError] = useState<string | null>(null);
@@ -358,7 +360,7 @@ export default function ManageAccounts() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-7xl space-y-4 p-2 lg:p-3">
+      <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         <FilterToolbar
           searchValue={search}
           onSearchChange={setSearch}
@@ -395,7 +397,14 @@ export default function ManageAccounts() {
                 />
               ) : (
                 <>
-                  <TableContainer>
+                  <div className="space-y-3 md:hidden">
+                    {paginatedAccounts.map(account => <article key={account.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white">
+                      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f1e6e3] bg-[#fffaf7] p-3"><span className="text-xs font-semibold text-[#800000]">{roleSelectOptions.find(role => role.value === account.role)?.label || account.role}</span><span className={'rounded-full px-2.5 py-1 text-xs font-semibold ' + statusStyles[account.status]}>{account.status === 'ACTIVE' ? 'Active' : 'Deactivated'}</span></header>
+                      <div className="space-y-3 p-4"><div><h3 className="break-words text-base font-semibold text-[#321d1d]">{account.name}</h3><p className="mt-1 break-all text-xs text-[#786565]">{account.email}</p></div><div className="rounded-xl bg-[#faf7f5] p-3"><p className="text-xs text-[#786565]">{account.role === 'STUDENT' ? 'Program & year' : 'Department'}</p><p className="mt-1 break-words text-sm text-[#514343]">{(account.role === 'STUDENT' ? [account.program, account.yearLevel ? 'Year ' + account.yearLevel : null].filter(Boolean).join(' · ') : account.department) || 'Not assigned'}</p></div></div>
+                      <footer className="grid grid-cols-2 gap-2 border-t border-[#f1e6e3] p-3"><button type="button" onClick={() => setDrawerState({ account, mode: 'edit' })} className="min-h-11 rounded-xl bg-[#800000] px-2 text-xs font-semibold text-white">Edit account</button><button type="button" disabled={resetSending !== null} onClick={async()=>{setResetSending(account.id);try{const {data}=await userApi.sendPasswordReset(account.id);toast.success(data.message);}catch{toast.error('Could not request a reset email. Please try again.');}finally{setResetSending(null);}}} className="min-h-11 rounded-xl border border-[#ead7d3] px-2 text-xs font-semibold text-[#800000] disabled:opacity-50">{resetSending === account.id ? 'Sending…' : 'Send reset link'}</button></footer>
+                    </article>)}
+                  </div>
+                  <div className="hidden md:block"><TableContainer>
                     <Table>
                       <TableHead>
                         <TableHeaderCell>Role</TableHeaderCell>
@@ -426,17 +435,20 @@ export default function ManageAccounts() {
                               </span>
                             </TableCell>
                             <TableCell align="center">
+                              <div className="flex min-w-max items-center justify-center gap-2">
                               <IconActionButton
                                 label={`Update ${account.name}`}
                                 onClick={() => setDrawerState({ account, mode: 'edit' })}
                                 icon="edit"
                               />
+                              <IconActionButton icon="resetPassword" label={`Send password reset link to ${account.name}`} disabled={resetSending !== null} busy={resetSending === account.id} onClick={async()=>{setResetSending(account.id);try{const {data}=await userApi.sendPasswordReset(account.id);toast.success(data.message);}catch{toast.error('Could not request a reset email. Please try again.');}finally{setResetSending(null);}}} />
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
-                  </TableContainer>
+                  </TableContainer></div>
                   <TablePagination
                     currentPage={accountPage}
                     pageSize={accountPageSize}

@@ -1,3 +1,4 @@
+import MobileScheduleExplorer from '../features/requests/MobileScheduleExplorer';
 import { normalizeSchedule } from '../components/lab-schedule/normalizeSchedule';
 import ScheduleDataTable from '../components/lab-schedule/ScheduleDataTable';
 import { CalendarView, ChartView } from '../components/lab-schedule/ScheduleViews';
@@ -22,7 +23,7 @@ import type { AcademicContextSelection, ApiLabSchedule, LabSchedule, LabSchedule
 
 import LabScheduleModal from '../components/lab-schedule/LabScheduleModal';
 
-import TableCellDetailModal from '../components/shared/TableCellDetailModal';
+import ScheduleDetailModal from '../components/lab-schedule/ScheduleDetailModal';
 
 import { IconActionButton } from '../components/shared/TableActionButtons';
 
@@ -106,6 +107,8 @@ export default function AdminLabSchedule() {
       )
   );
 
+  const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  useEffect(() => { const query = window.matchMedia('(max-width: 767px)'); const change = () => setMobile(query.matches); query.addEventListener('change', change); return () => query.removeEventListener('change', change); }, []);
   const requestVersion = useRef(0);
   const performFetchSchedules = useCallback(async () => {
     const version = ++requestVersion.current;
@@ -117,7 +120,7 @@ export default function AdminLabSchedule() {
         academicYearId: academicPeriod.academicYearId || undefined,
         termId: academicPeriod.termId || undefined,
       };
-      return (viewMode === 'table' ? labScheduleApi.getPage : labScheduleApi.getAll)(params).then((response) => {
+      return (!mobile && viewMode === 'table' ? labScheduleApi.getPage : labScheduleApi.getAll)(mobile ? { academicYearId: academicPeriod.academicYearId || undefined, termId: academicPeriod.termId || undefined } : params).then((response) => {
       if (version !== requestVersion.current) return;
       const count = Number(response.data.total); setServerTotal(count);
       if (schedulePage > 1 && count <= (schedulePage - 1) * schedulePageSize) setSchedulePage(Math.max(1, Math.ceil(count / schedulePageSize)));
@@ -132,10 +135,10 @@ export default function AdminLabSchedule() {
     }).finally(() => {
       if (version === requestVersion.current) setLoading(false);
     });
-  }, [schedulePage, schedulePageSize, viewMode, search, sourceFilter, scheduleTypeFilter, roomFilter, programFilter, facultyFilter, academicPeriod.academicYearId, academicPeriod.termId, dateFrom, dateTo]);
+  }, [mobile, schedulePage, schedulePageSize, viewMode, search, sourceFilter, scheduleTypeFilter, roomFilter, programFilter, facultyFilter, academicPeriod.academicYearId, academicPeriod.termId, dateFrom, dateTo]);
 
   // Automatic loads reset pending state when their query changes; refreshes reset it in the event.
-  const fetchSchedulesInputs = [schedulePage, schedulePageSize, viewMode, search, sourceFilter, scheduleTypeFilter, roomFilter, programFilter, facultyFilter, academicPeriod.academicYearId, academicPeriod.termId, dateFrom, dateTo];
+  const fetchSchedulesInputs = [mobile, schedulePage, schedulePageSize, viewMode, search, sourceFilter, scheduleTypeFilter, roomFilter, programFilter, facultyFilter, academicPeriod.academicYearId, academicPeriod.termId, dateFrom, dateTo];
   const [fetchSchedulesSource, setfetchSchedulesSource] = useState(fetchSchedulesInputs);
   if (fetchSchedulesInputs.some((value, index) => !Object.is(value, fetchSchedulesSource[index]))) {
     setfetchSchedulesSource(fetchSchedulesInputs);
@@ -345,7 +348,7 @@ export default function AdminLabSchedule() {
   };
 
   const filtersContent = (
-    <div className="compact-filter-panel w-full space-y-3">
+    <div className="schedule-ribbon-filters compact-filter-panel w-full min-w-0 space-y-3">
       <div className="grid grid-cols-1 items-end gap-3 lg:grid-cols-2">
         <FilterItem label="Search" className="min-w-0">
           <InputField
@@ -501,7 +504,11 @@ export default function AdminLabSchedule() {
 
   return (
     <AdminLayout>
-      <div className="px-2 pb-2 lg:px-3 lg:pb-3 max-w-7xl mx-auto space-y-4">
+      {mobile && <MobileScheduleExplorer schedules={schedules} loading={loading} error={error} reload={fetchSchedules} computerLabNames={computerLabNames} allRooms onSelectSchedule={handleViewSchedule}
+        actions={<button type="button" onClick={openCreateModal} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#800000] px-3 text-xs font-semibold text-white"><Plus size={16} />Add Schedule</button>}
+        extraControls={<AcademicPeriodFilter compact compactDropdown value={academicPeriod} onChange={setAcademicPeriod} />}
+      />}
+      <div className="hidden md:block px-2 pb-2 lg:px-3 lg:pb-3 responsive-workspace mx-auto space-y-4">
         <FilterToolbar
           searchValue={search}
           onSearchChange={setSearch}
@@ -512,7 +519,7 @@ export default function AdminLabSchedule() {
           }}
           searchInFilters
           filters={filtersContent}
-          className="mb-1"
+          className="mobile-schedule-ribbon mb-1"
           filtersActiveCount={appliedFilters.length}
           defaultFiltersOpen={appliedFilters.length > 0}
           compactFilters
@@ -537,8 +544,9 @@ export default function AdminLabSchedule() {
           id="lab-schedule-tabpanel"
           role="tabpanel"
           aria-labelledby={getPageTabId('lab-schedule-tabpanel', viewMode)}
-          className={viewMode === 'table' ? 'space-y-4' : 'py-2'}
+          className="space-y-4"
         >
+          <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
             {loading ? (
               <LoadingState message="Loading schedules…" />
             ) : error ? (
@@ -548,7 +556,6 @@ export default function AdminLabSchedule() {
                 <EmptyState title="No schedules found" description="No schedules match your filters yet." variant="minimal" />
               ) : (
                 <>
-                  <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
                   <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
                     <div className="px-4 py-5 lg:px-6">
                     <ScheduleDataTable schedules={paginatedSchedules}
@@ -607,26 +614,11 @@ export default function AdminLabSchedule() {
       )}
 
       {detailsModalConfig && (
-        <TableCellDetailModal
-          isOpen={true}
-          onClose={() => setDetailsModalConfig(null)}
-          title="Schedule Details"
-          data={detailsModalConfig.schedule!}
-          fields={[
-            { key: 'scheduleType' as keyof LabSchedule, label: 'Schedule Type', formatter: (value: unknown) => (value as string) === 'ONE_TIME' ? 'One Time' : 'Weekly' },
-            { key: 'displayDate' as keyof LabSchedule, label: 'Date' },
-            { key: 'displayDay' as keyof LabSchedule, label: 'Day' },
-            { key: 'timeRange' as keyof LabSchedule, label: 'Time' },
-            { key: 'roomLabel' as keyof LabSchedule, label: 'Room' },
-            { key: 'subjectLabel' as keyof LabSchedule, label: 'Subject' },
-            { key: 'programLabel' as keyof LabSchedule, label: 'Program' },
-            { key: 'facultyName' as keyof LabSchedule, label: 'Faculty' },
-            { key: 'academicYearLabel' as keyof LabSchedule, label: 'Academic Year', formatter: (value: unknown) => (value as string | null) || '—' },
-            { key: 'termLabel' as keyof LabSchedule, label: 'Term', formatter: (value: unknown) => (value as string | null) || '—' },
-            { key: 'yearLevel' as keyof LabSchedule, label: 'Year Level', formatter: (value: unknown) => (value as number | null)?.toString() || '—' },
-          ]}
-          actions={[]}
-        />
+        <ScheduleDetailModal schedule={detailsModalConfig.schedule!} onClose={() => setDetailsModalConfig(null)} onEdit={() => {
+          const id = detailsModalConfig.schedule!.id;
+          setDetailsModalConfig(null);
+          handleEditSchedule(id);
+        }} />
       )}
     </AdminLayout>
   );

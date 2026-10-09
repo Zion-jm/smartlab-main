@@ -336,7 +336,7 @@ export default function AdminEquipment() {
     ];
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="equipment-summary grid grid-cols-2 lg:grid-cols-5 gap-3">
         {cards.map((card) => (
           <CompactStatCard
             key={card.title}
@@ -371,7 +371,14 @@ export default function AdminEquipment() {
     return (
       <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
         <div className="px-4 py-5 lg:px-6">
-          <TableContainer>
+          <div className="space-y-3 md:hidden">
+            {paginatedEquipment.map(item => <article key={item.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white">
+              <header className="space-y-2 border-b border-[#f1e6e3] bg-[#fffaf7] p-3"><h3 className="break-words text-sm font-semibold text-[#57322d]">{item.name}</h3><span className={'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ' + statusBadges[item.status].className}>{item.retiredAt ? 'Archived' : statusBadges[item.status].label}</span></header>
+              <div className="p-3"><p className="mb-3 break-words text-xs leading-relaxed text-[#786565]">{item.description || 'No description provided'}</p><dl className="grid grid-cols-3 gap-2 text-center">{[['Available', item.availableQuantity], ['Borrowed', item.borrowedQuantity], ['Damaged', item.damagedQuantity]].map(([label, count]) => <div key={label} className="rounded-xl bg-[#faf7f5] py-3"><dt className="text-[10px] text-[#786565]">{label}</dt><dd className="mt-1 text-lg font-semibold text-[#321d1d]">{count}</dd></div>)}</dl><p className="mt-2 text-right text-xs text-[#786565]">{item.totalQuantity} total units</p></div>
+              <footer className="grid grid-cols-2 gap-2 border-t border-[#f1e6e3] p-3"><TextActionButton label="Edit" icon="edit" onClick={() => openDrawer('edit', item)} /><TextActionButton label={archivingId === item.id ? 'Saving…' : item.retiredAt ? 'Restore' : 'Archive'} icon={item.retiredAt ? 'restore' : 'archive'} onClick={() => item.retiredAt ? handleRestore(item) : handleArchive(item)} disabled={archivingId !== null} busy={archivingId === item.id} /></footer>
+            </article>)}
+          </div>
+          <div className="hidden md:block"><TableContainer>
             <Table>
               <TableHead>
                 <TableHeaderCell>Equipment</TableHeaderCell>
@@ -407,14 +414,14 @@ export default function AdminEquipment() {
                       </TableCell>
                       <TableActionsCell>
                         <TextActionButton
-                          label="Edit"
+                          label="Edit" icon="edit"
                           onClick={() => openDrawer('edit', item)}
                           variant="default"
                         />
                         <TextActionButton
                           label={archivingId === item.id ? 'Saving…' : item.retiredAt ? 'Restore' : 'Archive'}
                           onClick={() => item.retiredAt ? handleRestore(item) : handleArchive(item)}
-                          variant="danger"
+                          variant="default" icon={item.retiredAt ? 'restore' : 'archive'} disabled={archivingId !== null} busy={archivingId === item.id}
                         />
                       </TableActionsCell>
                     </TableRow>
@@ -422,7 +429,7 @@ export default function AdminEquipment() {
                 })}
               </TableBody>
             </Table>
-          </TableContainer>
+          </TableContainer></div>
           <TablePagination
             currentPage={equipmentPage}
             pageSize={equipmentPageSize}
@@ -558,7 +565,8 @@ export default function AdminEquipment() {
 
   return (
     <AdminLayout>
-      <div className="p-2 lg:p-3 max-w-7xl mx-auto space-y-4">
+      <div className="equipment-workspace min-w-0">
+      <div className="p-2 lg:p-3 responsive-workspace mx-auto space-y-4">
         <FilterToolbar
           searchValue={filters.search}
           onSearchChange={(value) => setFilters((previous) => ({ ...previous, search: value }))}
@@ -598,9 +606,7 @@ export default function AdminEquipment() {
           className={viewMode === 'table' ? 'space-y-4' : 'py-2'}
         >
             <div className="space-y-4">
-              {viewMode === 'table' && (
-                <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-              )}
+              <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
               {viewMode === 'table' && renderSummaryCards()}
               {viewMode === 'table' && stats && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -643,6 +649,6 @@ export default function AdminEquipment() {
         onClose={closeDrawer}
         onSaved={() => handleDrawerSaved(drawerMode)}
       />
-    </AdminLayout>
+    </div></AdminLayout>
   );
 }
