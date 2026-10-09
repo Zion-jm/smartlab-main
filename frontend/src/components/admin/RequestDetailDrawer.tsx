@@ -259,13 +259,16 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
     <div className="admin-mobile-drawer fixed inset-0 z-50 h-dvh">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
       <div className="request-review-drawer absolute inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl flex flex-col">
-        <p className="px-6 pt-4 text-xs font-semibold text-[#800000]">{request.requestType === 'EQUIPMENT' ? 'Equipment borrowing · location is for intended use only' : request.requestType === 'LABORATORY' ? 'Faculty laboratory reservation' : 'Request type unavailable'}</p><div className="request-review-header flex items-center justify-between gap-3 px-6 py-4">
+        <div className="request-review-header flex items-center justify-between gap-3 px-6 py-4">
           <div className="flex min-w-0 items-center gap-3">
             <span className="request-review-avatar" aria-hidden="true"><UserRound size={23} strokeWidth={1.75} /></span><div className="min-w-0">
             <p className="text-xs uppercase font-semibold text-[#9ca3af]">
               Request #{request.referenceCode ?? request.id.slice(-6)}
             </p>
-            <h3 className="text-lg font-semibold text-[#111827]">{request.requesterName}</h3></div>
+            <h3 className="break-words text-lg font-semibold text-[#111827]">{request.requesterName}</h3>
+            <span className="mt-1 inline-flex rounded-full bg-[#fff1e8] px-2 py-1 text-[11px] font-semibold text-[#800000]">
+              {request.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Request type unavailable'}
+            </span></div>
           </div>
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold ${statusChip.className}`}>
             {statusChip.label}
@@ -312,8 +315,11 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
               <p>{request.requesterRole}</p>
             </div>
             <div>
-              <p className="request-review-label"><MapPin size={14} strokeWidth={1.75} aria-hidden="true" />Room</p>
-              <p>{resolveRoom()}</p>
+              <p className="request-review-label"><MapPin size={14} strokeWidth={1.75} aria-hidden="true" />{request.requestType === 'EQUIPMENT' ? 'Usage location' : 'Room'}</p>
+              <p className="break-words">{resolveRoom()}</p>
+              {request.requestType === 'EQUIPMENT' && (
+                <p className="mt-1 text-xs text-[#786565]">This does not reserve the room.</p>
+              )}
             </div>
             <div>
               <p className="request-review-label"><BookOpen size={14} strokeWidth={1.75} aria-hidden="true" />Subject</p>

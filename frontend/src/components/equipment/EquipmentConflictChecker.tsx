@@ -452,12 +452,12 @@ export default function EquipmentConflictChecker({
               return (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between gap-3 text-xs"
+                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs"
                   data-testid={`row-equipment-availability-${item.id}`}
                 >
                   <span className="truncate font-medium">{item.name}</span>
                   <span className={`shrink-0 font-semibold ${isShort ? 'text-red-700' : 'text-green-700'}`}>
-                    {item.available} of {item.requested} available
+                    Requested: {item.requested} · Available: {item.available}
                   </span>
                 </div>
               );
