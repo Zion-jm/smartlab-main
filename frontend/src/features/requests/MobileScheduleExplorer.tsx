@@ -1,3 +1,4 @@
+import { dateToDateKey } from '../../utils/dateTime';
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import ControlRibbon from '../../components/shared/ControlRibbon';
 import PageTabGroup from '../../components/shared/PageTabGroup';
@@ -24,7 +25,7 @@ export default function MobileScheduleExplorer({ schedules, loading, error, relo
   const [selected, setSelected] = useState<LabSchedule | null>(null);
   const rooms = [...new Set(schedules.map(item => item.roomLabel))].sort();
   const filtered = schedules.filter(item => (!room || item.roomLabel === room) && [item.roomLabel, item.subjectLabel, item.facultyName, item.programLabel].join(' ').toLowerCase().includes(search.toLowerCase()));
-  const onDay = (key: string) => ((range.from && key < range.from) || (range.to && key > range.to) ? [] : filtered).filter(item => item.scheduleType === 'WEEKLY' ? item.dayOfWeekIndex === new Date(key + 'T00:00:00Z').getUTCDay() : item.date?.slice(0, 10) === key).sort((a,b) => a.startTime.localeCompare(b.startTime));
+  const onDay = (key: string) => ((range.from && key < range.from) || (range.to && key > range.to) ? [] : filtered).filter(item => item.scheduleType === 'WEEKLY' ? item.dayOfWeekIndex === new Date(key + 'T00:00:00Z').getUTCDay() : dateToDateKey(item.date) === key).sort((a,b) => a.startTime.localeCompare(b.startTime));
   const days = Array.from({ length: view === 'calendar' ? 1 : 7 }, (_, i) => shift(date, i)).filter(key => view === 'calendar' || ((!range.from || key >= range.from) && (!range.to || key <= range.to)));
   const monthStart = date.slice(0, 7) + '-01';
   const month = new Date(monthStart + 'T00:00:00Z');

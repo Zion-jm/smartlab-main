@@ -5,12 +5,12 @@ import { requestVisibility } from '../services/requestVisibility';
 import { sendError } from '../middleware/errors';
 import { validateRequestItems } from '../services/inventoryCapacityService';
 import { manilaDayBounds, parseManilaDate } from '../utils/manilaTime';
-import { approveRequest } from '../services/approvalService';
+import { approveRequest, assertRoomAvailable } from '../services/approvalService';
 import { inventoryTransaction } from '../services/inventoryTransaction';
 import { changeLoanStatus } from '../services/inventoryMovementService';
 import { Router } from 'express';
 import { cancelBorrowRequest, RequestActionError } from '../services/cancelBorrowRequestService';
-import { Prisma, RequestStatus, UserRole, NotificationType } from '@prisma/client';
+import { Prisma, RequestStatus, UserRole, NotificationType, ScheduleType } from '@prisma/client';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import {
   sendRequestCancelledEmail,
@@ -290,6 +290,18 @@ router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FA
       include: borrowRequestInclude,
     });
 
+    // Validate within the write transaction so a conflict rolls back the request and items.
+    if (saved.requestType !== 'EQUIPMENT' && saved.roomId) {
+      if (!saved.timeStart || !saved.timeEnd || saved.timeEnd <= saved.timeStart) {
+        throw new RequestActionError(400, 'A valid room reservation time range is required.');
+      }
+      await assertRoomAvailable(tx, {
+        roomId: saved.roomId, academicYearId: saved.academicYearId, termId: saved.termId,
+        scheduleType: ScheduleType.ONE_TIME, scheduleDate: saved.dateNeeded,
+        timeStart: saved.timeStart, timeEnd: saved.timeEnd,
+      }, saved.id);
+    }
+
     await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'CREATE', entityType: 'BorrowRequest', entityId: saved.id, details: { requestType: intent.requestType, roomId: intent.roomId, usageRoomId: intent.usageRoomId, usageLocation: intent.usageLocation } });
     return saved;
     });
@@ -424,6 +436,18 @@ router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.
       },
       include: borrowRequestInclude,
     });
+    // Validate within the write transaction so a conflict rolls back the request and items.
+    if (saved.requestType !== 'EQUIPMENT' && saved.roomId) {
+      if (!saved.timeStart || !saved.timeEnd || saved.timeEnd <= saved.timeStart) {
+        throw new RequestActionError(400, 'A valid room reservation time range is required.');
+      }
+      await assertRoomAvailable(tx, {
+        roomId: saved.roomId, academicYearId: saved.academicYearId, termId: saved.termId,
+        scheduleType: ScheduleType.ONE_TIME, scheduleDate: saved.dateNeeded,
+        timeStart: saved.timeStart, timeEnd: saved.timeEnd,
+      }, saved.id);
+    }
+
     await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'UPDATE', entityType: 'BorrowRequest', entityId: saved.id, details: { requestType: intent.requestType, previousRequestType: existingRequest.requestType, roomId: intent.roomId, usageRoomId: intent.usageRoomId, usageLocation: intent.usageLocation } });
     return saved;
     });

@@ -28,6 +28,15 @@ async function main(){
  await api('STUDENT','POST','',{...base,requestType:'EQUIPMENT',usageRoomId:room.id,items:[]},400);
  const lab=await api('FACULTY','POST','',{...base,requestType:'LABORATORY',roomId:room.id,items:[]},201);
  await api('ADMIN','PATCH','/'+lab.request.id+'/approve',{},200);
+ const countBeforeConflict=await db.borrowRequest.count();
+ await api('FACULTY','POST','',{...base,requestType:'LABORATORY',roomId:room.id,items:[]},409);
+ assert.equal(await db.borrowRequest.count(),countBeforeConflict,'Conflicting submission must roll back');
+ const subject=await db.subject.create({data:{code:'CONFLICT',name:'Conflict test subject'}});
+ const later={...base,programId:program.id,subjectId:subject.id,timeStart:'2035-06-12T10:00:00+08:00',timeEnd:'2035-06-12T11:00:00+08:00',requestType:'LABORATORY',roomId:room.id,items:[]};
+ const editable=await api('FACULTY','POST','',later,201);
+ await api('FACULTY','PUT','/'+editable.request.id,{...later,timeStart:base.timeStart,timeEnd:base.timeEnd},409);
+ assert.equal((await db.borrowRequest.findUnique({where:{id:editable.request.id}})).timeStart.toISOString(),new Date(later.timeStart).toISOString(),'Conflicting edit must preserve original time');
+
  const loan=await api('STUDENT','POST','',{...base,requestType:'EQUIPMENT',usageRoomId:room.id,items:[{equipmentId:equipment.id,quantity:1}]},201);
  await api('ADMIN','PUT','/'+loan.request.id,{...base,requestType:'EQUIPMENT',usageRoomId:room.id,items:[{equipmentId:equipment.id,quantity:1}]},403);
  assert.equal(loan.request.roomId,null);assert.equal(loan.request.usageRoomId,room.id);
