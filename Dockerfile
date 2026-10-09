@@ -1,4 +1,5 @@
-FROM node:22.13.0-bookworm-slim
+ARG NODE_IMAGE=node:22.13.0-bookworm-slim
+FROM ${NODE_IMAGE}
 
 # Chromium and fonts are runtime requirements for authenticated PDF exports.
 RUN apt-get update \

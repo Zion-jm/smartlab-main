@@ -8,7 +8,7 @@ jobs:
     timeout-minutes: 25
     services:
       postgres:
-        image: postgres:16
+        image: public.ecr.aws/docker/library/postgres:16
         env:
           POSTGRES_USER: smartlab
           POSTGRES_PASSWORD: ci-only-password
@@ -24,12 +24,14 @@ jobs:
       SMARTLAB_EVIDENCE_DIR: ${{ github.workspace }}/artifacts
     steps:
       - uses: actions/checkout@v4
+        id: checkout
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm install --global npm@10.9.2
       - run: npm ci
+        id: dependencies
       - run: npm run db:generate
       - run: npm run build
       - run: npm run lint:ci
@@ -40,7 +42,7 @@ jobs:
       - name: Fresh and upgrade migrations with production smoke
         run: node scripts/test-ui.cjs --deployment
       - name: Build staging container
-        run: docker build --tag smartlab-staging:ci .
+        run: docker build --build-arg NODE_IMAGE=public.ecr.aws/docker/library/node:22.13.0-bookworm-slim --tag smartlab-staging:ci .
       - name: Verify container migrations, startup, administrator and PDF
         run: >-
           docker run --rm --network host
@@ -48,7 +50,7 @@ jobs:
           smartlab-staging:ci
           node backend/scripts/smoke-production.cjs
       - name: Dependency security gate
-        if: always()
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' && steps.dependencies.outcome == 'success' }}
         run: |
           mkdir -p artifacts
           npm audit --audit-level=moderate --json > artifacts/npm-audit.json
