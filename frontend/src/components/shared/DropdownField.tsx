@@ -17,6 +17,9 @@ interface DropdownFieldProps<T extends string> {
   id?: string;
   testId?: string;
   portal?: boolean;
+  menuMinWidth?: number;
+  nowrapOptions?: boolean;
+  selectedLabel?: string;
 }
 
 export default function DropdownField<T extends string>({
@@ -30,6 +33,9 @@ export default function DropdownField<T extends string>({
   id,
   testId,
   portal = false,
+  menuMinWidth = 112,
+  nowrapOptions = false,
+  selectedLabel,
 }: DropdownFieldProps<T>) {
   const generatedSelectId = useId();
   const selectId = id ?? generatedSelectId;
@@ -79,7 +85,7 @@ export default function DropdownField<T extends string>({
       const upward = below < 240 && above > below;
       const maxHeight = Math.max(40, Math.min(240, upward ? above : below));
       const height = Math.min(maxHeight, options.length * 40 + 10);
-      const width = Math.min(Math.max(rect.width, 112), window.innerWidth - 16);
+      const width = Math.min(Math.max(rect.width, menuMinWidth), window.innerWidth - 16);
       setMenuPosition({ left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)), top: upward ? rect.top - height - 4 : rect.bottom + 4, width, maxHeight: height });
     }
     setOpen(true);
@@ -194,7 +200,7 @@ export default function DropdownField<T extends string>({
           }`}
         >
           <span className={selectedOption ? 'min-w-0 flex-1 truncate text-[#1f2937]' : 'truncate text-[#9ca3af]'}>
-            {selectedOption?.label ?? placeholder}
+            {selectedLabel ?? selectedOption?.label ?? placeholder}
           </span>
           <svg
             aria-hidden="true"
@@ -237,7 +243,7 @@ export default function DropdownField<T extends string>({
                         : 'text-[#1f2937] hover:bg-[#fff8f8] hover:text-[#800000]'
                   }`}
                 >
-                  <span className="min-w-0 flex-1 whitespace-normal [overflow-wrap:anywhere]">{option.label}</span>
+                  <span className={nowrapOptions ? "min-w-0 flex-1 whitespace-nowrap" : "min-w-0 flex-1 whitespace-normal [overflow-wrap:anywhere]"}>{option.label}</span>
                   {isSelected && (
                     <svg aria-hidden="true" className="ml-3 h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="m4.5 10 3.5 3.5L15.5 6" strokeLinecap="round" strokeLinejoin="round" />
