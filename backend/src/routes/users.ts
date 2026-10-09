@@ -337,6 +337,10 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const lastNameInput = req.body.last_name ?? req.body.lastName;
     const emailInput = req.body.gmail ?? req.body.email;
     const phoneInput = req.body.phone;
+    if (phoneInput !== undefined && (typeof phoneInput !== 'string' || (phoneInput.trim() !== '' && !/^09[0-9]{9}$/.test(phoneInput.trim())))) {
+      res.status(400).json({ error: 'Enter an 11-digit mobile number starting with 09, for example 09123456789.' });
+      return;
+    }
 
     const firstName = typeof firstNameInput === 'string' && firstNameInput.trim() ? firstNameInput.trim() : existingUser.firstName;
     const lastName = typeof lastNameInput === 'string' && lastNameInput.trim() ? lastNameInput.trim() : existingUser.lastName;

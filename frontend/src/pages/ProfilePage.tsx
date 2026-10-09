@@ -173,6 +173,11 @@ export default function ProfilePage({
       return;
     }
 
+    if (profile.phone.trim() && !/^09[0-9]{9}$/.test(profile.phone.trim())) {
+      setProfileNotice('Enter an 11-digit mobile number starting with 09, for example 09123456789.');
+      return;
+    }
+
     if (onProfileSubmit) {
       await onProfileSubmit({
         firstName: profile.firstName.trim(),
@@ -308,7 +313,12 @@ export default function ProfilePage({
               label="Phone number"
               value={profile.phone}
               onChange={(event) => setProfile((current) => ({ ...current, phone: event.target.value }))}
-              helper="Optional. Used for important SmartLab account notices."
+              helper="Optional. Enter exactly 11 digits starting with 09 (e.g., 09123456789)."
+              pattern="09[0-9]{9}"
+              maxLength={11}
+              inputMode="numeric"
+              placeholder="09123456789"
+              title="Enter exactly 11 digits starting with 09."
               type="tel"
               autoComplete="tel"
               disabled={!user}
