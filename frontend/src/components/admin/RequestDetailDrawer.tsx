@@ -1,4 +1,4 @@
-import { UserRound, Package, Mail, GraduationCap, MapPin, BookOpen, CalendarDays, Clock } from 'lucide-react';
+import { UserRound, FileText, MapPin, CalendarDays, Clock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api';
 import { useScheduleConflictCheck } from '../../hooks/useScheduleConflictCheck';
@@ -261,11 +261,11 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
       <div className="request-review-drawer absolute inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl flex flex-col">
         <div className="request-review-header flex items-center justify-between gap-3 px-6 py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="request-review-avatar" aria-hidden="true"><UserRound size={23} strokeWidth={1.75} /></span><div className="min-w-0">
-            <p className="text-xs uppercase font-semibold text-[#9ca3af]">
-              Request #{request.referenceCode ?? request.id.slice(-6)}
-            </p>
-            <h3 className="break-words text-lg font-semibold text-[#111827]">{request.requesterName}</h3>
+            <span className="request-review-avatar" aria-hidden="true"><FileText size={23} strokeWidth={1.75} /></span><div className="min-w-0">
+            <h3 className="text-lg font-semibold text-[#451a1a]">
+              REQ-{request.referenceCode?.replace(/^REQ-/, '') ?? request.id.slice(-6)}
+            </h3>
+            <p className="mt-1 text-sm text-[#786565]">Review request</p>
             <span className="mt-1 inline-flex rounded-full bg-[#fff1e8] px-2 py-1 text-[11px] font-semibold text-[#800000]">
               {request.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Request type unavailable'}
             </span></div>
@@ -276,6 +276,14 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
         </div>
 
         <div className="request-review-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5 space-y-5">
+          <div className="flex items-center gap-3 rounded-2xl bg-[#fff7f2] p-4">
+            <UserRound size={22} className="shrink-0 text-[#800000]" aria-hidden="true" />
+            <div className="min-w-0 break-words">
+              <p className="text-xs text-[#786565]">Requested by</p>
+              <p className="mt-1 text-sm font-semibold text-[#321d1d]">{request.requesterName}</p>
+              <p className="mt-1 text-xs text-[#786565]">{request.requesterRole.charAt(0) + request.requesterRole.slice(1).toLowerCase()} · {request.requesterEmail}</p>
+            </div>
+          </div>
           {conflictParams && (
             <ConflictStatusCard
               status={conflictCheck.status}
@@ -305,44 +313,29 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
             />
           )}
 
-          <section className="request-review-fields grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-[#374151]">
+          <div className="space-y-4 text-sm text-[#574545]">
             <div>
-              <p className="request-review-label"><Mail size={14} strokeWidth={1.75} aria-hidden="true" />Email</p>
-              <p>{request.requesterEmail}</p>
+              <p className="flex items-center gap-2 text-base font-semibold text-[#321d1d]"><MapPin size={19} className="shrink-0 text-[#800000]" aria-hidden="true" /><span className="break-words">{resolveRoom()}</span></p>
+              {request.requestType === 'EQUIPMENT' && <p className="mt-1 text-xs text-[#786565]">Usage location · This does not reserve the room.</p>}
             </div>
-            <div>
-              <p className="request-review-label"><GraduationCap size={14} strokeWidth={1.75} aria-hidden="true" />Role</p>
-              <p>{request.requesterRole}</p>
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <p className="flex items-center gap-2"><CalendarDays size={16} aria-hidden="true" />{formatDate(request.dateNeeded)}</p>
+              <p className="flex items-center gap-2"><Clock size={16} aria-hidden="true" />{formatTimeRange(request.timeStart, request.timeEnd)}</p>
             </div>
-            <div>
-              <p className="request-review-label"><MapPin size={14} strokeWidth={1.75} aria-hidden="true" />{request.requestType === 'EQUIPMENT' ? 'Usage location' : 'Room'}</p>
-              <p className="break-words">{resolveRoom()}</p>
-              {request.requestType === 'EQUIPMENT' && (
-                <p className="mt-1 text-xs text-[#786565]">This does not reserve the room.</p>
-              )}
-            </div>
-            <div>
-              <p className="request-review-label"><BookOpen size={14} strokeWidth={1.75} aria-hidden="true" />Subject</p>
-              <p>{request.subject || '—'}</p>
-            </div>
-            <div>
-              <p className="request-review-label"><CalendarDays size={14} strokeWidth={1.75} aria-hidden="true" />Date needed</p>
-              <p>{formatDate(request.dateNeeded)}</p>
-            </div>
-            <div>
-              <p className="request-review-label"><Clock size={14} strokeWidth={1.75} aria-hidden="true" />Time</p>
-              <p>{formatTimeRange(request.timeStart, request.timeEnd)}</p>
-            </div>
-          </section>
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="min-w-0"><dt className="text-xs text-[#786565]">Subject</dt><dd className="mt-1 break-words">{request.subject || '—'}</dd></div>
+              <div className="min-w-0"><dt className="text-xs text-[#786565]">Program & year</dt><dd className="mt-1 break-words">{[request.program, request.yearLevel].filter(Boolean).join(' - ') || '—'}</dd></div>
+            </dl>
+          </div>
 
           <section>
-            <p className="request-review-label mb-2"><Package size={15} aria-hidden="true" />Equipment requested</p>
+            <p className="mb-2 text-sm font-semibold text-[#321d1d]">Equipment <span className="font-normal text-[#786565]">· {request.items?.length ?? 0} items</span></p>
             <div className="request-review-equipment text-sm">
               {request.items?.length ? (
                 request.items.map((item) => (
                   <div key={item.id} className="flex items-center justify-between">
                     <span className="text-[#111827]">{item.equipmentName}</span>
-                    <span className="request-review-quantity">x{item.quantity}</span>
+                    <span className="request-review-quantity">×{item.quantity}</span>
                   </div>
                 ))
               ) : (
@@ -352,22 +345,23 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
           </section>
 
           <section>
-            <p className="text-xs font-semibold text-[#9ca3af] mb-1">Purpose / notes</p>
-            <p className="text-sm text-[#374151] bg-[#f9fafb] border border-[#f3f4f6] rounded-2xl p-3">
+            <p className="text-sm font-semibold text-[#321d1d] mb-2">Purpose / notes</p>
+            <p className="whitespace-pre-wrap break-words text-sm text-[#574545]">
               {request.purpose || request.notes || 'No additional context provided.'}
             </p>
           </section>
 
-          <section className="grid grid-cols-2 gap-3 text-xs text-[#6b7280]">
+          <section className="space-y-3 text-xs text-[#786565]">
+            <h4 className="text-sm font-semibold text-[#321d1d]">Request activity</h4>
             {[
-              { label: 'Created', value: formatDate(request.createdAt) },
+              { label: 'Submitted', value: formatDate(request.createdAt) },
               { label: 'Approved', value: formatDate(request.approvedAt) },
               { label: 'Borrowed', value: formatDate(request.borrowedAt) },
               { label: 'Returned', value: formatDate(request.returnedAt) },
               { label: 'Cancelled', value: formatDate(request.cancelledAt) },
               { label: 'Declined', value: formatDate(request.declinedAt) },
-            ].map((item) => (
-              <div key={item.label} className="rounded-xl border border-[#f3f4f6] bg-[#fdfdfd] px-3 py-2">
+            ].filter((item) => item.value && item.value !== '—').map((item) => (
+              <div key={item.label} className="border-l-2 border-[#c5ab78] pl-3">
                 <p className="font-semibold text-[#9ca3af]">{item.label}</p>
                 <p className="text-[#111827] text-sm">{item.value}</p>
               </div>
