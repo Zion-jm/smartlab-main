@@ -68,12 +68,12 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
     const startRaw = minutesFromIso(schedule.startTime);
     const endRaw = minutesFromIso(schedule.endTime);
     const start = clampMinutes(startRaw, chartMinuteStart, chartMinuteEnd);
-    const end = clampMinutes(endRaw, chartMinuteStart + 15, chartMinuteEnd);
+    const end = clampMinutes(endRaw, chartMinuteStart, chartMinuteEnd);
     if (start === null || end === null || end <= start) {
       return null;
     }
     const top = ((start - chartMinuteStart) / chartTotalMinutes) * 100;
-    const height = Math.max(((end - start) / chartTotalMinutes) * 100, 3);
+    const height = ((end - start) / chartTotalMinutes) * 100;
     return {
       top: `${top}%`,
       height: `${height}%`,
@@ -101,7 +101,7 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#f3f4f6] px-4 py-4">
           <div>
             <h3 className="text-sm font-semibold text-[#111827]">Weekly Lab Utilization</h3>
-            <p className="text-xs text-[#6b7280]">Visualize overlapping schedules across days of the week.</p>
+            <p className="text-xs text-[#6b7280]">Select a schedule to view full details. Short blocks show a brief summary.</p>
           </div>
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</label>
@@ -144,6 +144,10 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
                       {daySchedules.map((schedule) => {
                         const style = blockStyle(schedule);
                         if (!style) return null;
+                        const heightPx = parseFloat(style.height) / 100 * chartHeightPx;
+                        const compact = heightPx < 44;
+                        const detailed = heightPx >= 88;
+                        const accessibleLabel = `${schedule.programLabel} — ${schedule.facultyName} — ${schedule.timeRange} — ${scheduleTypeLabel[schedule.scheduleType]}. View schedule details.`;
                         const blockClasses =
                           schedule.scheduleType === 'WEEKLY'
                             ? 'from-[#3b82f6] via-[#2563eb] to-[#1e40af]'
@@ -153,17 +157,22 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
                             key={schedule.id}
                             type="button"
                             onClick={() => onSelectSchedule ? onSelectSchedule(schedule.id) : setSelectedSchedule(schedule)}
-                            title={`${schedule.programLabel} — ${schedule.facultyName} — ${schedule.timeRange}`}
-                            className={`group absolute left-1.5 right-1.5 flex flex-col overflow-hidden rounded-2xl bg-linear-to-br ${blockClasses} px-2.5 py-2 text-left text-white shadow-md ring-1 ring-black/5 transition-all duration-150 hover:z-10 hover:-translate-y-0.5 hover:shadow-lg hover:ring-2 hover:ring-white/60 focus:outline-none focus-visible:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-white cursor-pointer`}
+                            title={accessibleLabel}
+                            aria-label={accessibleLabel}
+                            className={`group absolute left-1.5 right-1.5 flex flex-col overflow-hidden rounded-2xl bg-linear-to-br ${blockClasses} min-h-0 box-border px-2 ${compact ? 'justify-center py-0' : 'py-1.5'} text-left text-white shadow-md ring-1 ring-black/5 transition-all duration-150 hover:z-10 hover:-translate-y-0.5 hover:shadow-lg hover:ring-2 hover:ring-white/60 focus:outline-none focus-visible:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-white cursor-pointer`}
                             style={style}
                           >
                             <span className="pointer-events-none absolute inset-0 bg-white/0 transition-colors duration-150 group-hover:bg-white/10" />
-                            <span className="relative text-[9px] font-bold uppercase tracking-wider text-white/85">
-                              {scheduleTypeLabel[schedule.scheduleType]}
-                            </span>
-                            <span className="relative mt-0.5 truncate text-[12px] font-bold leading-tight">{schedule.programLabel}</span>
-                            <span className="relative truncate text-[10px] leading-tight text-white/95">{schedule.facultyName}</span>
-                            <span className="relative mt-auto truncate text-[9px] font-medium text-white/85">{schedule.timeRange}</span>
+                            {compact ? (
+                              <span className="relative block w-full shrink-0 truncate text-[10px] font-semibold leading-4">{schedule.programLabel} · {schedule.timeRange}</span>
+                            ) : (
+                              <>
+                                {detailed && <span className="relative block w-full shrink-0 truncate text-[9px] font-bold uppercase leading-4 text-white/85">{scheduleTypeLabel[schedule.scheduleType]}</span>}
+                                <span className="relative block w-full shrink-0 truncate text-xs font-bold leading-4">{schedule.programLabel}</span>
+                                {detailed && <span className="relative block w-full shrink-0 truncate text-[10px] leading-4 text-white/95">{schedule.facultyName}</span>}
+                                <span className="relative mt-auto block w-full shrink-0 truncate text-[9px] font-medium leading-4 text-white/85">{schedule.timeRange}</span>
+                              </>
+                            )}
                           </button>
                         );
                       })}
