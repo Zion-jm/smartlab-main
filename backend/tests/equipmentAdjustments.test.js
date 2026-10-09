@@ -47,7 +47,7 @@ describe('Equipment adjustment authorization and cancellation', () => {
 
   async function fixture({ requestOwner = owner, recipient = requestOwner, status = 'PENDING', notice = {} } = {}) {
     const item = await prisma.equipment.create({ data: {
-      name: tag, totalQuantity: 10, availableQuantity: 8, borrowedQuantity: 2,
+      name:tag+'-'+require('node:crypto').randomUUID(), totalQuantity: 10, availableQuantity: 8, borrowedQuantity: 2,
     } });
     equipment.push(item.id);
     const request = await prisma.borrowRequest.create({ data: {

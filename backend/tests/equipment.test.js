@@ -156,6 +156,8 @@ describe('Equipment', () => {
   describe('PUT /equipment/:id', () => {
     test('admin can update equipment name and quantities', async () => {
       const { status, data } = await apiRequest('PUT', `/equipment/${createdEquipmentId}`, {
+        expectedUpdatedAt: (await apiRequest('GET', `/equipment/${createdEquipmentId}`, null, adminToken)).data.updatedAt,
+        adjustmentReason: 'Inventory inspection',
         name: 'Updated Projector Name',
         totalQuantity: 10,
         borrowedQuantity: 0,
@@ -168,6 +170,8 @@ describe('Equipment', () => {
 
     test('rejects update with empty name', async () => {
       const { status } = await apiRequest('PUT', `/equipment/${createdEquipmentId}`, {
+        expectedUpdatedAt: (await apiRequest('GET', `/equipment/${createdEquipmentId}`, null, adminToken)).data.updatedAt,
+        adjustmentReason: 'Test invalid name',
         name: '',
         totalQuantity: 5,
       }, adminToken);

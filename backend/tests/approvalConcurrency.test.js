@@ -36,11 +36,11 @@ describe('Shared approvals and schedule conflicts on local smartlab_test',()=>{
       await db.user.deleteMany({where:{id:{in:ids}}});
     }finally{await db.$disconnect()}
   });
-  async function room(){const r=await db.room.create({data:{name:tag,isComputerLab:true}});rooms.push(r.id);return r;}
-  async function item(total=1,borrowed=0,damaged=0){const e=await db.equipment.create({data:{name:tag,totalQuantity:total,availableQuantity:total-borrowed-damaged,borrowedQuantity:borrowed,damagedQuantity:damaged}});equipment.push(e.id);return e;}
+  async function room(){const r=await db.room.create({data:{name:tag+'-'+require('node:crypto').randomUUID(),isComputerLab:true}});rooms.push(r.id);return r;}
+  async function item(total=1,borrowed=0,damaged=0){const e=await db.equipment.create({data:{name:tag+'-'+require('node:crypto').randomUUID(),totalQuantity:total,availableQuantity:total-borrowed-damaged,borrowedQuantity:borrowed,damagedQuantity:damaged}});equipment.push(e.id);return e;}
   async function request({r,start=8,end=10,items=[],status='PENDING'}={}){
     r=r||await room();
-    const q=await db.borrowRequest.create({data:{requestedBy:admin.id,facultyId:profile.id,roomId:r.id,academicYearId:year.id,termId:term.id,dateNeeded:new Date(date),timeStart:new Date(clock(start)),timeEnd:new Date(clock(end)),status,items:{create:items.map(([e,quantity])=>({equipmentId:e.id,quantity}))}}});requests.push(q.id);return q;
+    const q=await db.borrowRequest.create({data:{requestedBy:faculty.id,facultyId:profile.id,roomId:r.id,academicYearId:year.id,termId:term.id,dateNeeded:new Date(date),timeStart:new Date(clock(start)),timeEnd:new Date(clock(end)),status,items:{create:items.map(([e,quantity])=>({equipmentId:e.id,quantity}))}}});requests.push(q.id);return q;
   }
   const approve=(q,route='borrow',auth=token)=>apiRequest('PATCH',route==='borrow'?'/borrow-requests/'+q.id+'/approve':'/lab-schedules/approve-request/'+q.id,null,auth);
   const payload=(r,{start=8,end=10,type='ONE_TIME'}={})=>({roomId:r.id,facultyId:profile.id,academicYearId:year.id,termId:term.id,scheduleType:type,scheduleDate:type==='ONE_TIME'?date:null,dayOfWeek:day,timeStart:clock(start),timeEnd:clock(end)});

@@ -32,7 +32,7 @@ describe('Inventory concurrency on local smartlab_test', () => {
     } finally { await prisma.$disconnect(); }
   });
   async function item(available=1, borrowed=0) {
-    const e = await prisma.equipment.create({ data: { name: tag, totalQuantity: available+borrowed, availableQuantity: available, borrowedQuantity: borrowed } });
+    const e = await prisma.equipment.create({ data: { name:tag+'-'+require('node:crypto').randomUUID(), totalQuantity: available+borrowed, availableQuantity: available, borrowedQuantity: borrowed } });
     equipment.push(e.id); return e;
   }
   async function request(items, status='APPROVED') {

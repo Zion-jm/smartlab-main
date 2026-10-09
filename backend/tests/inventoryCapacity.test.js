@@ -15,44 +15,53 @@ describe('quantity validation', () => {
 });
 
 describe('inventory capacity API on local smartlab_test', () => {
-  let db,admin,token,year,term;const ids=[];const tag='capacity-'+Date.now();
+  let db,admin,token,faculty,facultyToken,profile,year,term;const ids=[];const tag='capacity-'+Date.now();
   const day='2036-06-12';
   const at=t=>new Date(day+'T'+t+':00+08:00');
   beforeAll(async()=>{
     let d,a;try{d=new URL(process.env.DATABASE_URL);a=new URL(BASE_URL)}catch{throw Error('Invalid test configuration')}
     if(!['localhost','127.0.0.1'].includes(d.hostname)||d.pathname!=='/smartlab_test'||!['localhost','127.0.0.1'].includes(a.hostname))throw Error('Local smartlab_test/API required');
     db=new PrismaClient();admin=await db.user.create({data:{email:tag+'@smartlab.local',passwordHash:await bcrypt.hash('CapacityTest123!',10),firstName:'Capacity',lastName:'Test',role:'ADMIN'}});
-    token=await loginAs(admin.email,'CapacityTest123!');year=await db.academicYear.create({data:{year:tag}});term=await db.term.create({data:{name:tag}});
+    token=await loginAs(admin.email,'CapacityTest123!');
+    faculty=await db.user.create({data:{email:tag+'-faculty@smartlab.local',passwordHash:await bcrypt.hash('CapacityTest123!',10),firstName:'Capacity',lastName:'Faculty',role:'FACULTY'}});
+    facultyToken=await loginAs(faculty.email,'CapacityTest123!');
+    profile=await db.facultyProfile.create({data:{userId:faculty.id}});
+    year=await db.academicYear.findFirstOrThrow({where:{isActive:true}});term=await db.term.findFirstOrThrow({where:{isActive:true}});
   });
   afterAll(async()=>{
     if(!db)return;try{
-      if(admin){await db.notification.deleteMany({where:{OR:[{userId:admin.id},{borrowRequest:{requestedBy:admin.id}}]}});await db.auditLog.deleteMany({where:{actorUserId:admin.id}});await db.borrowRequest.deleteMany({where:{requestedBy:admin.id}});}
-      await db.equipment.deleteMany({where:{id:{in:ids}}});if(year)await db.academicYear.delete({where:{id:year.id}});if(term)await db.term.delete({where:{id:term.id}});if(admin)await db.user.delete({where:{id:admin.id}});
+      const userIds=[admin?.id,faculty?.id].filter(Boolean);
+      await db.notification.deleteMany({where:{OR:[{userId:{in:userIds}},{borrowRequest:{requestedBy:{in:userIds}}}]}});
+      await db.auditLog.deleteMany({where:{actorUserId:{in:userIds}}});
+      await db.borrowRequest.deleteMany({where:{requestedBy:{in:userIds}}});
+      await db.equipment.deleteMany({where:{id:{in:ids}}});
+      await db.user.deleteMany({where:{id:{in:userIds}}});
     }finally{await db.$disconnect()}
   });
   async function stock(total=10,borrowed=0,damaged=0,status='AVAILABLE'){
-    const e=await db.equipment.create({data:{name:tag,totalQuantity:total,availableQuantity:total-borrowed-damaged,borrowedQuantity:borrowed,damagedQuantity:damaged,status,retiredAt:status==='UNAVAILABLE'?new Date():null}});ids.push(e.id);return e;
+    const e=await db.equipment.create({data:{name:tag+'-'+require('node:crypto').randomUUID(),totalQuantity:total,availableQuantity:total-borrowed-damaged,borrowedQuantity:borrowed,damagedQuantity:damaged,status,retiredAt:status==='UNAVAILABLE'?new Date():null}});ids.push(e.id);return e;
   }
   async function booking(e,q=1,status='APPROVED',start='08:00',end='10:00',extra={}){
-    return db.borrowRequest.create({data:{requestedBy:admin.id,academicYearId:year.id,termId:term.id,dateNeeded:at('00:00'),timeStart:at(start),timeEnd:at(end),status,...extra,items:{create:{equipmentId:e.id,quantity:q}}}});
+    return db.borrowRequest.create({data:{requestedBy:faculty.id,academicYearId:year.id,termId:term.id,dateNeeded:at('00:00'),timeStart:at(start),timeEnd:at(end),status,...extra,items:{create:{equipmentId:e.id,quantity:q}}}});
   }
+  const requestBody=items=>({requestType:'EQUIPMENT',facultyId:profile.id,usageLocation:'Capacity test venue',academicYearId:year.id,termId:term.id,dateNeeded:day,timeStart:at('08:00').toISOString(),timeEnd:at('10:00').toISOString(),purpose:'Capacity test',items});
   const input=()=>({academicYearId:year.id,termId:term.id,date:day,timeStart:'08:00',timeEnd:'10:00'});
   async function preview(e){const r=await apiRequest('POST','/equipment-conflicts/conflicts',{...input(),equipment:[{equipmentId:e.id,requestedQuantity:1}]},token);expect(r.status).toBe(200);return r.data.data.availability[e.id].available;}
-  const edit=(e,body)=>apiRequest('PUT','/equipment/'+e.id,body,token);
+  const edit=(e,body)=>apiRequest('PUT','/equipment/'+e.id,{expectedUpdatedAt:e.updatedAt.toISOString(),adjustmentReason:'Test inventory correction',...body},token);
   const act=(r,action)=>apiRequest('PATCH','/borrow-requests/'+r.id+'/'+action,null,token);
   test.each([0,-1,1.5,'2',2147483648])('create and edit reject quantity %p without writing',async quantity=>{
     const e=await stock();const pending=await booking(e,1,'PENDING');
-    const body={...input(),dateNeeded:day,items:[{equipmentId:e.id,quantity}]};
-    expect((await apiRequest('POST','/borrow-requests',body,token)).status).toBe(400);
-    expect((await apiRequest('PUT','/borrow-requests/'+pending.id,body,token)).status).toBe(400);
+    const body=requestBody([{equipmentId:e.id,quantity}]);
+    expect((await apiRequest('POST','/borrow-requests',body,facultyToken)).status).toBe(400);
+    expect((await apiRequest('PUT','/borrow-requests/'+pending.id,body,facultyToken)).status).toBe(400);
     expect((await db.borrowRequestItem.findMany({where:{borrowRequestId:pending.id}})).map(i=>i.quantity)).toEqual([1]);
   });
   test('valid request creation persists positive integer selections',async()=>{
-    const e=await stock();const result=await apiRequest('POST','/borrow-requests',{academicYearId:year.id,termId:term.id,dateNeeded:day,items:[{equipmentId:e.id,quantity:2}]},token);
+    const e=await stock();const result=await apiRequest('POST','/borrow-requests',requestBody([{equipmentId:e.id,quantity:2}]),facultyToken);
     expect(result.status).toBe(201);expect(result.data.request.items.map(i=>i.quantity)).toEqual([2]);
   });
   test('unknown equipment selection returns a relationship conflict',async()=>{
-    const result=await apiRequest('POST','/borrow-requests',{academicYearId:year.id,termId:term.id,dateNeeded:day,items:[{equipmentId:'missing-'+tag,quantity:1}]},token);expect(result.status).toBe(409);
+    const result=await apiRequest('POST','/borrow-requests',requestBody([{equipmentId:'missing-'+tag,quantity:1}]),facultyToken);expect(result.status).toBe(409);
   });
   test.each([1,2,3])('stock reduction racing approval preserves capacity round %s',async()=>{
     const e=await stock(1);const r=await booking(e,1,'PENDING');
@@ -62,7 +71,7 @@ describe('inventory capacity API on local smartlab_test', () => {
     expect(request.status==='APPROVED'?current.availableQuantity===1:current.damagedQuantity===1).toBe(true);
   });
   test('create rejects duplicate lines',async()=>{
-    const e=await stock();expect((await apiRequest('POST','/borrow-requests',{...input(),dateNeeded:day,items:[{equipmentId:e.id,quantity:1},{equipmentId:e.id,quantity:2}]},token)).status).toBe(400);
+    const e=await stock();expect((await apiRequest('POST','/borrow-requests',requestBody([{equipmentId:e.id,quantity:1},{equipmentId:e.id,quantity:2}]),facultyToken)).status).toBe(400);
   });
   test('previews subtract damage and outstanding loans',async()=>{
     const e=await stock(10,2,3);await booking(e,2,'BORROWED','08:00','10:00',{dateNeeded:new Date('2020-01-01T00:00:00+08:00')});
@@ -96,17 +105,17 @@ describe('inventory capacity API on local smartlab_test', () => {
     expect((await db.equipment.findUnique({where:{id:e.id}})).borrowedQuantity).toBe(0);
   });
   test('ordinary edits preserve unavailable status',async()=>{
-    const e=await stock(10,0,0,'UNAVAILABLE');const result=await edit(e,{name:tag+' updated'});expect(result.status).toBe(200);expect(result.data.status).toBe('UNAVAILABLE');
+    const e=await stock(10,0,0,'UNAVAILABLE');const result=await edit(e,{name:tag+' updated '+e.id});expect(result.status).toBe(200);expect(result.data.status).toBe('UNAVAILABLE');
   });
   test('approved reservations are not borrowed stock during edits',async()=>{
-    const e=await stock(10);await booking(e,6);const result=await edit(e,{name:tag+' updated',totalQuantity:10,borrowedQuantity:0,damagedQuantity:1});expect(result.status).toBe(200);expect(result.data).toMatchObject({borrowedQuantity:0,availableQuantity:9});
+    const e=await stock(10);await booking(e,6);const result=await edit(e,{name:tag+' updated '+e.id,totalQuantity:10,borrowedQuantity:0,damagedQuantity:1});expect(result.status).toBe(200);expect(result.data).toMatchObject({borrowedQuantity:0,availableQuantity:9});
   });
   test('stock reductions that invalidate approvals roll back',async()=>{
     const e=await stock(10);await booking(e,6);expect((await edit(e,{damagedQuantity:5})).status).toBe(409);expect((await db.equipment.findUnique({where:{id:e.id}})).damagedQuantity).toBe(0);
   });
   test('cannot invent borrowed units through equipment create or edit',async()=>{
     const e=await stock();expect((await edit(e,{borrowedQuantity:1})).status).toBe(409);
-    expect((await apiRequest('POST','/equipment',{name:tag,totalQuantity:10,borrowedQuantity:1},token)).status).toBe(400);
+    expect((await apiRequest('POST','/equipment',{name:tag+'-'+require('node:crypto').randomUUID(),totalQuantity:10,borrowedQuantity:1},token)).status).toBe(400);
   });
   test('equipment counters reject fractions and strings',async()=>{
     const e=await stock();for(const totalQuantity of [1.5,'10',-1,2147483648])expect((await edit(e,{totalQuantity})).status).toBe(400);

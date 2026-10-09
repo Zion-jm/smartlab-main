@@ -5,7 +5,7 @@ describe('retirement preserves history and inventory on local smartlab_test',()=
   beforeAll(async()=>{let d,a;try{d=new URL(process.env.DATABASE_URL);a=new URL(BASE_URL)}catch{throw Error('Invalid test configuration')};if(!['localhost','127.0.0.1'].includes(d.hostname)||d.pathname!=='/smartlab_test'||!['localhost','127.0.0.1'].includes(a.hostname))throw Error('Local test database/API required');db=new PrismaClient();admin=await user('ADMIN');token=await loginAs(admin.email,password);year=await db.academicYear.create({data:{year:tag}});term=await db.term.create({data:{name:tag}})});
   afterAll(async()=>{if(!db)return;try{await db.notification.deleteMany({where:{OR:[{userId:{in:users}},{borrowRequest:{requestedBy:{in:users}}}]}});await db.auditLog.deleteMany({where:{actorUserId:{in:users}}});await db.borrowRequest.deleteMany({where:{requestedBy:{in:users}}});await db.equipment.deleteMany({where:{id:{in:equipment}}});await db.user.deleteMany({where:{id:{in:users}}});if(year)await db.academicYear.delete({where:{id:year.id}});if(term)await db.term.delete({where:{id:term.id}})}finally{await db.$disconnect()}});
   async function user(role='STUDENT'){const u=await db.user.create({data:{email:tag+'-'+users.length+'@smartlab.local',passwordHash:await bcrypt.hash(password,10),firstName:'Retirement',lastName:'Test',role}});users.push(u.id);return u}
-  async function stock(borrowed=0){const e=await db.equipment.create({data:{name:tag,description:'Keep this description',totalQuantity:3,availableQuantity:3-borrowed,borrowedQuantity:borrowed}});equipment.push(e.id);return e}
+  async function stock(borrowed=0){const e=await db.equipment.create({data:{name:tag+'-'+require('node:crypto').randomUUID(),description:'Keep this description',totalQuantity:3,availableQuantity:3-borrowed,borrowedQuantity:borrowed}});equipment.push(e.id);return e}
   async function request(u,e,status='BORROWED'){return db.borrowRequest.create({data:{requestedBy:u.id,academicYearId:year.id,termId:term.id,dateNeeded:new Date('2037-06-12T00:00:00+08:00'),timeStart:new Date('2037-06-12T08:00:00+08:00'),timeEnd:new Date('2037-06-12T10:00:00+08:00'),status,items:{create:{equipmentId:e.id,quantity:1}}}})}
   const retire=(type,id,method='POST',auth=token)=>apiRequest(method,'/'+type+'/'+id+(method==='POST'?'/retire':''),{},auth);
   const act=(r,a)=>apiRequest('PATCH','/borrow-requests/'+r.id+'/'+a,null,token);
@@ -37,22 +37,22 @@ describe('retirement preserves history and inventory on local smartlab_test',()=
   test('administrator cannot retire its own active account',async()=>{expect((await retire('users',admin.id)).status).toBe(409);expect((await apiRequest('GET','/auth/me',null,token)).status).toBe(200)});
   test('account history also survives retirement with no outstanding loan',async()=>{const u=await user(),e=await stock(),r=await request(u,e,'RETURNED');expect((await retire('users',u.id,'DELETE')).status).toBe(200);expect(await db.borrowRequest.findUnique({where:{id:r.id}})).not.toBeNull();expect(await db.borrowRequestItem.count({where:{borrowRequestId:r.id}})).toBe(1)});
   test('active zero-stock equipment becomes available when replenished',async()=>{
-    const result=await apiRequest('POST','/equipment',{name:tag,totalQuantity:0},token);expect(result.status).toBe(201);const e=result.data;equipment.push(e.id);expect(e.retiredAt).toBeNull();
-    const updated=await apiRequest('PUT','/equipment/'+e.id,{totalQuantity:4},token);expect(updated.status).toBe(200);expect(updated.data).toMatchObject({status:'AVAILABLE',retiredAt:null,stockStatus:'AVAILABLE'});
+    const result=await apiRequest('POST','/equipment',{name:tag+'-'+require('node:crypto').randomUUID(),totalQuantity:0},token);expect(result.status).toBe(201);const e=result.data;equipment.push(e.id);expect(e.retiredAt).toBeNull();
+    const updated=await apiRequest('PUT','/equipment/'+e.id,{totalQuantity:4,expectedUpdatedAt:(await current(e)).updatedAt.toISOString(),adjustmentReason:'Test stock replenishment'},token);expect(updated.status).toBe(200);expect(updated.data).toMatchObject({status:'AVAILABLE',retiredAt:null,stockStatus:'AVAILABLE'});
   });
   test('stock edits cannot reactivate archived equipment, explicit restore can',async()=>{
     const e=await stock();await retire('equipment',e.id);
-    const edited=await apiRequest('PUT','/equipment/'+e.id,{totalQuantity:5},token);expect(edited.status).toBe(200);expect(edited.data).toMatchObject({status:'UNAVAILABLE',stockStatus:'AVAILABLE'});expect(edited.data.retiredAt).toBeTruthy();
-    expect((await apiRequest('PUT','/equipment/'+e.id,{status:'AVAILABLE'},token)).status).toBe(409);
-    expect((await apiRequest('PUT','/equipment/'+e.id,{retiredAt:null},token)).status).toBe(409);
+    const edited=await apiRequest('PUT','/equipment/'+e.id,{totalQuantity:5,expectedUpdatedAt:(await current(e)).updatedAt.toISOString(),adjustmentReason:'Test stock replenishment'},token);expect(edited.status).toBe(200);expect(edited.data).toMatchObject({status:'UNAVAILABLE',stockStatus:'AVAILABLE'});expect(edited.data.retiredAt).toBeTruthy();
+    expect((await apiRequest('PUT','/equipment/'+e.id,{status:'AVAILABLE',expectedUpdatedAt:(await current(e)).updatedAt.toISOString()},token)).status).toBe(409);
+    expect((await apiRequest('PUT','/equipment/'+e.id,{retiredAt:null,expectedUpdatedAt:(await current(e)).updatedAt.toISOString()},token)).status).toBe(409);
     const restored=await apiRequest('POST','/equipment/'+e.id+'/restore',{},token);expect(restored.status).toBe(200);expect(restored.data.equipment).toMatchObject({retiredAt:null,status:'AVAILABLE',totalQuantity:5});
   });
   test('archive marks empty equipment and restore does not invent stock',async()=>{
-    const result=await apiRequest('POST','/equipment',{name:tag,totalQuantity:0},token);const e=result.data;equipment.push(e.id);await retire('equipment',e.id);expect((await current(e)).retiredAt).not.toBeNull();
+    const result=await apiRequest('POST','/equipment',{name:tag+'-'+require('node:crypto').randomUUID(),totalQuantity:0},token);const e=result.data;equipment.push(e.id);await retire('equipment',e.id);expect((await current(e)).retiredAt).not.toBeNull();
     const restored=await apiRequest('POST','/equipment/'+e.id+'/restore',{},token);expect(restored.status).toBe(200);expect(restored.data.equipment).toMatchObject({retiredAt:null,status:'UNAVAILABLE',availableQuantity:0});
   });
   test('restore derives damaged status from current stock',async()=>{
-    const e=await stock();await retire('equipment',e.id);expect((await apiRequest('PUT','/equipment/'+e.id,{damagedQuantity:3},token)).status).toBe(200);
+    const e=await stock();await retire('equipment',e.id);expect((await apiRequest('PUT','/equipment/'+e.id,{damagedQuantity:3,expectedUpdatedAt:(await current(e)).updatedAt.toISOString(),adjustmentReason:'Test damage correction'},token)).status).toBe(200);
     const restored=await apiRequest('POST','/equipment/'+e.id+'/restore',{},token);expect(restored.data.equipment).toMatchObject({retiredAt:null,status:'DAMAGED',availableQuantity:0});
   });
   test('restore is admin-only and missing equipment returns 404',async()=>{

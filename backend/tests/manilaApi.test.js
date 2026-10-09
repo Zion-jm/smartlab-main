@@ -49,9 +49,19 @@ describe('Manila API date boundaries on local smartlab_test',()=>{
     expect(result.data.requests.map(r=>r.id).sort()).toEqual([a.id,b.id].sort());
   });
   test('duplicate detection sees a pending request at Manila midnight',async()=>{
-    const existing=await request(start,'PENDING');
-    const result=await apiRequest('POST','/borrow-requests',{academicYearId:year.id,termId:term.id,dateNeeded:day,timeStart:times.timeStart.toISOString(),timeEnd:times.timeEnd.toISOString(),items:[{equipmentId:equipment.id,quantity:1}]},token);
-    expect(result.status).toBe(409);expect(result.data.existingRequestId).toBe(existing.id);
+    const faculty=await db.user.create({data:{email:tag+'-faculty@smartlab.local',passwordHash:await bcrypt.hash('ManilaTest123!',10),firstName:'Manila',lastName:'Faculty',role:'FACULTY'}});
+    try {
+      const facultyToken=await loginAs(faculty.email,'ManilaTest123!');
+      const facultyProfile=await db.facultyProfile.create({data:{userId:faculty.id}});
+      const activeYear=await db.academicYear.findFirstOrThrow({where:{isActive:true}});
+      const activeTerm=await db.term.findFirstOrThrow({where:{isActive:true}});
+      const existing=await db.borrowRequest.create({data:{requestedBy:faculty.id,requestType:'EQUIPMENT',facultyId:facultyProfile.id,purpose:'Manila date check',usageLocation:'Test venue',academicYearId:activeYear.id,termId:activeTerm.id,dateNeeded:start,status:'PENDING',...times,items:{create:{equipmentId:equipment.id,quantity:1}}}});
+      const result=await apiRequest('POST','/borrow-requests',{requestType:'EQUIPMENT',facultyId:facultyProfile.id,purpose:'Manila date check',usageLocation:'Test venue',academicYearId:activeYear.id,termId:activeTerm.id,dateNeeded:day,timeStart:times.timeStart.toISOString(),timeEnd:times.timeEnd.toISOString(),items:[{equipmentId:equipment.id,quantity:1}]},facultyToken);
+      expect(result.status).toBe(409);expect(result.data.existingRequestId).toBe(existing.id);
+    } finally {
+      await db.borrowRequest.deleteMany({where:{requestedBy:faculty.id}});
+      await db.user.delete({where:{id:faculty.id}});
+    }
   });
   test('equipment preview includes same-day bookings at Manila midnight',async()=>{
     const result=await apiRequest('POST','/equipment-conflicts/conflicts',{academicYearId:year.id,termId:term.id,date:day,timeStart:'08:00',timeEnd:'09:00',equipment:[{equipmentId:equipment.id,requestedQuantity:1}]},token);

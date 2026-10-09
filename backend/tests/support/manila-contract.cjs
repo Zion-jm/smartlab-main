@@ -29,6 +29,6 @@ assert.equal(front.addCalendarDays('2024-03-10',1),'2024-03-11');
 assert.equal(front.combineManilaDateTime('2025-02-30','08:00'),null);assert.equal(front.dateToDateKey('2025-02-30'),'');assert.equal(front.combineManilaDateTime('2035-06-12','24:00'),null);
 assert.equal(Number.isNaN(back.parseManilaDate('2025-02-30').getTime()),true);
 assert.equal(schedules.hasTimeOverlap(new Date('2035-06-11T23:30:00Z'),new Date('2035-06-12T02:00:00Z'),new Date('2035-06-12T00:00:00Z'),new Date('2035-06-12T01:00:00Z')),true);
-const email=templates.requestDetailBlock({id:'timezone-test',requesterName:'Test',dateNeeded:'2035-06-11T16:00:00Z',timeStart:'2035-06-11T23:30:00Z',timeEnd:'2035-06-12T02:00:00Z',location:'Test',purpose:'Test',items:[]});
-assert.match(email,/June 12, 2035/);assert.match(email,/07:30/);
+const email=templates.renderRequestEmail('Test', 'Test message', {id:'timezone-test',requesterName:'Test',dateNeeded:'2035-06-11T16:00:00Z',timeStart:'2035-06-11T23:30:00Z',timeEnd:'2035-06-12T02:00:00Z',location:'Test',purpose:'Test',items:[]}, 'View request').html;
+assert.match(email,/June 12, 2035/);assert.match(email,/7:30 AM/);
 process.stdout.write('Manila contract passed: '+process.env.TZ);

@@ -9,7 +9,7 @@ describe('session invalidation on local smartlab_test',()=>{
   const status=(u,s)=>apiRequest('PATCH','/users/'+u.id+'/status',{status:s},adminToken);
   test('deactivation blocks an existing token, login and protected mutations',async()=>{
     const u=await create(),t=await loginAs(u.email,password);expect((await status(u,'DEACTIVATED')).status).toBe(200);
-    expect((await me(t)).status).toBe(401);expect((await apiRequest('POST','/auth/login',{email:u.email,password})).status).toBe(401);
+    expect((await me(t)).status).toBe(401);expect((await apiRequest('POST','/auth/login',{email:u.email,password})).status).toBe(403);
     expect((await apiRequest('POST','/equipment',{name:tag,totalQuantity:1},t)).status).toBe(401);
   });
   test('reactivation never resurrects an old token',async()=>{const u=await create(),t=await loginAs(u.email,password);await status(u,'DEACTIVATED');await status(u,'ACTIVE');expect((await me(t)).status).toBe(401);expect((await me(await loginAs(u.email,password))).status).toBe(200)});
