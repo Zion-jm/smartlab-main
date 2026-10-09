@@ -363,7 +363,7 @@ export default function AdminRequests() {
     if (academicPeriod.academicYearId) next.set('academicYearId', academicPeriod.academicYearId);
     if (academicPeriod.termId) next.set('termId', academicPeriod.termId);
     setSearchParams(next, { replace: true, state: location.state });
-  }, [academicPeriod, filters, setSearchParams]);
+  }, [academicPeriod, filters, location.state, setSearchParams]);
 
   const handleFilterChange = (field: keyof BorrowRequestFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [field]: value }));

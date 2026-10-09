@@ -15,6 +15,11 @@ if (!Array.isArray(rows)) throw Error('ESLint did not produce an array of result
 const out = process.env.SMARTLAB_EVIDENCE_DIR || path.join(root, 'artifacts/lint');
 fs.mkdirSync(out, { recursive: true });
 fs.writeFileSync(path.join(out, 'lint-results.json'), JSON.stringify(rows, null, 2));
+for (const row of rows) {
+  for (const message of row.messages) {
+    console.log(path.relative(root, row.filePath) + ':' + message.line + ':' + message.column + ' ' + (message.severity === 2 ? 'error' : 'warning') + ' ' + message.message + ' (' + message.ruleId + ')');
+  }
+}
 const errors = rows.reduce((total, row) => total + row.errorCount, 0);
 const warnings = rows.reduce((total, row) => total + row.warningCount, 0);
 console.log(`Strict lint: ${errors} errors, ${warnings} warnings.`);

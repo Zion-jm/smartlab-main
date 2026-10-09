@@ -43,5 +43,10 @@
   "engines": {
     "node": ">=22.12.0 <23",
     "npm": ">=10 <11"
+  },
+  "overrides": {
+    "@istanbuljs/load-nyc-config": {
+      "js-yaml": "^4.3.2"
+    }
   }
 }
