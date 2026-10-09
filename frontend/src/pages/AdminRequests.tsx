@@ -96,7 +96,6 @@ const roleOptions: Array<{ value: BorrowRequestRoleFilter; label: string }> = [
   { value: 'ALL', label: 'All roles' },
   { value: 'FACULTY', label: 'Faculty' },
   { value: 'STUDENT', label: 'Student' },
-  { value: 'STAFF', label: 'Staff' },
 ];
 
 const sortOptions: Array<{ value: BorrowRequestSort; label: string }> = [

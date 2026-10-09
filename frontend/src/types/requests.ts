@@ -52,7 +52,7 @@ export interface BorrowRequest {
   items?: BorrowRequestItemSummary[];
 }
 
-export type BorrowRequestRoleFilter = 'ALL' | 'FACULTY' | 'STUDENT' | 'STAFF';
+export type BorrowRequestRoleFilter = 'ALL' | 'FACULTY' | 'STUDENT';
 
 export type BorrowRequestSort = 'newest' | 'oldest' | 'date-asc' | 'date-desc' | 'name-asc' | 'name-desc';
 

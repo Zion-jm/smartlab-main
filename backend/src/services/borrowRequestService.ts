@@ -133,7 +133,7 @@ export const mapRoleFilter = (role?: string | null): UserRole | null => {
   if (!role || role === 'ALL') return null;
   if (role === 'FACULTY') return UserRole.FACULTY;
   if (role === 'STUDENT') return UserRole.STUDENT;
-  if (role === 'ADMIN' || role === 'STAFF') return UserRole.ADMIN;
+  if (role === 'ADMIN') return UserRole.ADMIN;
   return null;
 };
 
