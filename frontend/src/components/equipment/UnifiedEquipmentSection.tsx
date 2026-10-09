@@ -133,15 +133,32 @@ export default function UnifiedEquipmentSection({
   const selected = enhancedEquipment.filter(item => item.isSelected);
   const pendingAvailability = availabilityLoading || selected.some(item => !item.availability);
   const shortages = selected.filter(item => item.availability && item.selectedQuantity > item.effectiveAvailable);
+  const pendingItems = selected.flatMap(item => {
+    const requests = item.availability?.reservations?.filter(request => request.status === 'PENDING') ?? [];
+    return requests.length ? [{ id: item.id, name: item.name, count: requests.length,
+      quantity: requests.reduce((sum, request) => sum + request.quantity, 0) }] : [];
+  });
   const conflictChecker = selected.length > 0 && (
-    <div role="status" className={`rounded-xl border px-3 py-3 text-sm ${availabilityError || shortages.length ? 'border-[#f4dfac] bg-[#fffaf0] text-[#92400e]' : 'border-[#d9e9e1] bg-[#f5fcf8] text-[#18765c]'}`}>
+    <div role="status" className={`rounded-xl border px-3 py-3 text-sm ${availabilityError || shortages.length || pendingItems.length ? 'border-[#f4dfac] bg-[#fffaf0] text-[#92400e]' : 'border-[#d9e9e1] bg-[#f5fcf8] text-[#18765c]'}`}>
       {availabilityError ? <><p className="font-semibold">Couldn’t check equipment availability.</p><button type="button" onClick={() => void retryAvailability()} className="min-h-11 font-semibold underline">Retry</button></> : pendingAvailability ? <p>Checking your selected quantities…</p> : shortages.length ? <>
         <p className="font-semibold">Adjust {shortages.length} equipment {shortages.length === 1 ? 'quantity' : 'quantities'}</p>
         <ul className="mt-2 space-y-2">{(showAllIssues ? shortages : shortages.slice(0, 2)).map(item => <li key={item.id}><span className="font-medium">{item.name}</span><span className="block text-xs">Requested {item.selectedQuantity} · Available {item.effectiveAvailable}</span></li>)}</ul>
         {shortages.length > 2 && <button type="button" aria-expanded={showAllIssues} onClick={() => setShowAllIssues(!showAllIssues)} className="min-h-11 text-xs font-semibold underline">{showAllIssues ? 'Show fewer issues' : 'View all issues'}</button>}
         <p className="mt-2 text-xs">Reduce the quantities or remove unavailable items.</p>
         <button type="button" onClick={() => setReviewVersion(value => value + 1)} className="mt-2 min-h-11 rounded-lg bg-[#800000] px-3 text-xs font-semibold text-white md:hidden">Review equipment</button>
-      </> : <p className="font-medium">Your selected equipment is available.</p>}
+      </> : !pendingItems.length ? <p className="font-medium">Your selected equipment is available.</p> : null}
+      {!availabilityError && !pendingAvailability && pendingItems.length > 0 && (
+        <div className={shortages.length ? 'mt-3 border-t border-amber-200 pt-3' : ''} data-testid="pending-equipment-advisory">
+          <p className="font-semibold">Other pending requests include this equipment.</p>
+          <ul className="mt-2 space-y-2">
+            {pendingItems.map(item => <li key={item.id}>
+              <span className="font-medium break-words">{item.name}</span>
+              <span className="block text-xs">{item.quantity} units requested across {item.count} overlapping pending {item.count === 1 ? 'request' : 'requests'}.</span>
+            </li>)}
+          </ul>
+          <p className="mt-2 text-xs">Pending requests do not reserve stock. Availability may change if they are approved. Your request is still subject to approval.</p>
+        </div>
+      )}
     </div>
   );
 
