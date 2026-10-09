@@ -73,6 +73,33 @@ describe('Manila API date boundaries on local smartlab_test',()=>{
     const result=await apiRequest('GET','/equipment/stats/overview?'+period(),null,token);expect(result.status).toBe(200);
     expect(result.data.today.quantityReserved).toBe(2);expect(result.data.upcoming.quantity).toBe(1);
   });
+  test('equipment summaries count requests, exclude room-only pending and archived availability',async()=>{
+    const endpoint='/equipment/stats/overview?'+period();
+    const before=(await apiRequest('GET',endpoint,null,token)).data;
+    const extra=await db.equipment.create({data:{name:tag+'-summary',totalQuantity:6,availableQuantity:6}});
+    const ids=[];
+    try {
+      const base={requestedBy:admin.id,academicYearId:year.id,termId:term.id,dateNeeded:manilaDayBounds(new Date()).end,...times};
+      for(const data of [
+        {...base,requestType:'LABORATORY',roomId:room.id,status:'PENDING'},
+        {...base,requestType:'EQUIPMENT',usageLocation:'Summary test',status:'PENDING',items:{create:[{equipmentId:extra.id,quantity:1}]}},
+        {...base,requestType:'EQUIPMENT',usageLocation:'Summary test',status:'APPROVED',items:{create:[{equipmentId:extra.id,quantity:2},{equipmentId:equipment.id,quantity:3}]}}
+      ]) ids.push((await db.borrowRequest.create({data})).id);
+      let result=await apiRequest('GET',endpoint,null,token);
+      expect(result.status).toBe(200);
+      expect(result.data.pendingRequests).toBe(before.pendingRequests+1);
+      expect(result.data.upcoming.requests).toBe(before.upcoming.requests+1);
+      expect(result.data.upcoming.quantity).toBe(before.upcoming.quantity+5);
+      expect(result.data.inventory.availableQuantity).toBe(before.inventory.availableQuantity+6);
+      await db.equipment.update({where:{id:extra.id},data:{retiredAt:new Date(),status:'UNAVAILABLE'}});
+      result=await apiRequest('GET',endpoint,null,token);
+      expect(result.data.inventory.availableQuantity).toBe(before.inventory.availableQuantity);
+      expect(result.data.inventory.totalQuantity).toBe(before.inventory.totalQuantity+6);
+    } finally {
+      await db.borrowRequest.deleteMany({where:{id:{in:ids}}});
+      await db.equipment.delete({where:{id:extra.id}});
+    }
+  });
   test('invalid date-only inputs return validation errors',async()=>{
     expect((await apiRequest('GET','/audit-logs?from=2035-02-30',null,token)).status).toBe(400);
     expect((await apiRequest('GET','/lab-schedules?dateFrom=2035-02-30',null,token)).status).toBe(400);

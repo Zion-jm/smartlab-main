@@ -265,7 +265,7 @@ router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN),
 
     const activeStatuses: RequestStatus[] = [RequestStatus.APPROVED, RequestStatus.BORROWED];
 
-    const [inventory, lowStockCount, todayReserved, pendingRequests, upcomingReservations, overdueReservations] = await Promise.all([
+    const [inventory, lendableInventory, lowStockCount, todayReserved, pendingRequests, upcomingReservations, overdueReservations] = await Promise.all([
       prisma.equipment.aggregate({
         _count: { id: true },
         _sum: {
@@ -275,8 +275,10 @@ router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN),
           damagedQuantity: true,
         },
       }),
+      prisma.equipment.aggregate({ where: { retiredAt: null }, _sum: { availableQuantity: true } }),
       prisma.equipment.count({
         where: {
+          retiredAt: null,
           totalQuantity: { gt: 1 },
           availableQuantity: { lte: 1 },
         },
@@ -293,18 +295,16 @@ router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN),
         },
       }),
       prisma.borrowRequest.count({
-        where: { status: RequestStatus.PENDING, ...periodFilter },
+        where: { status: RequestStatus.PENDING, ...periodFilter, items: { some: {} } },
       }),
-      prisma.borrowRequestItem.aggregate({
-        _count: { id: true },
-        _sum: { quantity: true },
+      prisma.borrowRequest.findMany({
         where: {
-          borrowRequest: {
-            ...periodFilter,
-            dateNeeded: { gte: endOfToday, lt: sevenDaysFromNow },
-            status: { in: activeStatuses },
-          },
+          ...periodFilter,
+          dateNeeded: { gte: endOfToday, lt: sevenDaysFromNow },
+          status: { in: activeStatuses },
+          items: { some: {} },
         },
+        select: { items: { select: { quantity: true } } },
       }),
       prisma.borrowRequest.findMany({
         where: { ...periodFilter, dateNeeded: { lt: startOfToday }, status: RequestStatus.BORROWED },
@@ -320,7 +320,7 @@ router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN),
       inventory: {
         uniqueItems: inventory._count.id,
         totalQuantity,
-        availableQuantity: inventory._sum.availableQuantity ?? 0,
+        availableQuantity: lendableInventory._sum.availableQuantity ?? 0,
         borrowedQuantity,
         damagedQuantity: inventory._sum.damagedQuantity ?? 0,
         lowStockCount,
@@ -332,8 +332,8 @@ router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN),
       },
       pendingRequests,
       upcoming: {
-        requests: upcomingReservations._count.id ?? 0,
-        quantity: upcomingReservations._sum.quantity ?? 0,
+        requests: upcomingReservations.length,
+        quantity: upcomingReservations.reduce((total, request) => total + request.items.reduce((sum, item) => sum + item.quantity, 0), 0),
       },
       overdue: {
         requests: overdueReservations.length,

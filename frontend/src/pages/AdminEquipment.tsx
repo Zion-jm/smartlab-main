@@ -100,9 +100,9 @@ export default function AdminEquipment() {
       return Promise.all([
         (viewMode === 'table' ? equipmentApi.getPage : equipmentApi.getAll)({
           page: equipmentPage, pageSize: equipmentPageSize,
-          ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
-          ...(filters.status !== 'ALL' ? { status: filters.status } : {}),
-          ...(filters.lowStockOnly ? { lowStock: '1' } : {}),
+          ...(viewMode === 'table' && debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
+          ...(viewMode === 'table' && filters.status !== 'ALL' ? { status: filters.status } : {}),
+          ...(viewMode === 'table' && filters.lowStockOnly ? { lowStock: '1' } : {}),
         }),
         equipmentApi.getStats({
           academicYearId: academicPeriod.academicYearId || undefined,
@@ -174,7 +174,9 @@ export default function AdminEquipment() {
     setViewMode((currentView) => (currentView === nextView ? currentView : nextView));
   }
 
+  const usageRequestVersion = useRef(0);
   const performLoadUsageData = useCallback(async () => {
+    const version = ++usageRequestVersion.current;
     
       return borrowRequestApi.getAll({
         status: 'ALL',
@@ -182,13 +184,15 @@ export default function AdminEquipment() {
         academicYearId: academicPeriod.academicYearId || undefined,
         termId: academicPeriod.termId || undefined,
       }).then((response) => {
+      if (version !== usageRequestVersion.current) return;
       setUsageRequests((response.data?.requests ?? []) as BorrowRequest[]);
     
     }).catch((err) => {
+      if (version !== usageRequestVersion.current) return;
       console.error('Failed to load equipment usage schedule', err);
       setUsageError(err instanceof Error && /exceeds 1000|Data changed while loading/.test(err.message) ? err.message : 'Failed to load equipment usage schedule. Please try again.');
     }).finally(() => {
-      setUsageLoading(false);
+      if (version === usageRequestVersion.current) setUsageLoading(false);
     });
   }, [academicPeriod.academicYearId, academicPeriod.termId]);
 
@@ -448,7 +452,7 @@ export default function AdminEquipment() {
   const equipmentViewLabel = equipmentViewTabs.find((tab) => tab.id === viewMode)?.label ?? 'Equipment view';
   const equipmentRibbonSummary = [
     `View: ${equipmentViewLabel}`,
-    appliedFilters.length > 0 ? appliedFilters.map((filter) => filter.label).join(', ') : 'No active filters',
+    viewMode === 'table' && appliedFilters.length > 0 ? appliedFilters.map((filter) => filter.label).join(', ') : 'No active filters',
   ].filter(Boolean).join(' · ');
 
   const advancedFilterCount = [
@@ -578,7 +582,7 @@ export default function AdminEquipment() {
           }}
           filters={equipmentFilterPanel}
           className="mb-1"
-          filtersActiveCount={appliedFilters.length}
+          filtersActiveCount={viewMode === 'table' ? appliedFilters.length : 0}
           defaultFiltersOpen={appliedFilters.length > 0}
           compactFilters
           ribbonSummary={equipmentRibbonSummary}
@@ -634,9 +638,9 @@ export default function AdminEquipment() {
                 <EquipmentUsageCalendar
                   equipment={equipment}
                   requests={usageRequests}
-                  loading={usageLoading}
-                  error={usageError}
-                  onRetry={loadUsageData}
+                  loading={loading || usageLoading}
+                  error={error || usageError}
+                  onRetry={refreshEquipmentData}
                 />
               )}
             </div>
