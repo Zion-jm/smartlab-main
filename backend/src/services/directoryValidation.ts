@@ -48,7 +48,7 @@ export async function saveDirectory(db: PrismaClient, entity: DirectoryEntity, b
         if (before?.isComputerLab && !data.isComputerLab) {
           const today = manilaDayBounds(new Date()).start;
           const schedules = await tx.labSchedule.count({where:{roomId:id,OR:[{scheduleType:'ONE_TIME',scheduleDate:{gte:today}},{scheduleType:'WEEKLY',academicYear:{isActive:true},term:{isActive:true}}]}});
-          const requests = await tx.borrowRequest.count({where:{roomId:id,requestType:{not:'EQUIPMENT'},status:{in:['PENDING','APPROVED','BORROWED']},dateNeeded:{gte:today}}});
+          const requests = await tx.borrowRequest.count({where:{roomId:id,requestType:'LABORATORY',status:{in:['PENDING','APPROVED','BORROWED']},dateNeeded:{gte:today}}});
           if (schedules || requests) throw new RequestActionError(409, 'This laboratory has active or future schedules or requests. Resolve them before changing its classification.');
         }
       } else {

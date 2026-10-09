@@ -40,7 +40,7 @@ describe('Shared approvals and schedule conflicts on local smartlab_test',()=>{
   async function item(total=1,borrowed=0,damaged=0){const e=await db.equipment.create({data:{name:tag+'-'+require('node:crypto').randomUUID(),totalQuantity:total,availableQuantity:total-borrowed-damaged,borrowedQuantity:borrowed,damagedQuantity:damaged}});equipment.push(e.id);return e;}
   async function request({r,start=8,end=10,items=[],status='PENDING'}={}){
     r=r||await room();
-    const q=await db.borrowRequest.create({data:{requestedBy:faculty.id,facultyId:profile.id,roomId:r.id,academicYearId:year.id,termId:term.id,dateNeeded:new Date(date),timeStart:new Date(clock(start)),timeEnd:new Date(clock(end)),status,items:{create:items.map(([e,quantity])=>({equipmentId:e.id,quantity}))}}});requests.push(q.id);return q;
+    const q=await db.borrowRequest.create({data:{requestType:'LABORATORY',requestedBy:faculty.id,facultyId:profile.id,roomId:r.id,academicYearId:year.id,termId:term.id,dateNeeded:new Date(date),timeStart:new Date(clock(start)),timeEnd:new Date(clock(end)),status,items:{create:items.map(([e,quantity])=>({equipmentId:e.id,quantity}))}}});requests.push(q.id);return q;
   }
   const approve=(q,route='borrow',auth=token)=>apiRequest('PATCH',route==='borrow'?'/borrow-requests/'+q.id+'/approve':'/lab-schedules/approve-request/'+q.id,null,auth);
   const payload=(r,{start=8,end=10,type='ONE_TIME'}={})=>({roomId:r.id,facultyId:profile.id,academicYearId:year.id,termId:term.id,scheduleType:type,scheduleDate:type==='ONE_TIME'?date:null,dayOfWeek:day,timeStart:clock(start),timeEnd:clock(end)});
@@ -135,13 +135,11 @@ describe('Shared approvals and schedule conflicts on local smartlab_test',()=>{
     expect((await apiRequest('POST','/lab-schedules/admin/create',body,token)).status).toBe(400);
   });
 
-  test('approved general-room reservation is visible without a derived schedule',async()=>{
+  test('general rooms cannot be approved as laboratory reservations',async()=>{
     const r=await room();await db.room.update({where:{id:r.id},data:{isComputerLab:false}});
-    const q=await request({r});expect((await approve(q)).status).toBe(200);
+    const q=await request({r});expect((await approve(q)).status).toBe(400);
     expect(await db.labSchedule.count({where:{borrowRequestId:q.id}})).toBe(0);
-    const preview=await apiRequest('POST','/conflicts/check',payload(r),token);
-    expect(preview.data.conflicts.some(c=>c.type==='borrow_request'&&c.severity==='high')).toBe(true);
-    expect((await create(r)).status).toBe(409);
+    expect((await db.borrowRequest.findUnique({where:{id:q.id}})).status).toBe('PENDING');
   });
 
 });

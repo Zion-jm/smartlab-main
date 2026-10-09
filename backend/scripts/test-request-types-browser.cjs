@@ -26,6 +26,14 @@ async function main(){
  await api('ADMIN','POST','',{...base,requestType:'EQUIPMENT',usageRoomId:room.id,items:[{equipmentId:equipment.id,quantity:1}]},403);
  await api('STUDENT','POST','',{...base,requestType:'LABORATORY',roomId:room.id,items:[]},403);
  await api('STUDENT','POST','',{...base,requestType:'EQUIPMENT',usageRoomId:room.id,items:[]},400);
+ for(const requestType of [undefined,'LEGACY']) await api('FACULTY','POST','',{...base,requestType,usageRoomId:room.id,items:[{equipmentId:equipment.id,quantity:1}]},400);
+ const scheduleRequest=async(role,body,status)=>{const r=await fetch('http://localhost:3137/api/lab-schedules/request',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+auths[role].token},body:JSON.stringify(body)});const data=await r.json();assert.equal(r.status,status,JSON.stringify(data));return data;};
+ const directBody={...base,scheduleDate:base.dateNeeded,roomId:room.id,timeStart:'2035-06-12T12:00:00+08:00',timeEnd:'2035-06-12T13:00:00+08:00',items:[]};
+ await scheduleRequest('STUDENT',directBody,403);
+ await scheduleRequest('FACULTY',{...directBody,timeEnd:directBody.timeStart},400);
+ const direct=await scheduleRequest('FACULTY',directBody,201);assert.equal(direct.request.requestType,'LABORATORY');
+ await api('ADMIN','PATCH','/'+direct.request.id+'/approve',{},200);
+ await scheduleRequest('FACULTY',directBody,409);
  const lab=await api('FACULTY','POST','',{...base,requestType:'LABORATORY',roomId:room.id,items:[]},201);
  await api('ADMIN','PATCH','/'+lab.request.id+'/approve',{},200);
  const countBeforeConflict=await db.borrowRequest.count();

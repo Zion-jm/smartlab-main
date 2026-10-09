@@ -334,7 +334,6 @@ model LabSchedule {
 // ====================================================
 
 enum BorrowRequestType {
-  LEGACY
   LABORATORY
   EQUIPMENT
 }
@@ -342,7 +341,7 @@ enum BorrowRequestType {
 model BorrowRequest {
   id              String         @id @default(cuid())
   
-  requestType BorrowRequestType @default(LEGACY)
+  requestType BorrowRequestType
   usageRoomId String?
   usageRoom Room? @relation("EquipmentUsageRoom", fields: [usageRoomId], references: [id], onDelete: SetNull)
   usageLocation String?

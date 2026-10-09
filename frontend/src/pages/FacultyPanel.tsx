@@ -377,7 +377,7 @@ function RequestFormScaffold({
 }) {
   const selfFacultyProfileId = resources?.selfFacultyProfileId ?? null;
 
-  const [useLabRoom, setUseLabRoom] = useState(editingRequest ? editingRequest.requestType === 'LABORATORY' || (editingRequest.requestType === 'LEGACY' && Boolean(editingRequest.room?.id)) : false);
+  const [useLabRoom, setUseLabRoom] = useState(editingRequest ? editingRequest.requestType === 'LABORATORY' : false);
   const [selectedEquipment, setSelectedEquipment] = useState<Record<string, number>>(() =>
     (editingRequest?.items ?? []).reduce<Record<string, number>>((selected, item) => {
       selected[item.equipmentId] = item.quantity;
@@ -654,9 +654,6 @@ function RequestFormScaffold({
           ? 'Edit your request below. Your changes will be sent to the administrator for review.'
           : 'Choose a request type and complete the details. Submit at least 3 days in advance.'}
       >
-        {editingRequest && editingRequest.requestType === 'LEGACY' && (
-          <p className="mb-4 rounded-xl border border-[#ead7d3] bg-[#fff8f3] p-3 text-sm text-[#800000]">This is an older request. Saving applies the new request rules. Confirm the request type, equipment, and location before submitting.</p>
-        )}
         <div className="request-form-sections rounded-2xl border border-[#f1f5f9] bg-[#fdfdfd] divide-y divide-[#f1f5f9]">
           <section className="space-y-4 p-4 lg:p-5">
             <div>

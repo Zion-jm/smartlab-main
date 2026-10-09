@@ -42,7 +42,7 @@ describe('inventory capacity API on local smartlab_test', () => {
     const e=await db.equipment.create({data:{name:tag+'-'+require('node:crypto').randomUUID(),totalQuantity:total,availableQuantity:total-borrowed-damaged,borrowedQuantity:borrowed,damagedQuantity:damaged,status,retiredAt:status==='UNAVAILABLE'?new Date():null}});ids.push(e.id);return e;
   }
   async function booking(e,q=1,status='APPROVED',start='08:00',end='10:00',extra={}){
-    return db.borrowRequest.create({data:{requestedBy:faculty.id,academicYearId:year.id,termId:term.id,dateNeeded:at('00:00'),timeStart:at(start),timeEnd:at(end),status,...extra,items:{create:{equipmentId:e.id,quantity:q}}}});
+    return db.borrowRequest.create({data:{requestType:'EQUIPMENT',usageLocation:'Test venue',requestedBy:faculty.id,academicYearId:year.id,termId:term.id,dateNeeded:at('00:00'),timeStart:at(start),timeEnd:at(end),status,...extra,items:{create:{equipmentId:e.id,quantity:q}}}});
   }
   const requestBody=items=>({requestType:'EQUIPMENT',facultyId:profile.id,usageLocation:'Capacity test venue',academicYearId:year.id,termId:term.id,dateNeeded:day,timeStart:at('08:00').toISOString(),timeEnd:at('10:00').toISOString(),purpose:'Capacity test',items});
   const input=()=>({academicYearId:year.id,termId:term.id,date:day,timeStart:'08:00',timeEnd:'10:00'});
@@ -85,7 +85,7 @@ describe('inventory capacity API on local smartlab_test', () => {
   test('minute-level adjacent intervals do not create a false conflict',async()=>{
     const e=await stock(1);await booking(e,1,'APPROVED','07:45','08:00');expect(await preview(e)).toBe(1);
   });
-  test('legacy requests with no times reserve the whole day',async()=>{
+  test('incomplete stored time ranges conservatively reserve the whole day',async()=>{
     const e=await stock(10);await booking(e,3,'APPROVED','08:00','10:00',{timeStart:null,timeEnd:null});expect(await preview(e)).toBe(7);
   });
   test('stock is shared across academic periods',async()=>{

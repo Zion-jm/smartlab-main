@@ -74,12 +74,11 @@ async function main() {
     assert.equal(race.filter(r=>r.status==='rejected').length,1);
     const winner=race[0].status==='fulfilled'?a:b;
     await inventoryTransaction(db,tx=>cancelBorrowRequest(tx,{id:winner.id,actorId:admin.id,actorRole:'ADMIN'}));
-    const legacy=await create({},student,[]);
-    assert.equal(legacy.requestType,'LEGACY');
-    assert.equal(legacy.usageRoomId,null);
-    const legacyLab = await create({roomId:room.id},student);
-    await assert.rejects(approve(legacyLab.id),{statusCode:403});
-    assert.equal((await db.borrowRequest.findUnique({where:{id:legacyLab.id}})).status,'PENDING');
+    await assert.rejects(create({},student,[]));
+    await assert.rejects(create({requestType:'LEGACY'},student,[]));
+    const invalidLab = await create(labIntent,student);
+    await assert.rejects(approve(invalidLab.id),{statusCode:403});
+    assert.equal((await db.borrowRequest.findUnique({where:{id:invalidLab.id}})).status,'PENDING');
     await inventoryTransaction(db,tx=>cancelBorrowRequest(tx,{id:conflictingLab.id,actorId:admin.id,actorRole:'ADMIN'}));
     const combined = await create(labIntent,faculty,items);
     await approve(combined.id);
@@ -93,7 +92,7 @@ async function main() {
     assert.equal((await db.borrowRequest.findUnique({where:{id:shortage.id}})).status,'PENDING');
     assert.equal(await db.labSchedule.count({where:{borrowRequestId:shortage.id}}),0);
     assert(await db.auditLog.count()>0);
-    console.log('PASS: migration, legacy defaults, student restrictions, required items/location, equipment-only lab usage, room conflicts, atomic approvals, release/return, double-return protection, cancellation, and competing equipment approvals.');
+    console.log('PASS: migration, explicit types and legacy rejection, student restrictions, required items/location, equipment-only lab usage, room conflicts, atomic approvals, release/return, double-return protection, cancellation, and competing equipment approvals.');
   } finally {
     await db.$executeRawUnsafe('DROP SCHEMA IF EXISTS "'+schema+'" CASCADE');
     await db.$disconnect();

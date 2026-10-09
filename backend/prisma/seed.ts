@@ -633,13 +633,16 @@ async function ensureReportFixtures() {
       where: { requestedBy: fixture.requester.id, purpose: fixture.purpose },
     });
     const data = {
+      requestType: 'EQUIPMENT' as const,
+      usageRoomId: fixture.room.id,
+      usageLocation: null,
       requestedBy: fixture.requester.id,
       facultyId: fixture.faculty.id,
       programId: fixture.program.id,
       subjectId: fixture.subject.id,
       yearLevel: fixture.yearLevel,
       dateNeeded,
-      roomId: fixture.room.id,
+      roomId: null,
       location: null,
       timeStart,
       timeEnd,
@@ -684,7 +687,7 @@ async function ensureReportFixtures() {
       start: '13:00',
       end: '15:00',
       yearLevel: 3,
-      requestKey: 'approved-mia',
+      requestKey: null,
     },
     {
       key: 'borrowed-kevin',
@@ -697,7 +700,7 @@ async function ensureReportFixtures() {
       start: '09:30',
       end: '11:30',
       yearLevel: 1,
-      requestKey: 'borrowed-kevin',
+      requestKey: null,
     },
     {
       key: 'returned-paolo',
@@ -710,7 +713,7 @@ async function ensureReportFixtures() {
       start: '10:00',
       end: '12:00',
       yearLevel: 2,
-      requestKey: 'returned-paolo',
+      requestKey: null,
     },
     {
       key: 'weekly-jane',

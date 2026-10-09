@@ -26,7 +26,7 @@ describe('Manila API date boundaries on local smartlab_test',()=>{
   });
   const period=()=> 'academicYearId='+year.id+'&termId='+term.id;
   async function request(dateNeeded,status='APPROVED'){
-    const r=await db.borrowRequest.create({data:{requestedBy:admin.id,academicYearId:year.id,termId:term.id,dateNeeded,status,...times,items:{create:{equipmentId:equipment.id,quantity:1}}}});requests.push(r.id);return r;
+    const r=await db.borrowRequest.create({data:{requestType:'EQUIPMENT',usageLocation:'Test venue',requestedBy:admin.id,academicYearId:year.id,termId:term.id,dateNeeded,status,...times,items:{create:{equipmentId:equipment.id,quantity:1}}}});requests.push(r.id);return r;
   }
   test('audit date filter includes Manila midnight and excludes next midnight',async()=>{
     const dates=[new Date(start.getTime()-1),start,new Date(end.getTime()-1),end];const ids=[];

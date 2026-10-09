@@ -50,7 +50,7 @@ describe('Equipment adjustment authorization and cancellation', () => {
       name:tag+'-'+require('node:crypto').randomUUID(), totalQuantity: 10, availableQuantity: 8, borrowedQuantity: 2,
     } });
     equipment.push(item.id);
-    const request = await prisma.borrowRequest.create({ data: {
+    const request = await prisma.borrowRequest.create({ data: {requestType:'EQUIPMENT',usageLocation:'Test venue',
       requestedBy: requestOwner.id, academicYearId: year.id, termId: term.id,
       dateNeeded: new Date('2035-06-12T00:00:00Z'),
       timeStart: new Date('2035-06-12T02:00:00Z'), timeEnd: new Date('2035-06-12T03:00:00Z'),
@@ -169,7 +169,7 @@ describe('Equipment adjustment authorization and cancellation', () => {
   });
   test('an actual admin-generated adjustment notice remains actionable', async () => {
     const f = await fixture();
-    const source = await prisma.borrowRequest.create({ data: {
+    const source = await prisma.borrowRequest.create({ data: {requestType:'EQUIPMENT',usageLocation:'Test venue',
       requestedBy: other.id, academicYearId: year.id, termId: term.id,
       dateNeeded: f.request.dateNeeded, timeStart: f.request.timeStart, timeEnd: f.request.timeEnd,
       status: 'APPROVED', items: { create: { equipmentId: f.item.id, quantity: 10 } },

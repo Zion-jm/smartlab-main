@@ -60,7 +60,7 @@ export type ApiBorrowRequestItem = {
 };
 
 export type ApiBorrowRequest = {
-  requestType?: 'LEGACY' | 'LABORATORY' | 'EQUIPMENT';
+  requestType?: 'LABORATORY' | 'EQUIPMENT';
   usageRoomId?: string | null;
   usageRoom?: { id: string; name?: string | null; roomNumber?: string | null } | null;
   usageLocation?: string | null;

@@ -709,9 +709,6 @@ function RequestFormScaffold({
           ? 'Edit your request below. Your changes will be sent to the administrator for review.'
           : 'Choose equipment, a borrowing time, and a usage location. Submit at least 3 days in advance.'}
       >
-        {editingRequest && editingRequest.requestType === 'LEGACY' && (
-          <p className="mb-4 rounded-xl border border-[#ead7d3] bg-[#fff8f3] p-3 text-sm text-[#800000]">This is an older request. Saving applies the new request rules. Confirm the request type, equipment, and location before submitting.</p>
-        )}
         <div className="request-form-sections rounded-2xl border border-[#f1f5f9] bg-[#fdfdfd] divide-y divide-[#f1f5f9]">
           <section className="space-y-4 p-4 lg:p-5">
             <div>

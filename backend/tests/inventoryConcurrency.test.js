@@ -36,7 +36,7 @@ describe('Inventory concurrency on local smartlab_test', () => {
     equipment.push(e.id); return e;
   }
   async function request(items, status='APPROVED') {
-    const r = await prisma.borrowRequest.create({ data: { requestedBy: admin.id, academicYearId: year.id, termId: term.id, dateNeeded: new Date('2035-06-12T00:00:00Z'), status, items: { create: items.map(e => ({ equipmentId: e.id, quantity: 1 })) } } });
+    const r = await prisma.borrowRequest.create({ data: {requestType:'EQUIPMENT',usageLocation:'Test venue', requestedBy: admin.id, academicYearId: year.id, termId: term.id, dateNeeded: new Date('2035-06-12T00:00:00Z'), status, items: { create: items.map(e => ({ equipmentId: e.id, quantity: 1 })) } } });
     requests.push(r.id); return r;
   }
   const act=(r,action)=>apiRequest('PATCH', '/borrow-requests/'+r.id+'/'+action, null, token);

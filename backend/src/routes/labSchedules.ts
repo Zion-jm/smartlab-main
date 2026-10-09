@@ -1,3 +1,5 @@
+import { resolveRequestIntent } from '../services/requestTypePolicy';
+import { validateRequestItems } from '../services/inventoryCapacityService';
 import { prisma } from '../db/prisma';
 import { pagination, pageHeaders } from '../utils/pagination';
 import { scheduleView } from '../services/requestVisibility';
@@ -403,8 +405,13 @@ router.post(
         return;
       }
 
-      const request = await prisma.borrowRequest.create({
+      const selectedItems = validateRequestItems(items === undefined ? [] : items);
+      const intent = await resolveRequestIntent(prisma, { requestType: 'LABORATORY', facultyId: facultyProfile.id, dateNeeded: scheduleDate, timeStart, timeEnd, purpose, roomId }, req.user!.role, selectedItems);
+      const request = await inventoryTransaction(prisma, async tx => {
+        await assertRoomAvailable(tx, {roomId, academicYearId: periodSelection.academicYearId!, termId: periodSelection.termId!, scheduleType: ScheduleType.ONE_TIME, scheduleDate: manilaDayBounds(scheduleDate).start, timeStart: parseManilaDate(timeStart), timeEnd: parseManilaDate(timeEnd)});
+        const saved = await tx.borrowRequest.create({
         data: {
+          ...intent,
           requestedBy: req.user!.id,
           facultyId: facultyProfile.id,
           programId, subjectId, yearLevel,
@@ -413,15 +420,15 @@ router.post(
           timeStart: parseManilaDate(timeStart),
           timeEnd: parseManilaDate(timeEnd),
           purpose,
-          academicYearId: periodSelection.academicYearId,
-          termId: periodSelection.termId,
+          academicYearId: periodSelection.academicYearId!,
+          termId: periodSelection.termId!,
           status: RequestStatus.PENDING,
           notes: 'Schedule request with lab reservation',
           items: {
-            create: items?.map((item: any) => ({
+            create: selectedItems.map((item) => ({
               equipmentId: item.equipmentId,
               quantity: item.quantity,
-            })) || [],
+            })),
           },
         },
         include: {
@@ -429,6 +436,9 @@ router.post(
           program: true,
           subject: true,
         },
+        });
+        await recordRequiredAuditLog(tx, {actorUserId: req.user!.id, action: 'CREATE', entityType: 'BorrowRequest', entityId: saved.id, details: {requestType: intent.requestType, roomId}});
+        return saved;
       });
 
       res.status(201).json({ message: 'Schedule request submitted successfully', request });

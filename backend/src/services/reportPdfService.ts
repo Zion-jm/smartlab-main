@@ -209,7 +209,7 @@ const renderRows = (rows: RequestSummary[]) =>
     .map((request) => {
       const cells = [
         formatDate(request.dateNeeded),
-        request.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Legacy request',
+        request.requestType === 'EQUIPMENT' ? 'Equipment borrowing' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Request type unavailable',
         (request.requestType === 'EQUIPMENT' ? 'Intended use: ' : request.requestType === 'LABORATORY' ? 'Reserved lab: ' : '') + (request.location || ''),
         request.equipmentList || '',
         request.requesterName,

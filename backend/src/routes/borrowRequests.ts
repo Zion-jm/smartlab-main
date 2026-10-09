@@ -581,8 +581,8 @@ router.patch(
           include: borrowRequestInclude,
         });
 
-        const releasedSchedules = existing.requestType !== 'LEGACY' ? await tx.labSchedule.findMany({ where: { borrowRequestId: id } }) : [];
-        if (existing.requestType !== 'LEGACY') await tx.labSchedule.deleteMany({ where: { borrowRequestId: id } });
+        const releasedSchedules = await tx.labSchedule.findMany({ where: { borrowRequestId: id } });
+        await tx.labSchedule.deleteMany({ where: { borrowRequestId: id } });
         await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'REJECT', entityType: 'BorrowRequest', entityId: id, details: { reason, releasedSchedules: JSON.parse(JSON.stringify(releasedSchedules)) } });
         return request;
       });
