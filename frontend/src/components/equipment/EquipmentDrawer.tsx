@@ -14,14 +14,8 @@ interface EquipmentDrawerProps {
   onSaved?: () => void;
 }
 
-const MAX_TOTAL_QUANTITY = 9999;
+const MAX_TOTAL_QUANTITY = 2147483647;
 
-const clampValue = (value: number, min: number, max?: number) => {
-  if (Number.isNaN(value)) return min;
-  if (value < min) return min;
-  if (typeof max === 'number' && value > max) return max;
-  return value;
-};
 
 export default function EquipmentDrawer({ open, mode, record = null, onClose, onSaved }: EquipmentDrawerProps) {
   const isCreateMode = mode === 'create';
@@ -33,6 +27,8 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
     damagedQuantity: 0,
     status: 'AVAILABLE' as EquipmentStatus,
   });
+  const [adjustmentReason, setAdjustmentReason] = useState('');
+  const stockChanged = !isCreateMode && !!record && (formValues.totalQuantity !== record.totalQuantity || formValues.damagedQuantity !== record.damagedQuantity);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +56,7 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
       });
     }
     setError(null);
+    setAdjustmentReason('');
     }
   }
 
@@ -81,26 +78,18 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
     if (formValues.borrowedQuantity + formValues.damagedQuantity > formValues.totalQuantity) {
       return 'Borrowed + damaged cannot exceed total quantity.';
     }
+    if (formValues.name.trim().replace(/\s+/g, ' ').length > 150) return 'Equipment name must be at most 150 characters.';
+    if (formValues.description.length > 1000) return 'Description must be at most 1000 characters.';
+    if (formValues.totalQuantity > MAX_TOTAL_QUANTITY || formValues.damagedQuantity > MAX_TOTAL_QUANTITY) return 'Quantity exceeds the supported limit.';
+    if (stockChanged && !adjustmentReason.trim()) return 'Explain why the stock quantity is changing.';
+    if (adjustmentReason.length > 500) return 'Stock adjustment reason must be at most 500 characters.';
     return null;
   };
 
   const handleInputChange = (field: keyof typeof formValues, value: string | number) => {
     if (field === 'totalQuantity' || field === 'borrowedQuantity' || field === 'damagedQuantity') {
       const parsedValue = typeof value === 'number' ? value : Number(value);
-      setFormValues((prev) => {
-        if (field === 'totalQuantity') {
-          const safeTotal = clampValue(parsedValue, 0, MAX_TOTAL_QUANTITY);
-          const adjustedDamaged = Math.min(prev.damagedQuantity, Math.max(safeTotal - prev.borrowedQuantity, 0));
-          return { ...prev, totalQuantity: safeTotal, damagedQuantity: adjustedDamaged };
-        }
-        if (field === 'damagedQuantity') {
-          const maxDamage = Math.max(prev.totalQuantity - prev.borrowedQuantity, 0);
-          const safeDamage = clampValue(parsedValue, 0, maxDamage);
-          return { ...prev, damagedQuantity: safeDamage };
-        }
-        const safeNumber = clampValue(parsedValue, 0, prev.totalQuantity || MAX_TOTAL_QUANTITY);
-        return { ...prev, [field]: safeNumber };
-      });
+      setFormValues((prev) => ({ ...prev, [field]: parsedValue }));
       return;
     }
 
@@ -132,7 +121,7 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
       if (mode === 'create') {
         await equipmentApi.create(payload);
       } else if (record) {
-        await equipmentApi.update(record.id, payload);
+        await equipmentApi.update(record.id, { ...payload, expectedUpdatedAt: record.updatedAt, adjustmentReason: stockChanged ? adjustmentReason.trim() : undefined });
       }
       onSaved?.();
       onClose();
@@ -170,6 +159,7 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
             <label className="block text-xs font-semibold text-[#374151] mb-1">Equipment name</label>
             <input
               type="text"
+              maxLength={150}
               value={formValues.name}
               onChange={(event) => handleInputChange('name', event.target.value)}
               required
@@ -180,6 +170,7 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
           <div>
             <label className="block text-xs font-semibold text-[#374151] mb-1">Description (optional)</label>
             <textarea
+              maxLength={1000}
               value={formValues.description}
               onChange={(event) => handleInputChange('description', event.target.value)}
               rows={3}
@@ -248,6 +239,12 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
               />
             </div>
           </div>
+          {stockChanged && <div>
+            <label className="block text-xs font-semibold text-[#374151] mb-1" htmlFor="equipment-adjustment-reason">Stock adjustment reason</label>
+            <textarea id="equipment-adjustment-reason" value={adjustmentReason} onChange={event => setAdjustmentReason(event.target.value)} maxLength={500} required rows={3}
+              placeholder="e.g., Two units damaged during inspection"
+              className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm" />
+          </div>}
           {error && <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
         </form>
         <div className="px-5 py-4 border-t border-[#f3f4f6] flex justify-end gap-2">
