@@ -6,8 +6,8 @@ Applies to add and edit operations. Administrators only. Saves preserve record I
 - Programs and subjects: independently unique code (20 characters) and name (150 characters), both required.
 - Comparisons ignore case and repeated whitespace; display text is trimmed and spaces collapsed. Codes are stored uppercase. Legitimate punctuation and Filipino names are allowed.
 - Rooms: number (20 characters) or name (150 characters) required; both allowed. Building is optional. Room numbers are text. Computer-lab classification must be a boolean, not a string.
-- Assigned rooms: duplicate numbers within the building are blocked. Name-only duplicates are blocked within the building. Different buildings may reuse identifiers.
-- Unassigned rooms: duplicate number/name generates a warning after saving; it does not block saving.
+- Assigned rooms: duplicate numbers within the building are blocked. Duplicate names are also blocked within the building, even when a number is supplied. Different buildings may reuse identifiers.
+- Unassigned rooms: duplicate numbers and names are rejected, including case and spacing variations. Apply migration 20261009010000_room_uniqueness to enforce this in the database.
 - Nonexistent building IDs are rejected. Reclassifying a computer lab is blocked for today/future one-time schedules, recurring schedules in the active year and term, or today/future pending/approved/borrowed room requests. Equipment usage locations do not count as reservations.
 - Editing shows a warning that renaming may affect labels in linked historical reports. There are no delete endpoints in this directory; this update does not introduce deletion or archiving.
 

@@ -152,8 +152,13 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
       }
 
       setSubmitState({ loading: false, error: null });
-      toast.success(`${entityMeta[entity].singular} ${mode === 'create' ? 'added' : 'updated'} successfully.`);
-      for (const warning of savedResponse?.data?.warnings ?? []) toast.warning(warning, { duration: 10000 });
+      const savedMessage = `${entityMeta[entity].singular} ${mode === 'create' ? 'added' : 'updated'} successfully.`;
+      const warnings = (savedResponse?.data?.warnings ?? []).filter((warning: unknown): warning is string => typeof warning === 'string' && warning.trim().length > 0);
+      if (warnings.length) {
+        toast.warning(warnings.join(' '), { title: savedMessage, duration: 10000 });
+      } else {
+        toast.success(savedMessage);
+      }
       onSuccess?.();
     } catch (error) {
       console.error('DirectoryDrawer submission error:', error);

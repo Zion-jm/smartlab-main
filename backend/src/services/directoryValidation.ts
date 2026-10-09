@@ -28,7 +28,7 @@ export async function saveDirectory(db: PrismaClient, entity: DirectoryEntity, b
     data.isComputerLab = body.isComputerLab;
   } else {
     data.name = directoryText(body.name, label + ' name', 150, true);
-    if (entity === 'programs' || entity === 'subjects') data.code = directoryText(body.code, label + ' code', 20, true).toUpperCase();
+    if (entity === 'programs' || entity === 'subjects') data.code = directoryText(directoryText(body.code, label + ' code', 20, true).toUpperCase(), label + ' code', 20, true);
   }
   try {
     return await inventoryTransaction(db, async tx => {
@@ -39,11 +39,12 @@ export async function saveDirectory(db: PrismaClient, entity: DirectoryEntity, b
       const warnings: string[] = [];
       if (entity === 'rooms') {
         if (data.buildingId && !await tx.building.findUnique({where:{id:String(data.buildingId)}})) throw new RequestActionError(400, 'Selected building does not exist.');
-        const field = data.roomNumber ? 'roomNumber' : 'name';
         const scope = data.buildingId ? Prisma.sql`"buildingId" = ${data.buildingId}` : Prisma.sql`"buildingId" IS NULL`;
-        const matches = await duplicates(tx, entity, field, String(data[field]), id, scope);
-        if (matches.length && data.buildingId) throw new RequestActionError(409, 'This room ' + (field === 'name' ? 'name' : 'number') + ' already exists in the selected building.');
-        if (matches.length) warnings.push('Another unassigned room has this number or name. Please verify these are different locations.');
+        for (const field of ['roomNumber', 'name']) {
+          if (!data[field]) continue;
+          const matches = await duplicates(tx, entity, field, String(data[field]), id, scope);
+          if (matches.length) throw new RequestActionError(409, 'This room ' + (field === 'name' ? 'name' : 'number') + ' already exists ' + (data.buildingId ? 'in the selected building.' : 'among rooms without a building.'));
+        }
         if (before?.isComputerLab && !data.isComputerLab) {
           const today = manilaDayBounds(new Date()).start;
           const schedules = await tx.labSchedule.count({where:{roomId:id,OR:[{scheduleType:'ONE_TIME',scheduleDate:{gte:today}},{scheduleType:'WEEKLY',academicYear:{isActive:true},term:{isActive:true}}]}});
@@ -66,7 +67,7 @@ export async function saveDirectory(db: PrismaClient, entity: DirectoryEntity, b
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       const target = JSON.stringify(error.meta?.target ?? '');
       const field = /code/i.test(target) ? 'code' : /name/i.test(target) ? 'name' : entity === 'rooms' ? 'number or name' : 'code or name';
-      throw new RequestActionError(409, 'This ' + label.toLowerCase() + ' ' + field + ' already exists' + (entity === 'rooms' ? ' in the selected building.' : '.'));
+      throw new RequestActionError(409, 'This ' + label.toLowerCase() + ' ' + field + ' already exists' + (entity === 'rooms' ? (data.buildingId ? ' in the selected building.' : ' among rooms without a building.') : '.'));
     }
     throw error;
   }

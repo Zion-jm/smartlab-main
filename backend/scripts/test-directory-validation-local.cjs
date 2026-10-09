@@ -36,6 +36,16 @@ async function main() {
       await assert.rejects(save(kind,{name:'  '+kind.toUpperCase()+'   NAME ',code:'OTHER'}),{statusCode:409});
       await assert.rejects(save(kind,{name:'  ',code:'OTHER'}),{statusCode:400});
       if(['programs','subjects'].includes(kind))await assert.rejects(save(kind,{name:'Different',code:' code '}),{statusCode:409});
+      const second=await save(kind,{name:kind+' second',code:'SECOND'});
+      await assert.rejects(save(kind,{name:kind+' NAME',code:'SECOND'},second.id),{statusCode:409});
+      const model={buildings:db.building,departments:db.department,programs:db.program,subjects:db.subject}[kind];
+      const coded=['programs','subjects'].includes(kind);
+      await assert.rejects(model.create({data:{name:kind.toUpperCase()+'  NAME',...(coded?{code:'DIRECT'}:{})}}),{code:'P2002'});
+      if(coded){
+        await assert.rejects(save(kind,{name:kind+' second',code:'CODE'},second.id),{statusCode:409});
+        await assert.rejects(model.create({data:{name:kind+' direct',code:' code '}}),{code:'P2002'});
+      }
+      assert.equal((await model.findUnique({where:{id:second.id}})).name,kind+' second');
       const race=await Promise.allSettled([0,1].map(i=>save(kind,{name:kind+' race',code:'RACE'+i})));
       assert.equal(race.filter(r=>r.status==='fulfilled').length,1);
     }
@@ -47,7 +57,14 @@ async function main() {
     await save('rooms',{roomName:'Science Lab',buildingId:b1.id,isComputerLab:false});
     await assert.rejects(save('rooms',{roomName:' science  LAB ',buildingId:b1.id,isComputerLab:false}),{statusCode:409});
     await save('rooms',{...roomData,buildingId:null});
-    assert.equal((await save('rooms',{...roomData,buildingId:null})).warnings.length,1);
+    await assert.rejects(save('rooms',{...roomData,buildingId:null}),{statusCode:409});
+    const unassigned=await save('rooms',{roomName:'Unassigned Lab',isComputerLab:false});
+    await save('rooms',{roomName:'Unassigned Lab',isComputerLab:false},unassigned.id);
+    await assert.rejects(save('rooms',{roomName:' unassigned  LAB ',roomNumber:'NEW',isComputerLab:false}),{statusCode:409});
+    await assert.rejects(db.room.create({data:{name:'UNASSIGNED LAB',isComputerLab:false}}),{code:'P2002'});
+    await assert.rejects(save('rooms',{roomName:'Science Lab',roomNumber:'NEW',buildingId:b1.id,isComputerLab:false}),{statusCode:409});
+    const roomRace=await Promise.allSettled([0,1].map(()=>save('rooms',{roomNumber:'RACE',isComputerLab:false})));
+    assert.equal(roomRace.filter(result=>result.status==='fulfilled').length,1);
     await assert.rejects(save('rooms',{isComputerLab:false}),{statusCode:400});
     await assert.rejects(save('rooms',{...roomData,isComputerLab:'false'}),{statusCode:400});
     await assert.rejects(save('rooms',{...roomData,buildingId:'missing'}),{statusCode:400});
@@ -59,7 +76,7 @@ async function main() {
     assert.equal((await db.room.findUnique({where:{id:lab.id}})).isComputerLab,true);
     const audit=await db.auditLog.findFirst({where:{entityId:room.id,action:'UPDATE'}});
     assert(audit.details.before && audit.details.after);
-    console.log('PASS: all directory entities, duplicates, edits, lengths, data types, room combinations, optional buildings, warning-only duplicates, active lab protection, concurrent writes and audits.');
+    console.log('PASS: all directory entities, duplicates, edits, lengths, data types, room combinations, optional buildings, blocked unassigned duplicates, active lab protection, concurrent writes and audits.');
   } finally {
     await db.$executeRawUnsafe('DROP SCHEMA IF EXISTS "'+schema+'" CASCADE');
     await db.$disconnect();
