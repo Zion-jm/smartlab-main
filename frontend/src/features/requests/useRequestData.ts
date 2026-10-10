@@ -1,3 +1,4 @@
+import { studentAcademicApi } from '../../services/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { normalizeSchedule } from '../../components/lab-schedule/normalizeSchedule';
 import { borrowRequestApi, equipmentApi, labScheduleApi } from '../../services/api';
@@ -170,7 +171,7 @@ export const useRequestResources = (): ResourceHookState => {
         terms?: RawResource[];
       };
 
-      return Promise.all([labScheduleApi.getResources(), equipmentApi.getAll()]).then(([resourcesRes, equipmentRes]) => {
+      return Promise.all([labScheduleApi.getResources(), equipmentApi.getAll(), user?.role === 'STUDENT' ? studentAcademicApi.me() : Promise.resolve(null)]).then(([resourcesRes, equipmentRes, academicRes]) => {
       const rawData: RawResponse = resourcesRes.data ?? {};
       const equipmentList = Array.isArray(equipmentRes.data) ? (equipmentRes.data as EquipmentItem[]) : [];
 
@@ -222,6 +223,7 @@ export const useRequestResources = (): ResourceHookState => {
         }));
 
       setResources({
+        studentAcademic: academicRes?.data,
         rooms: roomOptions,
         programs: mapOptions(rawData.programs, (item) => item.name || item.code || ''),
         subjects: mapOptions(rawData.subjects, (item) => item.name || item.code || ''),
@@ -238,7 +240,7 @@ export const useRequestResources = (): ResourceHookState => {
     }).finally(() => {
       setLoading(false);
     });
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   // Automatic loads reset pending state when their query changes; refreshes reset it in the event.
   const loadResourcesInputs = [user?.id];

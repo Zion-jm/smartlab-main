@@ -1,3 +1,4 @@
+import studentAcademicRecordRoutes from './routes/studentAcademicRecords';
 import './config/loadEnvironment';
 import { startEmailWorker, stopEmailWorker } from './services/email/outbox';
 import { createShutdown } from './services/shutdown';
@@ -72,6 +73,7 @@ app.use('/api/equipment-adjustments', equipmentAdjustmentsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/academic-period', academicPeriodRoutes);
+app.use('/api/student-academic-records', studentAcademicRecordRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 
 // Unknown API paths must never fall through to React.

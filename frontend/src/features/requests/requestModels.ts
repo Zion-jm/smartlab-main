@@ -28,6 +28,7 @@ export type FacultySelectOption = SelectOption & {
 };
 
 export type RequestResources = {
+  studentAcademic?: { managed: boolean; record: { programId: string; yearLevel: number | null; status: string } | null };
   rooms: SelectOption[];
   programs: SelectOption[];
   subjects: SelectOption[];

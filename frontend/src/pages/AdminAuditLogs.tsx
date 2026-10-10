@@ -41,6 +41,7 @@ const ENTITY_OPTIONS = [
   ['BorrowRequest', 'Borrow request'],
   ['AcademicDirectory', 'Academic directory'],
   ['AcademicPeriod', 'Academic period'],
+  ['StudentAcademicRecord', 'Student academic record'],
 ] as const;
 
 const formatDateTime = (value: string) => {

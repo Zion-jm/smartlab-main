@@ -31,6 +31,7 @@ const ENTITY_LABELS: Record<string, string> = {
   BorrowRequest: 'Borrow request',
   AcademicDirectory: 'Academic directory',
   AcademicPeriod: 'Academic period',
+  StudentAcademicRecord: 'Student academic record',
 };
 
 const toPositiveInt = (value: unknown, fallback: number, max: number): number => {

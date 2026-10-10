@@ -1,3 +1,4 @@
+import StudentAcademicRecords from '../components/admin/StudentAcademicRecords';
 import { dateToDateKey } from '../utils/dateTime';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Archive, CalendarRange, CheckCircle2, Clock3, History, RefreshCw, ShieldCheck } from 'lucide-react';
@@ -467,6 +468,7 @@ export default function AdminAcademicPeriod() {
           </div>
         </section>
       </div>
+      <div className="mx-auto mb-5 px-4"><StudentAcademicRecords years={data?.academicYears ?? []} /></div>
       <ConfirmationModal
         isOpen={pendingActivation !== null}
         title="Activate academic period?"

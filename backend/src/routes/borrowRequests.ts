@@ -1,3 +1,4 @@
+import { studentStanding } from '../services/studentStanding';
 import { resolveRequestIntent } from '../services/requestTypePolicy';
 import { prisma } from '../db/prisma';
 import { pagination, pageHeaders } from '../utils/pagination';
@@ -249,21 +250,9 @@ router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FA
     let requestProgramId = programId;
     let requestYearLevel = yearLevel;
     if (req.user!.role === UserRole.STUDENT) {
-      const studentProfile = await prisma.studentProfile.findUnique({
-        where: { userId: req.user!.id },
-        select: {
-          programId: true,
-          yearLevel: true,
-        },
-      });
-
-      if (!studentProfile?.programId || studentProfile.yearLevel == null) {
-        res.status(400).json({ error: 'Your student program and year level are not configured.' });
-        return;
-      }
-
-      requestProgramId = studentProfile.programId;
-      requestYearLevel = studentProfile.yearLevel;
+      const standing = await studentStanding(prisma, req.user!.id, resolvedAcademicYearId);
+      requestProgramId = standing.programId;
+      requestYearLevel = standing.yearLevel;
     }
 
     const requestData: any = {
@@ -289,6 +278,7 @@ router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FA
     }
 
     const request = await inventoryTransaction(prisma, async tx => {
+    if (req.user!.role === UserRole.STUDENT) Object.assign(requestData, await studentStanding(tx, req.user!.id, resolvedAcademicYearId));
     const saved = await tx.borrowRequest.create({
       data: requestData,
       include: borrowRequestInclude,
@@ -333,7 +323,7 @@ router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.
     const {
       facultyId, programId, subjectId, yearLevel,
       dateNeeded, timeStart, timeEnd,
-      purpose, contactDetails, notes, academicYearId, termId, items: rawItems,
+      purpose, contactDetails, notes, items: rawItems,
     } = req.body;
 
     const existingRequest = await prisma.borrowRequest.findUnique({
@@ -358,13 +348,9 @@ router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.
 
     const items = validateRequestItems(rawItems);
     const intent = await resolveRequestIntent(prisma, req.body, req.user!.role, items);
-    const periodSelection = await resolveAcademicPeriodSelection(
-      prisma,
-      { academicYearId, termId },
-      req.user!.role
-    );
-    const resolvedAcademicYearId = periodSelection.academicYearId;
-    const resolvedTermId = periodSelection.termId;
+    const periodSelection = { academicYearId: existingRequest.academicYearId, termId: existingRequest.termId };
+    const resolvedAcademicYearId = existingRequest.academicYearId;
+    const resolvedTermId = existingRequest.termId;
 
     if (!dateNeeded || !timeStart || !timeEnd || !purpose || !programId || !subjectId || !resolvedAcademicYearId || !resolvedTermId) {
       res.status(400).json({ error: 'Complete all required request fields before saving' });
@@ -399,22 +385,9 @@ router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.
       }
     }
 
-    let requestProgramId = programId;
-    let requestYearLevel = yearLevel;
-    if (req.user!.role === UserRole.STUDENT) {
-      const studentProfile = await prisma.studentProfile.findUnique({
-        where: { userId: req.user!.id },
-        select: { programId: true, yearLevel: true },
-      });
-
-      if (!studentProfile?.programId || studentProfile.yearLevel == null) {
-        res.status(400).json({ error: 'Your student program and year level are not configured.' });
-        return;
-      }
-
-      requestProgramId = studentProfile.programId;
-      requestYearLevel = studentProfile.yearLevel;
-    }
+    // Editing a request must not replace its saved academic standing with today's profile.
+    const requestProgramId = req.user!.role === UserRole.STUDENT ? existingRequest.programId : programId;
+    const requestYearLevel = req.user!.role === UserRole.STUDENT ? existingRequest.yearLevel : yearLevel;
 
     const updatedRequest = await inventoryTransaction(prisma, async tx => {
     const saved = await tx.borrowRequest.update({

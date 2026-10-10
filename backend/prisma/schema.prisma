@@ -62,6 +62,7 @@ enum NotificationType {
 // ====================================================
 
 model AcademicYear {
+  studentAcademicRecords StudentAcademicRecord[]
   id          String   @id @default(cuid())
   year        String   @unique // "2024-2025"
   isActive    Boolean  @default(false)
@@ -126,6 +127,7 @@ model Room {
 }
 
 model Program {
+  studentAcademicRecords StudentAcademicRecord[]
   id          String   @id @default(cuid())
   code        String   @unique // "BSIT"
   name        String
@@ -171,6 +173,7 @@ model Department {
 // ====================================================
 
 model User {
+  studentAcademicRecords StudentAcademicRecord[]
   passwordResets PasswordReset[]
   reactivationRequests ReactivationRequest[]
   id           String     @id @default(cuid())
@@ -517,4 +520,31 @@ model PasswordReset {
  expiresAt DateTime
  usedAt DateTime?
  @@index([userId, createdAt])
+}
+
+// Academic standing is saved per year, independently of account access.
+enum StudentAcademicStatus {
+  ENROLLED
+  CONTINUING
+  GRADUATED
+  WITHDRAWN
+}
+
+model StudentAcademicRecord {
+  id String @id @default(cuid())
+  studentId String
+  student User @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  academicYearId String
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  programId String
+  program Program @relation(fields: [programId], references: [id], onDelete: Restrict)
+  programCode String
+  programName String
+  yearLevel Int?
+  status StudentAcademicStatus
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([studentId, academicYearId])
+  @@index([academicYearId, status])
+  @@map("student_academic_records")
 }

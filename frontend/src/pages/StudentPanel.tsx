@@ -414,8 +414,11 @@ function RequestFormScaffold({
   onCancel?: () => void;
 }) {
   const selfFacultyProfileId = resources?.selfFacultyProfileId ?? null;
-  const studentProgramId = student?.programId ?? '';
-  const studentYearLevel = student?.yearLevel != null ? String(student.yearLevel) : '';
+  const academic = resources?.studentAcademic;
+  const studentProgramId = academic?.managed ? academic.record?.programId ?? '' : student?.programId ?? '';
+  const recordedLevel = academic?.managed ? academic.record?.yearLevel : student?.yearLevel;
+  const studentYearLevel = recordedLevel != null ? String(recordedLevel) : '';
+  const standingError = !editingRequest && academic?.managed && (!academic.record || !['ENROLLED', 'CONTINUING'].includes(academic.record.status)) ? 'Your enrollment for this academic year needs administrator review before you can submit a new request.' : null;
 
   const useLabRoom = false;
 
@@ -592,7 +595,7 @@ function RequestFormScaffold({
     });
   };
 
-  const submitDisabled = submitting || loading || !academicContext || conflictBlocked || Boolean(timeRangeError);
+  const submitDisabled = Boolean(standingError) || submitting || loading || !academicContext || conflictBlocked || Boolean(timeRangeError);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -910,7 +913,7 @@ function RequestFormScaffold({
         <div>
           <p className="text-sm font-semibold text-[#111827]">Request summary</p>
           <p role="status" className="mt-1 text-xs font-semibold text-[#b91c1c]">
-            {conflictBlocked ? 'Room unavailable: choose another time or room.' : timeRangeError || (!academicContext ? 'Academic period is unavailable. Refresh before submitting.' : loading ? 'Loading request options…' : submitting ? 'Submitting request…' : '')}
+            {standingError || (conflictBlocked ? 'Room unavailable: choose another time or room.' : timeRangeError || (!academicContext ? 'Academic period is unavailable. Refresh before submitting.' : loading ? 'Loading request options…' : submitting ? 'Submitting request…' : ''))}
           </p>
           <div className="text-xs text-[#6b7280] space-y-1">
             <p>
