@@ -394,7 +394,6 @@ export default function ManageAccounts() {
           refreshError={Boolean(accountsError)}
           className="mb-1"
         />
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
         <section aria-label="Account totals" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {[
             {label:'Active students',value:stats?.activeStudents,detail:'Can access the student portal',role:'STUDENT' as RoleFilter,status:'ACTIVE' as StatusFilter},
