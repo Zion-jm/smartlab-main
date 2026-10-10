@@ -335,6 +335,11 @@ export default function AdminEquipment() {
         subtext: `${stats.overdue?.requests ?? 0} overdue returns`,
       },
       {
+        title: 'Archived',
+        value: stats.inventory?.archivedQuantity ?? 0,
+        subtext: 'Stored units unavailable for borrowing',
+      },
+      {
         title: 'Utilization',
         value: `${stats.inventory?.utilizationRate ?? 0}%`,
         subtext: `${stats.upcoming?.requests ?? 0} upcoming reservations`,
@@ -342,7 +347,7 @@ export default function AdminEquipment() {
     ];
 
     return (
-      <div className="equipment-summary grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="equipment-summary grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         {cards.map((card) => (
           <CompactStatCard
             key={card.title}

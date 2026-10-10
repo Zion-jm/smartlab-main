@@ -95,6 +95,9 @@ describe('Manila API date boundaries on local smartlab_test',()=>{
       result=await apiRequest('GET',endpoint,null,token);
       expect(result.data.inventory.availableQuantity).toBe(before.inventory.availableQuantity);
       expect(result.data.inventory.totalQuantity).toBe(before.inventory.totalQuantity+6);
+      expect(result.data.inventory.archivedQuantity).toBe(before.inventory.archivedQuantity+6);
+      const inventory=result.data.inventory;
+      expect(inventory.availableQuantity+inventory.borrowedQuantity+inventory.damagedQuantity+inventory.archivedQuantity).toBe(inventory.totalQuantity);
     } finally {
       await db.borrowRequest.deleteMany({where:{id:{in:ids}}});
       await db.equipment.delete({where:{id:extra.id}});

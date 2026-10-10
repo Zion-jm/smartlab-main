@@ -22,6 +22,7 @@ export interface EquipmentStats {
     availableQuantity: number;
     borrowedQuantity: number;
     damagedQuantity: number;
+    archivedQuantity: number;
     lowStockCount: number;
     utilizationRate: number;
   };
