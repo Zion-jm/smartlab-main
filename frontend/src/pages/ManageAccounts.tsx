@@ -373,20 +373,6 @@ export default function ManageAccounts() {
   return (
     <AdminLayout>
       <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
-        <section aria-label="Account totals" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          {[
-            {label:'Active students',value:stats?.activeStudents,detail:'Can access the student portal',role:'STUDENT' as RoleFilter,status:'ACTIVE' as StatusFilter},
-            {label:'Active faculty',value:stats?.activeFaculty,detail:'Can access the faculty portal',role:'FACULTY' as RoleFilter,status:'ACTIVE' as StatusFilter},
-            {label:'Administrators',value:stats?.administrators,detail:'Active administrator accounts',role:'ADMIN' as RoleFilter,status:'ACTIVE' as StatusFilter},
-            {label:'Archived accounts',value:stats?.archivedAccounts,detail:stats?`${stats.archivedBreakdown.students} students · ${stats.archivedBreakdown.faculty} faculty`: 'Preserved historical accounts',role:'all' as RoleFilter,status:'DEACTIVATED' as StatusFilter},
-            {label:'Pending reactivation',value:stats?.pendingReactivation,detail:'Archived users awaiting review',role:'all' as RoleFilter,status:'DEACTIVATED' as StatusFilter},
-          ].map(card => {
-            const active=roleFilter===card.role&&statusFilter===card.status&&!search.trim();
-            return <button key={card.label} type="button" onClick={()=>{setSearch('');setRoleFilter(card.role);setStatusFilter(card.status);}} aria-pressed={active} className={`rounded-2xl border p-4 text-left shadow-sm transition ${active?'border-[#800000] bg-[#fff5f2] ring-2 ring-[#800000]/10':'border-[#ead7d3] bg-white hover:border-[#c98f83]'}`}>
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-[#786565]">{card.label}</span><strong className="mt-1 block text-2xl text-[#321d1d]">{card.value ?? '—'}</strong><span className={`mt-1 block text-xs ${card.label==='Pending reactivation'&&(card.value??0)>0?'font-semibold text-amber-700':'text-[#786565]'}`}>{card.detail}</span>
-            </button>;
-          })}
-        </section>
         <FilterToolbar
           searchValue={search}
           onSearchChange={setSearch}
@@ -408,6 +394,22 @@ export default function ManageAccounts() {
           refreshError={Boolean(accountsError)}
           className="mb-1"
         />
+        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+        <section aria-label="Account totals" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {[
+            {label:'Active students',value:stats?.activeStudents,detail:'Can access the student portal',role:'STUDENT' as RoleFilter,status:'ACTIVE' as StatusFilter},
+            {label:'Active faculty',value:stats?.activeFaculty,detail:'Can access the faculty portal',role:'FACULTY' as RoleFilter,status:'ACTIVE' as StatusFilter},
+            {label:'Administrators',value:stats?.administrators,detail:'Active administrator accounts',role:'ADMIN' as RoleFilter,status:'ACTIVE' as StatusFilter},
+            {label:'Archived accounts',value:stats?.archivedAccounts,detail:stats?`${stats.archivedBreakdown.students} students · ${stats.archivedBreakdown.faculty} faculty`: 'Preserved historical accounts',role:'all' as RoleFilter,status:'DEACTIVATED' as StatusFilter},
+            {label:'Pending reactivation',value:stats?.pendingReactivation,detail:'Archived users awaiting review',role:'all' as RoleFilter,status:'DEACTIVATED' as StatusFilter},
+          ].map(card => {
+            const active=roleFilter===card.role&&statusFilter===card.status&&!search.trim();
+            return <button key={card.label} type="button" onClick={()=>{setSearch('');setRoleFilter(card.role);setStatusFilter(card.status);}} aria-pressed={active} className={`rounded-2xl border p-4 text-left shadow-sm transition ${active?'border-[#800000] bg-[#fff5f2] ring-2 ring-[#800000]/10':'border-[#ead7d3] bg-white hover:border-[#c98f83]'}`}>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-[#786565]">{card.label}</span><strong className="mt-1 block text-2xl text-[#321d1d]">{card.value ?? '—'}</strong><span className={`mt-1 block text-xs ${card.label==='Pending reactivation'&&(card.value??0)>0?'font-semibold text-amber-700':'text-[#786565]'}`}>{card.detail}</span>
+            </button>;
+          })}
+        </section>
+        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
         <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <div className="px-4 py-5 lg:px-6">
             <div className="overflow-x-auto lg:overflow-x-visible overflow-y-visible">
