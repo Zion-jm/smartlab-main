@@ -1,3 +1,4 @@
+import { previewAcademicBatch, commitAcademicBatch } from '../services/studentAcademicBatch';
 import { Router } from 'express';
 import { Prisma, StudentAcademicStatus, UserRole } from '@prisma/client';
 import { prisma } from '../db/prisma';
@@ -19,6 +20,14 @@ router.get('/me', authorizeRoles(UserRole.STUDENT), async (req, res) => {
   } catch (error) { sendError(error, res); }
 });
 router.use(authorizeRoles(UserRole.ADMIN));
+router.post('/batch/preview', async (req, res) => {
+  try { res.json(await prisma.$transaction(tx => previewAcademicBatch(tx, req.body), { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })); }
+  catch (error) { sendError(error, res); }
+});
+router.post('/batch/commit', async (req, res) => {
+  try { res.json(await prisma.$transaction(tx => commitAcademicBatch(tx, req.body, req.user!.id), { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 30000 })); }
+  catch (error) { sendError(error, res); }
+});
 router.get('/', async (req, res) => {
   try {
     const academicYearId = String(req.query.academicYearId ?? '');

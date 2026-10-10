@@ -1,3 +1,4 @@
+import StudentAcademicBatch from './StudentAcademicBatch';
 import { useRef, useState } from 'react';
 import { studentAcademicApi } from '../../services/api';
 import ConfirmationModal from '../shared/ConfirmationModal';
@@ -66,6 +67,7 @@ export default function StudentAcademicRecords({ years }: { years: { id: string;
       </div>; })}</div>
       <div className="mt-3 flex items-center gap-3 text-xs"><button type="button" disabled={results.page <= 1 || loading || saving || confirm} className="min-h-11 rounded-lg border px-3 disabled:opacity-40" onClick={() => void load(results.page - 1)}>Previous</button><span>Page {results.page} of {Math.max(1, Math.ceil(results.total / results.pageSize))}</span><button type="button" disabled={results.page * results.pageSize >= results.total || loading || saving || confirm} className="min-h-11 rounded-lg border px-3 disabled:opacity-40" onClick={() => void load(results.page + 1)}>Next</button></div>
     </>}
+    {results && !loading && !selected && <StudentAcademicBatch key={`${yearId}-${search}-${results.page}`} yearId={yearId} years={years} studentIds={results.students.map(student => student.id)} programs={results.programs} onSaved={() => { void load(results.page).then(() => setSuccess('Batch saved. Existing records and account access were not changed.')); }} />}
     {selected && <form className="mt-5 rounded-xl border border-[#ead7d3] bg-[#faf7f5] p-4" onSubmit={e => { e.preventDefault(); setConfirm(true); }}>
       <h3 className="font-semibold">{selected.firstName} {selected.lastName} · {year?.year}</h3>
       <p className="mt-1 text-xs text-[#786565]">Confirm that these details belong to this year. Adding the first record enables year-specific enrollment checks for future requests; missing years will require administrator review.</p>

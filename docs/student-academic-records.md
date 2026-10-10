@@ -5,7 +5,7 @@ Admin > Academic Period now includes Student academic records. Select a year, lo
 
 One record is stored per student account and academic year. Records link to the account rather than its disposable role profile so a later role change does not erase academic history. Program code/name are saved on the academic record. Year levels remain 1–4; graduation is a status, not Year 5.
 
-Selecting a historical year or changing the active period never increments, decrements, promotes or archives accounts. Batch promotion and automatic account archival are not included.
+Selecting a historical year or changing the active period never increments, decrements, promotes or archives accounts. Reviewed batch promotion is available; automatic account archival is not included.
 
 ## Deployment
 Apply the new migration to the intended database before starting the updated backend:
@@ -29,3 +29,14 @@ This feature does not reconstruct unknown historical enrollment or snapshot ever
 
 ## Verification
 The regression suite covers profile fallback, independent yearly records, uniqueness/stale edits, permissions, validation, graduation, saved program names and historical request edits. Browser verification covers explicit confirmation and year switching at desktop and phone widths.
+
+## Bulk setup and reviewed promotion
+Load the destination year and students. The bulk section operates on the currently loaded page (up to 25 students); search and pagination let the administrator handle larger groups in manageable batches.
+
+Choose Set up from current profiles for initial enrollment, or Promote from previous year for consecutive academic years. Preview is read-only. Existing destination records and inactive/non-student accounts are protected. Missing or non-enrolled source standings need individual review. Promotion never guesses across skipped years.
+
+Review every selected row. Change program, status or year level for exceptions, or deselect a student. Year 4 graduation proposals start unchecked and require explicit selection; repeaters can remain Year 4 / Continuing. Graduation does not archive accounts.
+
+Enter a batch reason, review the count, and confirm. All selected records and audit entries commit in one transaction. A changed source, newly created destination, invalid row, or concurrent conflict rejects the entire batch. Reload the preview before retrying. Repeating a successful batch cannot overwrite its records. Audit entries include a common batch ID and reason.
+
+No additional database migration is required for bulk operations. Active period, account access, current profiles and historical requests are not rewritten.

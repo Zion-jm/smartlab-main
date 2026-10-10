@@ -56,3 +56,45 @@ test('invalid levels and stale updates cannot overwrite history',async()=>{
  expect((await save(years[0].id,{yearLevel:null})).status).toBe(400);
  expect((await save(years[0].id,{expectedUpdatedAt:'2000-01-01T00:00:00Z',yearLevel:4})).status).toBe(409);
 });
+test('bulk setup and promotion preview, exceptions, protection and rollback',async()=>{
+ const {previewAcademicBatch,commitAcademicBatch}=require('../dist/services/studentAcademicBatch');
+ const batchYears=await Promise.all(['2090-2091','2091-2092','2092-2093'].map(year=>db.academicYear.create({data:{year}})));
+ const second=await db.user.create({data:{email:tag+'-batch@test.local',firstName:'Batch',lastName:'Student',role:'STUDENT',passwordHash:'unused',studentProfile:{create:{programId:program.id,yearLevel:4}}}});
+ try {
+  const setup={mode:'SETUP',academicYearId:batchYears[0].id,studentIds:[student.id,second.id]};
+  const preview=await previewAcademicBatch(db,setup);expect(preview.rows).toHaveLength(2);expect(await db.studentAcademicRecord.count({where:{academicYearId:batchYears[0].id}})).toBe(0);
+  const rows=preview.rows.map(row=>({...row,status:'ENROLLED',yearLevel:row.studentId===student.id?3:4}));
+  await db.$transaction(tx=>commitAcademicBatch(tx,{...setup,rows,reason:'Reviewed setup'},admin.id));
+  await expect(db.$transaction(tx=>commitAcademicBatch(tx,{...setup,rows,reason:'Duplicate'},admin.id))).rejects.toThrow(/already exists/);
+  const promotion={mode:'PROMOTE',academicYearId:batchYears[1].id,sourceYearId:batchYears[0].id,studentIds:[student.id,second.id]};
+  const next=await previewAcademicBatch(db,promotion);
+  expect(next.rows.find(row=>row.studentId===student.id).yearLevel).toBe(4);
+  expect(next.rows.find(row=>row.studentId===second.id)).toMatchObject({status:'GRADUATED',yearLevel:null,requiresGraduationReview:true});
+  const invalid=next.rows.map(row=>({...row,status:'CONTINUING',yearLevel:row.studentId===second.id?0:4}));
+  await expect(db.$transaction(tx=>commitAcademicBatch(tx,{...promotion,rows:invalid,reason:'Invalid'},admin.id))).rejects.toThrow(/year level/);
+  expect(await db.studentAcademicRecord.count({where:{academicYearId:batchYears[1].id}})).toBe(0);
+  await db.studentAcademicRecord.update({where:{studentId_academicYearId:{studentId:student.id,academicYearId:batchYears[0].id}},data:{yearLevel:2}});
+  await expect(db.$transaction(tx=>commitAcademicBatch(tx,{...promotion,rows:next.rows,reason:'Stale'},admin.id))).rejects.toThrow(/changed/);
+  const refreshed=await previewAcademicBatch(db,promotion);
+  await db.$transaction(tx=>commitAcademicBatch(tx,{...promotion,rows:refreshed.rows.map(row=>({...row,status:'CONTINUING',yearLevel:row.studentId===second.id?4:3})),reason:'Repeating student reviewed'},admin.id));
+  expect((await db.studentAcademicRecord.findUnique({where:{studentId_academicYearId:{studentId:second.id,academicYearId:batchYears[1].id}}})).yearLevel).toBe(4);
+  expect((await db.user.findUnique({where:{id:second.id}})).status).toBe('ACTIVE');
+  await expect(previewAcademicBatch(db,{...promotion,academicYearId:batchYears[2].id})).rejects.toThrow(/consecutive/);
+  const concurrentInput={mode:'PROMOTE',academicYearId:batchYears[2].id,sourceYearId:batchYears[1].id,studentIds:[student.id]};
+  mockActor=admin;
+  const apiPreview=await fetch(base+'/academic/batch/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(concurrentInput)});
+  expect(apiPreview.status).toBe(200);const concurrentPreview=await apiPreview.json();
+  const payload={...concurrentInput,rows:concurrentPreview.rows,reason:'Concurrent confirmation'};
+  const commits=await Promise.all([1,2].map(()=>fetch(base+'/academic/batch/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})));
+  expect(commits.map(response=>response.status).sort()).toEqual([200,409]);
+  expect(await db.studentAcademicRecord.count({where:{academicYearId:batchYears[2].id}})).toBe(1);
+  expect((await db.borrowRequest.findUnique({where:{id:request.id}})).yearLevel).toBe(3);
+  const audit=await db.auditLog.findMany({where:{actorUserId:admin.id,entityType:'StudentAcademicRecord'}});
+  expect(audit.some(log=>log.details?.reason==='Concurrent confirmation'&&log.details?.batchId)).toBe(true);
+  mockActor=student;
+  expect((await fetch(base+'/academic/batch/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(setup)})).status).toBe(403);
+  expect((await fetch(base+'/academic/batch/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...setup,rows,reason:'Unauthorized'})})).status).toBe(403);
+ } finally {
+  await db.studentAcademicRecord.deleteMany({where:{academicYearId:{in:batchYears.map(year=>year.id)}}});await db.user.delete({where:{id:second.id}});await db.academicYear.deleteMany({where:{id:{in:batchYears.map(year=>year.id)}}});
+ }
+});
