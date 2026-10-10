@@ -275,7 +275,7 @@ export default function StudentPanel() {
         title="Cancel this request?"
         message={
           requestToCancel
-            ? `${requestToCancel.reference} is still pending. Cancelling it means it will no longer be reviewed for approval.`
+            ? `${requestToCancel.reference} will be cancelled. Any approved room or equipment reservations will be released. This cannot be undone.`
             : ''
         }
         confirmLabel="Yes, cancel request"

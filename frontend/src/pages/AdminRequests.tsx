@@ -565,11 +565,11 @@ export default function AdminRequests() {
         borrow: 'borrowed',
         return: 'returned',
         reject: 'rejected',
-        cancel: 'cancelled & stock restored',
+        cancel: request.status === 'BORROWED' ? 'cancelled & stock restored' : 'cancelled',
       };
       toast.success(`Request ${actionLabels[action]} successfully.`);
       await fetchRequests();
-      if (action === 'approve' || action === 'reject') {
+      if (action === 'approve' || action === 'reject' || action === 'cancel') {
         setSelectedRequest(null);
       } else if (selectedRequest) {
         const updated = requests.find((item) => item.id === selectedRequest.id);

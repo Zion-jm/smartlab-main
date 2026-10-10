@@ -94,7 +94,7 @@ export function MyRequestsPreview({
             </div>
             <footer className="flex items-center justify-between gap-2 border-t border-[#f1e6e3] px-3 py-2">
               <button type="button" onClick={() => setSelected(request)} className="min-h-11 rounded-lg px-2 text-sm font-semibold text-[#800000]">View details</button>
-              {request.status === 'PENDING' && <div className="flex gap-2"><IconActionButton label={'Edit ' + request.reference} onClick={() => onEdit(request.source)} icon="edit" variant="warning" /><IconActionButton label={'Cancel ' + request.reference} onClick={() => { if (cancellingRequestId === null) void onCancelRequest(request); }} icon="cancel" variant="danger" disabled={cancellingRequestId !== null} busy={cancellingRequestId === request.id} /></div>}
+              {(request.status === 'PENDING' || request.status === 'APPROVED') && <div className="flex gap-2">{request.status === 'PENDING' && <IconActionButton label={'Edit ' + request.reference} onClick={() => onEdit(request.source)} icon="edit" variant="warning" />}<IconActionButton label={'Cancel ' + request.reference} onClick={() => { if (cancellingRequestId === null) void onCancelRequest(request); }} icon="cancel" variant="danger" disabled={cancellingRequestId !== null} busy={cancellingRequestId === request.id} /></div>}
             </footer>
           </article>;
         })}
@@ -122,14 +122,14 @@ export function MyRequestsPreview({
 { id: '5', header: 'Actions', action: true, cell: request => <>
                     <div className="flex justify-end items-center gap-2">
                       <IconActionButton label={`View details for ${request.reference}`} icon="view" onClick={() => setSelected(request)} />
-                      {request.status === 'PENDING' && (
+                      {(request.status === 'PENDING' || request.status === 'APPROVED') && (
                         <>
-                          <IconActionButton
+                          {request.status === 'PENDING' &&                           <IconActionButton
                             label={`Edit ${request.reference}`}
                             onClick={() => onEdit(request.source)}
                             icon="edit"
                             variant="warning"
-                          />
+                          />}
                           <IconActionButton
                             label={cancellingRequestId === request.id ? `Cancelling ${request.reference}` : `Cancel ${request.reference}`}
                             onClick={() => {

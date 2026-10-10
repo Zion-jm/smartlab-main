@@ -152,6 +152,19 @@ describe('Equipment adjustment authorization and cancellation', () => {
     await unchanged(f);
     expect((await apiRequest('PATCH', `/borrow-requests/${f.request.id}/cancel`, null, ownerToken)).status).toBe(200);
   });
+  test.each(['student', 'faculty'])('%s owner can cancel approved equipment without changing physical stock', async role => {
+    const requestOwner=role==='student'?owner:other;
+    const token=role==='student'?ownerToken:otherToken;
+    const f=await fixture({requestOwner,status:'APPROVED'});
+    const before=await prisma.equipment.findUnique({where:{id:f.item.id}});
+    const results=await Promise.all([1,2].map(()=>apiRequest('PATCH', '/borrow-requests/'+f.request.id+'/cancel',null,token)));
+    expect(results.filter(r=>r.status===200)).toHaveLength(1);
+    expect(results.every(r=>[200,409].includes(r.status))).toBe(true);
+    expect((await prisma.borrowRequest.findUnique({where:{id:f.request.id}})).status).toBe('CANCELLED');
+    const after=await prisma.equipment.findUnique({where:{id:f.item.id}});
+    expect(after.availableQuantity).toBe(before.availableQuantity);
+    expect(after.borrowedQuantity).toBe(before.borrowedQuantity);
+  });
   test('normal cancellation rejects borrowed owners; concurrent admin cancellation restores stock once', async () => {
     const f = await fixture({ status: 'BORROWED' });
     expect((await apiRequest('PATCH', `/borrow-requests/${f.request.id}/cancel`, null, ownerToken)).status).toBe(409);

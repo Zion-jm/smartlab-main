@@ -20,10 +20,11 @@ export const cancelBorrowRequest = async (
     throw new RequestActionError(403, 'Access denied');
   }
   const wasBorrowed = request.status === RequestStatus.BORROWED;
-  const approvedRequest = isAdmin && request.status === RequestStatus.APPROVED;
-  if (request.status !== RequestStatus.PENDING && (input.pendingOnly || !isAdmin || (!wasBorrowed && !approvedRequest))) {
-    throw new RequestActionError(409, input.pendingOnly || !isAdmin
-      ? 'Can only cancel pending requests' : 'Can only cancel pending, borrowed, or approved requests');
+  const approvedRequest = request.status === RequestStatus.APPROVED;
+  const allowed = request.status === RequestStatus.PENDING || (!input.pendingOnly && (approvedRequest || (isAdmin && wasBorrowed)));
+  if (!allowed) {
+    throw new RequestActionError(409, input.pendingOnly ? 'Can only cancel pending requests' : isAdmin
+      ? 'Can only cancel pending, approved, or borrowed requests' : 'Can only cancel pending or approved requests');
   }
   if (!approvedRequest) ensureTransition(request.status, RequestStatus.CANCELLED);
   const claimed = await tx.borrowRequest.updateMany({
