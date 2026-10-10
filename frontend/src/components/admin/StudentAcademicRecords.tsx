@@ -7,7 +7,7 @@ type RecordEntry = { id: string; programId: string; programCode: string; program
 type Student = { id: string; firstName: string; lastName: string; email: string; status: string; studentProfile: { programId: string | null; yearLevel: number | null } | null; studentAcademicRecords: RecordEntry[] };
 type Results = { total: number; page: number; pageSize: number; students: Student[]; programs: { id: string; name: string; code: string }[] };
 const statusLabels: Record<string, string> = { ENROLLED: 'Enrolled', CONTINUING: 'Continuing', GRADUATED: 'Graduated', WITHDRAWN: 'Withdrawn' };
-const inputClass = 'mt-1 min-h-11 w-full rounded-xl border border-[#ead7d3] bg-white px-3 text-sm';
+const inputClass = 'mt-1.5 min-h-11 w-full rounded-xl border border-[#dcc8c2] bg-white px-3 text-sm text-[#321d1d] outline-none transition focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/10';
 const errorText = (error: unknown) => (error as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Unable to save or load academic records. Please try again.';
 
 export default function StudentAcademicRecords({ years }: { years: { id: string; year: string; isActive: boolean }[] }) {
@@ -49,21 +49,22 @@ export default function StudentAcademicRecords({ years }: { years: { id: string;
     } catch (e) { setConfirm(false); setError(errorText(e)); }
     finally { setSaving(false); }
   };
-  return <section className="rounded-2xl border border-[#ead7d3] bg-white p-5 shadow-sm">
-    <h2 className="text-sm font-semibold text-[#321d1d]">Student academic records</h2>
-    <p className="mt-1 text-xs text-[#786565]">Save each student’s confirmed standing for a specific year. Changing filters or activating a period never promotes, demotes, or archives accounts.</p>
-    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+  return <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white p-5 shadow-sm lg:p-6">
+    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a15c45]">Student records</p>
+    <h2 className="mt-1 text-lg font-semibold text-[#321d1d]">Academic standing by year</h2>
+    <p className="mt-1 max-w-3xl text-sm leading-5 text-[#786565]">Review and confirm each student’s standing for the selected academic year. Historical records and account access remain unchanged unless explicitly updated.</p>
+    <div className="mt-5 grid gap-3 rounded-2xl border border-[#ead7d3] bg-[#faf7f5] p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
       <label className="text-xs">Academic year<select className={inputClass} value={yearId} disabled={saving || confirm} onChange={e => { setYearId(e.target.value); resetResults(); }}><option value="">Select academic year</option>{years.map(item => <option key={item.id} value={item.id}>{item.year}{item.isActive ? ' · Active' : ''}</option>)}</select></label>
       <label className="text-xs">Student name or email<input className={inputClass} value={search} disabled={saving || confirm} onChange={e => { setSearch(e.target.value); resetResults(); }} /></label>
-      <button type="button" disabled={loading || saving || confirm} onClick={() => void load()} className="min-h-11 self-end rounded-xl bg-[#800000] px-4 text-sm font-semibold text-white disabled:opacity-50">{loading ? 'Loading…' : 'Load academic records'}</button>
+      <button type="button" disabled={loading || saving || confirm} onClick={() => void load()} className="min-h-11 self-end rounded-xl bg-[#800000] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#680000] disabled:opacity-50">{loading ? 'Loading…' : 'Load records'}</button>
     </div>
     {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
     {success && <p role="status" className="mt-3 text-sm text-green-800">{success}</p>}
     {results && !loading && <>
-      <p className="mt-4 text-xs text-[#786565]">{results.total} students · {year?.year}. “No academic record” means no standing has been confirmed for this year.</p>
-      <div className="mt-3 divide-y divide-[#ead7d3]">{results.students.map(student => { const record = student.studentAcademicRecords[0]; return <div key={student.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold text-[#321d1d]">{results.total} students · {year?.year}</p><p className="text-xs text-[#786565]">No record means standing has not been confirmed for this year.</p></div>
+      <div className="mt-3 grid gap-2">{results.students.map(student => { const record = student.studentAcademicRecords[0]; return <div key={student.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#eee1dd] bg-white px-4 py-3 transition hover:border-[#d9bbb3] hover:bg-[#fffdfc]">
         <div><p className="text-sm font-semibold">{student.firstName} {student.lastName}</p><p className="text-xs text-[#786565]">{student.email} · Account {student.status.toLowerCase()}</p><p className="mt-1 text-sm">{record ? `${record.programCode} · ${record.yearLevel == null ? 'No year level' : `Year ${record.yearLevel}`} · ${statusLabels[record.status]}` : 'No academic record'}</p></div>
-        <button type="button" disabled={saving || confirm} onClick={() => edit(student)} className="min-h-11 rounded-xl border border-[#ead7d3] px-4 text-sm text-[#800000]">{record ? 'Edit academic record' : 'Add academic record'}</button>
+        <button type="button" disabled={saving || confirm} onClick={() => edit(student)} className="min-h-11 rounded-xl border border-[#dcbeb7] bg-white px-4 text-sm font-semibold text-[#800000] transition hover:bg-[#fff5f2]">{record ? 'Edit record' : 'Add record'}</button>
       </div>; })}</div>
       <div className="mt-3 flex items-center gap-3 text-xs"><button type="button" disabled={results.page <= 1 || loading || saving || confirm} className="min-h-11 rounded-lg border px-3 disabled:opacity-40" onClick={() => void load(results.page - 1)}>Previous</button><span>Page {results.page} of {Math.max(1, Math.ceil(results.total / results.pageSize))}</span><button type="button" disabled={results.page * results.pageSize >= results.total || loading || saving || confirm} className="min-h-11 rounded-lg border px-3 disabled:opacity-40" onClick={() => void load(results.page + 1)}>Next</button></div>
     </>}
