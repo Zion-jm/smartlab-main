@@ -37,7 +37,7 @@ export default function EquipmentAvailabilityPlanner() {
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#800000] text-white shadow-sm"><CalendarDays size={22} aria-hidden="true" /></span>
       <div><h2 className="text-base font-semibold text-[#321d1d]">Equipment availability</h2><p className="mt-1 text-xs text-[#786565]">Plan equipment use for a day or a specific time. All times are in Manila time.</p></div>
     </header>
-    <form className="grid grid-cols-2 items-end gap-4 xl:grid-cols-4" onSubmit={event => {
+    <form className="grid grid-cols-2 items-end gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" onSubmit={event => {
       event.preventDefault();
       if (!date || (mode === 'time' && end <= start)) { setError('Select a date and an end time later than the start.'); return; }
       setError(''); setLoading(true); setExpanded(null);
@@ -45,8 +45,8 @@ export default function EquipmentAvailabilityPlanner() {
     }}>
       <div className="col-span-2 min-w-0 sm:col-span-1"><p className="mb-2 text-xs font-semibold text-[#786565]">Date</p><StyledDatePicker browsing value={date} onChange={setDate} /></div>
       <div className="col-span-2 min-w-0 sm:col-span-1"><p className="mb-2 text-xs font-semibold text-[#786565]">Time coverage</p><DropdownField value={mode} onChange={setMode} options={[{ value: 'day', label: 'Whole day' }, { value: 'time', label: 'Specific time' }]} /></div>
-      {mode === 'time' && <><div className="min-w-0"><p className="mb-2 text-xs font-semibold text-[#786565]">From</p><DropdownField value={start} onChange={setStart} options={times} /></div><div className="min-w-0"><p className="mb-2 text-xs font-semibold text-[#786565]">To</p><DropdownField value={end} onChange={setEnd} options={times} /></div></>}
-      <div className="col-span-2 flex justify-end border-t border-[#eee4df] pt-4 xl:col-span-4"><button disabled={loading} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#800000] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#650000] disabled:opacity-60 sm:w-auto" type="submit"><Search size={16} aria-hidden="true" />{loading ? 'Checking…' : 'Check availability'}</button></div>
+      <div className="min-w-0"><p className="mb-2 text-xs font-semibold text-[#786565]">From</p><DropdownField disabled={mode === 'day'} value={mode === 'day' ? '00:00' : start} onChange={setStart} options={mode === 'day' ? [{ value: '00:00', label: '12:00 AM' }] : times} /></div><div className="min-w-0"><p className="mb-2 text-xs font-semibold text-[#786565]">To</p><DropdownField disabled={mode === 'day'} value={mode === 'day' ? '24:00' : end} onChange={setEnd} options={mode === 'day' ? [{ value: '24:00', label: '12:00 AM (next day)' }] : times} /></div>
+      <div className="col-span-2 flex justify-end xl:col-span-1"><button disabled={loading} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#800000] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#650000] disabled:opacity-60 sm:w-auto" type="submit"><Search size={16} aria-hidden="true" />{loading ? 'Checking…' : 'Check availability'}</button></div>
     </form>
     <div className="flex items-start gap-2 rounded-xl bg-[#faf8f6] px-3 py-2.5 text-xs leading-5 text-[#786565]"><Info size={15} className="mt-0.5 shrink-0 text-[#967348]" aria-hidden="true" /><p>Stock is shared across academic periods. Pending requests do not reserve stock. Checked-out units remain unavailable until returned.</p></div>
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
