@@ -110,10 +110,10 @@ export function StyledDatePicker({
               
               <div className="picker-controls">
                 {/* Month Picker */}
-                <DropdownField portal menuMinWidth={180} nowrapOptions selectedLabel={months[currentMonth].slice(0, 3)} placeholder="Month" value={String(currentMonth)} onChange={value => changeMonth(Number(value))} options={months.map((month, index) => ({label: month, value: String(index)}))} className="min-w-0 flex-1" />
+                <DropdownField portal menuZIndex={zIndex.datepicker + 1} menuMinWidth={180} nowrapOptions selectedLabel={months[currentMonth].slice(0, 3)} placeholder="Month" value={String(currentMonth)} onChange={value => changeMonth(Number(value))} options={months.map((month, index) => ({label: month, value: String(index)}))} className="min-w-0 flex-1" />
                 
                 {/* Year Picker */}
-                <DropdownField portal menuMinWidth={112} nowrapOptions placeholder="Year" value={String(currentYear)} onChange={value => changeYear(Number(value))} options={yearOptions.map(year => ({label: String(year), value: String(year)}))} className="min-w-0 flex-1" />
+                <DropdownField portal menuZIndex={zIndex.datepicker + 1} menuMinWidth={112} nowrapOptions placeholder="Year" value={String(currentYear)} onChange={value => changeYear(Number(value))} options={yearOptions.map(year => ({label: String(year), value: String(year)}))} className="min-w-0 flex-1" />
               </div>
               
               <button

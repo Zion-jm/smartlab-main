@@ -219,6 +219,8 @@ export default function DropdownField<T extends string>({
           renderMenu(
           <div
             ref={menuRef}
+            // Portaled options belong to this control, not an enclosing popup's outside-click area.
+            onMouseDown={portal ? (event) => event.stopPropagation() : undefined}
             style={portal ? { position: 'fixed', ...menuPosition, zIndex: menuZIndex, marginTop: 0 } : undefined}
             id={listboxId}
             role="listbox"
