@@ -36,3 +36,17 @@ test('successful approval writes exactly one audit and duplicate approval writes
 test('optional directory audit failure does not reject the completed operation',async()=>{
  await expect(audit.recordOptionalAuditLog({auditLog:{create:async()=>{throw new Error('Injected optional failure')}}},{actorUserId:mockActor.id,action:'UPDATE',entityType:'Building',entityId:'example'})).resolves.toBeUndefined();
 });
+
+test('request audit keeps readable context after requester and location change', async()=>{
+ const event = {actorUserId:mockActor.id,action:'SNAPSHOT_TEST',entityType:'BorrowRequest',entityId:loan.id};
+ await db.$transaction(tx=>audit.recordRequiredAuditLog(tx,event));
+ const before=await db.auditLog.findFirst({where:{entityId:loan.id,action:'SNAPSHOT_TEST'}});
+ expect(before.details.referenceCode).toBe('REQ-'+loan.id.toUpperCase().slice(-6));
+ expect(before.details.context).toContain('Test venue');
+ expect(before.details.context).toContain('Jun 12, 2039');
+ expect(before.details.context).toContain('Audit Student');
+ await db.borrowRequest.update({where:{id:loan.id},data:{usageLocation:'New venue'}});
+ await db.user.update({where:{id:borrower.id},data:{firstName:'Renamed'}});
+ const after=await db.auditLog.findUnique({where:{id:before.id}});
+ expect(after.details).toEqual(before.details);
+});

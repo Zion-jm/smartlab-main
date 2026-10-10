@@ -1,3 +1,4 @@
+import NotFoundPage from './pages/NotFoundPage'
 import PasswordRecoveryPage from './pages/PasswordRecoveryPage'
 import RequestLinkPage from './pages/RequestLinkPage'
 import { StrictMode } from 'react'
@@ -136,6 +137,7 @@ createRoot(document.getElementById('root')!).render(
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

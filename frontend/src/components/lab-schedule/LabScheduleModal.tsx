@@ -110,6 +110,7 @@ export default function LabScheduleModal({
 }: LabScheduleModalProps) {
   const isEditMode = mode === 'edit';
   const [formValues, setFormValues] = useState<FormValues>(() => createEmptyFormValues());
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConflictModalOpen, setConflictModalOpen] = useState(false);
@@ -124,6 +125,7 @@ export default function LabScheduleModal({
       setFormValues(createEmptyFormValues());
     }
     setSubmitError(null);
+    setAttemptedSubmit(false);
   }
 
   const roomOptions = useMemo(
@@ -173,7 +175,7 @@ export default function LabScheduleModal({
     }));
   };
 
-  const validateForm = () => {
+  const getFieldErrors = () => {
     const requiredFields: { field: keyof typeof formValues; label: string }[] = [
       { field: 'timeStart', label: 'Start time' },
       { field: 'timeEnd', label: 'End time' },
@@ -189,10 +191,21 @@ export default function LabScheduleModal({
       requiredFields.unshift({ field: 'dayOfWeek', label: 'Day of week' });
     }
 
+    const errors: Partial<Record<keyof FormValues, string>> = {};
     for (const { field, label } of requiredFields) {
-      if (!formValues[field]) {
-        return `${label} is required.`;
-      }
+      if (!formValues[field]) errors[field] = `${label} is required.`;
+    }
+    if (formValues.timeStart && formValues.timeEnd && formValues.timeEnd <= formValues.timeStart) errors.timeEnd = 'End time must be after start time.';
+    return errors;
+  };
+  const fieldErrors = attemptedSubmit ? getFieldErrors() : {};
+
+  const validateForm = () => {
+    const errors = getFieldErrors();
+    const firstField = Object.keys(errors)[0];
+    if (firstField) {
+      document.getElementById(`schedule-${firstField}`)?.focus();
+      return 'Please correct the highlighted fields.';
     }
 
     if (!academicContext) {
@@ -214,6 +227,7 @@ export default function LabScheduleModal({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setAttemptedSubmit(true);
     const validationError = validateForm();
     if (validationError) {
       setSubmitError(validationError);
@@ -341,6 +355,9 @@ export default function LabScheduleModal({
         </div>
         <DropdownField
           label="Laboratory room"
+          required
+          id="schedule-roomId"
+          error={fieldErrors.roomId}
           value={formValues.roomId}
           options={roomOptions}
           placeholder="Select laboratory room"
@@ -349,8 +366,11 @@ export default function LabScheduleModal({
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {formValues.scheduleType === 'ONE_TIME' ? (
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1">Schedule date</label>
+              <label className="block text-xs font-semibold text-[#374151] mb-1" htmlFor="schedule-scheduleDate">Schedule date <span aria-hidden="true" className="text-red-700">*</span></label>
               <StyledDatePicker
+                id="schedule-scheduleDate"
+                required
+                error={fieldErrors.scheduleDate}
                 value={dateKeyToPickerDate(formValues.scheduleDate)}
                 onChange={(date) => handleSelectChange('scheduleDate', pickerDateToDateKey(date))}
                 placeholder="Select a date"
@@ -360,6 +380,9 @@ export default function LabScheduleModal({
           ) : (
             <DropdownField
               label="Weekday"
+          required
+          id="schedule-dayOfWeek"
+          error={fieldErrors.dayOfWeek}
               value={formValues.dayOfWeek}
               options={weekdayOptions}
               placeholder="Select weekday"
@@ -369,6 +392,9 @@ export default function LabScheduleModal({
           <div className="grid grid-cols-2 gap-3">
             <DropdownField
               label="Start time"
+          required
+          id="schedule-timeStart"
+          error={fieldErrors.timeStart}
               value={formValues.timeStart}
               options={timeOptions}
               placeholder="Select start time"
@@ -377,6 +403,9 @@ export default function LabScheduleModal({
             />
             <DropdownField
               label="End time"
+          required
+          id="schedule-timeEnd"
+          error={fieldErrors.timeEnd}
               value={formValues.timeEnd}
               options={timeOptions}
               placeholder="Select end time"
@@ -398,6 +427,9 @@ export default function LabScheduleModal({
         <div className="grid gap-3 sm:grid-cols-2">
           <DropdownField
             label="Faculty"
+          required
+          id="schedule-facultyId"
+          error={fieldErrors.facultyId}
             value={formValues.facultyId}
             options={facultyOptions}
             placeholder="Assign faculty"
@@ -405,6 +437,9 @@ export default function LabScheduleModal({
           />
           <DropdownField
             label="Subject"
+          required
+          id="schedule-subjectId"
+          error={fieldErrors.subjectId}
             value={formValues.subjectId}
             options={subjectOptions}
             placeholder="Select subject"
@@ -414,6 +449,9 @@ export default function LabScheduleModal({
         <div className="grid gap-3 sm:grid-cols-2">
           <DropdownField
             label="Program"
+          required
+          id="schedule-programId"
+          error={fieldErrors.programId}
             value={formValues.programId}
             options={programOptions}
             placeholder="Select program"
@@ -457,7 +495,7 @@ export default function LabScheduleModal({
             ✕
           </button>
         </div>
-        <form id={formId} className="flex-1 overflow-y-auto px-5 py-4 space-y-4" onSubmit={handleSubmit}>
+        <form noValidate id={formId} className="flex-1 overflow-y-auto px-5 py-4 space-y-4" onSubmit={handleSubmit}>
           {renderFormFields()}
         </form>
         <div className="px-5 py-4 border-t border-[#f3f4f6] flex flex-col gap-2 sm:flex-row sm:justify-end sm:items-center">

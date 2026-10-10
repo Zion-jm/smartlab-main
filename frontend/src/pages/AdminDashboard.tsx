@@ -72,6 +72,7 @@ interface DashboardStats {
     availableQuantity: number;
     borrowedQuantity: number;
     damagedQuantity: number;
+    archivedQuantity: number;
     lowStockCount: number;
     utilizationRate: number;
   };
@@ -177,9 +178,12 @@ export default function AdminDashboard() {
         dateToDateKey(request.dateNeeded, 'Asia/Manila') === todayKey &&
         activeRequestStatuses.has(request.status)
     );
+    const nextSevenDaysEnd = new Date(`${todayKey}T12:00:00+08:00`);
+    nextSevenDaysEnd.setUTCDate(nextSevenDaysEnd.getUTCDate() + 7);
+    const nextSevenDaysKey = dateToDateKey(nextSevenDaysEnd, 'Asia/Manila');
     const upcomingRequests = requests.filter((request) => {
       const dateKey = dateToDateKey(request.dateNeeded, 'Asia/Manila');
-      return activeRequestStatuses.has(request.status) && dateKey > todayKey && dateKey <= weekKeys[6];
+      return activeRequestStatuses.has(request.status) && dateKey > todayKey && dateKey <= nextSevenDaysKey;
     });
     const overdueRequests = requests.filter(
       (request) =>
@@ -203,6 +207,7 @@ export default function AdminDashboard() {
         availableQuantity: inventoryStats.availableQuantity ?? 0,
         borrowedQuantity: inventoryStats.borrowedQuantity ?? 0,
         damagedQuantity: inventoryStats.damagedQuantity ?? 0,
+        archivedQuantity: inventoryStats.archivedQuantity ?? 0,
         lowStockCount: inventoryStats.lowStockCount ?? 0,
         utilizationRate: Number.isFinite(inventoryStats.utilizationRate ?? 0) ? inventoryStats.utilizationRate ?? 0 : 0,
       },
@@ -367,8 +372,8 @@ export default function AdminDashboard() {
               <p className="mt-1 text-xs text-[#a16207]">Currently in use</p>
             </div>
             <div className="rounded-lg border border-[#fecaca] bg-[#fef2f2] p-3">
-              <div className="mb-2 flex items-center gap-2 text-[#991b1b]"><AlertTriangleIcon size={16} /><h3 className="text-sm font-medium">Inventory alerts</h3></div>
-              <p className="text-2xl font-bold text-[#991b1b]">{stats.equipment.damagedQuantity + stats.equipment.lowStockCount}</p>
+              <div className="mb-2 flex items-center gap-2 text-[#991b1b]"><AlertTriangleIcon size={16} /><h3 className="text-sm font-medium">Damaged</h3></div>
+              <p className="text-2xl font-bold text-[#991b1b]">{stats.equipment.damagedQuantity}</p>
               <p className="mt-1 text-xs text-[#7f1d1d]">{stats.equipment.damagedQuantity} damaged · {stats.equipment.lowStockCount} low stock</p>
             </div>
           </div>
@@ -376,6 +381,10 @@ export default function AdminDashboard() {
 
         
 
+        <div className="mb-5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 text-sm text-[#475569]">
+          <span className="font-semibold">Archived: {stats.equipment.archivedQuantity} units</span>
+          <span className="ml-2">Included in total inventory; unavailable for new loans. Borrowed and damaged units are counted separately.</span>
+        </div>
         <Card title="Operations at a glance">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {[

@@ -179,7 +179,7 @@ export default function AdminAuditLogs() {
               setSearch(event.target.value);
               resetToFirstPage();
             }}
-            placeholder="Actor, action, or record ID"
+            placeholder="Actor, action, or request code"
             size="md"
             data-testid="input-audit-log-search"
           />
@@ -295,7 +295,7 @@ export default function AdminAuditLogs() {
             {loading ? <p role="status" className="py-6 text-center text-sm">Loading audit logs…</p> : error ? null : !logs.length ? <p className="py-6 text-center text-sm text-[#786565]">No audit log entries match the selected filters.</p> : <>
               <div className="space-y-3">{logs.map(log => <article key={log.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white">
                 <header className="space-y-2 border-b border-[#f1e6e3] bg-[#fffaf7] p-3"><span className="inline-flex rounded-full bg-[#f5eae5] px-2.5 py-1 text-xs font-semibold text-[#800000]">{log.actionLabel || log.action}</span><p className="text-xs text-[#786565]">{formatDateTime(log.createdAt)}</p></header>
-                <div className="space-y-3 p-4"><div><h3 className="break-words text-sm font-semibold text-[#321d1d]">{log.actor?.name || 'Unknown actor'}</h3><p className="mt-1 break-all text-xs text-[#786565]">{log.actor?.email || 'No email'}</p></div><p className="break-words text-sm leading-relaxed text-[#514343]">{log.summary || 'No summary available.'}</p><div className="rounded-xl bg-[#faf7f5] p-3"><p className="text-xs font-semibold text-[#786565]">{log.entityLabel || log.entityType}</p><p className="mt-1 break-all text-xs text-[#514343]">{log.entityId}</p></div></div>
+                <div className="space-y-3 p-4"><div><h3 className="break-words text-sm font-semibold text-[#321d1d]">{log.actor?.name || 'Unknown actor'}</h3><p className="mt-1 break-all text-xs text-[#786565]">{log.actor?.email || 'No email'}</p></div><p className="break-words text-sm leading-relaxed text-[#514343]">{log.summary || 'No summary available.'}</p><div className="rounded-xl bg-[#faf7f5] p-3"><p className="text-xs font-semibold text-[#786565]">{log.entityLabel || log.entityType}</p><p className="mt-1 break-all text-xs text-[#514343]">{log.recordReference || log.entityId}</p></div></div>
                 <footer className="border-t border-[#f1e6e3] p-3"><button type="button" onClick={() => setSelectedLog(log)} className="min-h-11 w-full rounded-xl border border-[#ead7d3] text-xs font-semibold text-[#800000]">View recorded changes</button></footer>
               </article>)}</div>
               <TablePagination currentPage={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} onPageSizeChange={handlePageSizeChange} />
@@ -310,7 +310,7 @@ export default function AdminAuditLogs() {
 {id:'1',header:'Action',cell:log=><><span className="inline-flex rounded-full bg-[#fff5f5] px-2.5 py-1 text-xs font-semibold text-[#800000]">{log.actionLabel || log.action}</span></>},
 {id:'2',header:'Entity',cell:log=><>
                         <div className="font-medium text-[#374151]">{log.entityLabel || log.entityType}</div>
-                        <div className="max-w-[180px] truncate text-xs text-[#6b7280]" title={log.entityId}>{log.entityId}</div>
+                        <div className="max-w-[180px] truncate text-xs text-[#6b7280]" title={log.entityId}>{log.recordReference || log.entityId}</div>
                       </>},
 {id:'3',header:'Date / time',cell:log=><>{formatDateTime(log.createdAt)}</>},
 {id:'4',header:'Summary',cell:log=><>{log.summary || 'No summary available.'}</>},

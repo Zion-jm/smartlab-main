@@ -8,6 +8,8 @@ type DropdownOption<T extends string> = {
 
 interface DropdownFieldProps<T extends string> {
   label?: ReactNode;
+  error?: string;
+  required?: boolean;
   value: T | '';
   options: DropdownOption<T>[];
   placeholder?: string;
@@ -25,6 +27,8 @@ interface DropdownFieldProps<T extends string> {
 
 export default function DropdownField<T extends string>({
   label: labelText,
+  error,
+  required = false,
   value,
   options,
   placeholder = 'Select an option',
@@ -160,7 +164,7 @@ export default function DropdownField<T extends string>({
 
   return (
     <div ref={containerRef} className={`flex min-w-0 max-w-full flex-col gap-1 ${className}`}>
-      {labelText && <label htmlFor={selectId} className="block text-xs font-semibold text-[#4b5563]">{labelText}</label>}
+      {labelText && <label htmlFor={selectId} className="block text-xs font-semibold text-[#4b5563]">{labelText}{required && <span aria-hidden="true" className="text-red-700"> *</span>}</label>}
       <div className="relative min-w-0 max-w-full">
         <select
           aria-hidden="true"
@@ -186,6 +190,8 @@ export default function DropdownField<T extends string>({
           id={selectId}
           type="button"
           aria-label={labelText ? undefined : placeholder}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${selectId}-error` : undefined}
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={open ? listboxId : undefined}
@@ -260,6 +266,7 @@ export default function DropdownField<T extends string>({
           )
         )}
       </div>
+      {error && <p id={`${selectId}-error`} className="text-xs text-red-700">{error}</p>}
     </div>
   );
 }

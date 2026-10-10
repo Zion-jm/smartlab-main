@@ -919,3 +919,6 @@
 .profile-page--admin .profile-section-heading p { font-size: .75rem; line-height: 1.5; }
 .profile-page--admin button { border-radius: .75rem; }
 @media (max-width: 639px) { .profile-page--admin { padding: 1rem .75rem; } }
+
+/* Keep the schedule action intact when the mobile ribbon wraps its controls. */
+.page-control-ribbon__actions button.schedule-add-button { white-space: nowrap; overflow-wrap: normal; flex-shrink: 0; }

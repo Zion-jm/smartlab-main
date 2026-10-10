@@ -175,6 +175,7 @@ export type AuditLog = {
   actionLabel: string;
   entityType: string;
   entityLabel: string;
+  recordReference?: string;
   entityId: string;
   details: unknown;
   summary: string;

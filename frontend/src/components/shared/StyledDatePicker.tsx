@@ -7,6 +7,8 @@ import { colors, fontSize, fontWeight, input, radius, shadows, zIndex } from '..
 
 interface StyledDatePickerProps {
   browsing?: boolean;
+  id?: string;
+  error?: string;
   value: Date | null;
   onChange: (date: Date | null) => void;
   placeholder?: string;
@@ -17,6 +19,8 @@ interface StyledDatePickerProps {
 
 export function StyledDatePicker({
   value,
+  id,
+  error,
   browsing = false,
   onChange,
   placeholder = 'Select a date',
@@ -52,6 +56,9 @@ export function StyledDatePicker({
   return (
     <div className={`styled-date-picker-wrapper ${className}`} style={{ width: '100%' }}>
       <DatePicker
+        id={id}
+        ariaInvalid={error ? 'true' : undefined}
+        ariaDescribedBy={error && id ? `${id}-error` : undefined}
         selected={value}
         onChange={onChange}
         minDate={browsing ? undefined : minDate}
@@ -140,6 +147,7 @@ export function StyledDatePicker({
         }
       />
       
+      {error && <p id={id ? `${id}-error` : undefined} className="mt-1 text-xs text-red-700">{error}</p>}
       {/* Custom CSS for the date picker */}
       <style>{`
         .styled-date-picker-wrapper {

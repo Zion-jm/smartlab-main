@@ -47,15 +47,17 @@ const parseDateFilter = (value: unknown, endOfDay = false): Date | undefined => 
   return date;
 };
 
-const readableSummary = (action: string, entityType: string, details: unknown): string => {
+const readableSummary = (action: string, entityType: string, details: unknown, entityId: string): string => {
   if (details && typeof details === 'object' && !Array.isArray(details)) {
     const record = details as Record<string, unknown>;
-    const label = record.label ?? record.name ?? record.reference ?? record.referenceCode;
+    const requestCode = entityType === 'BorrowRequest' ? 'REQ-' + entityId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6).padStart(6, '0') : undefined;
+    const label = [record.referenceCode ?? requestCode, record.context ?? record.label ?? record.name ?? record.reference].filter(value => typeof value === 'string' && value.trim()).join(' · ');
     if (typeof label === 'string' && label.trim()) {
       return `${ACTION_LABELS[action] ?? action} ${ENTITY_LABELS[entityType] ?? entityType}: ${label}`;
     }
   }
-  return `${ACTION_LABELS[action] ?? action} ${ENTITY_LABELS[entityType] ?? entityType}`;
+  const reference = entityType === 'BorrowRequest' ? 'REQ-' + entityId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6).padStart(6, '0') : entityId;
+  return `${ACTION_LABELS[action] ?? action} ${ENTITY_LABELS[entityType] ?? entityType}: ${reference}`;
 };
 
 router.get(
@@ -91,7 +93,7 @@ router.get(
           ...(search ? [
             { action: contains(search) },
             { entityType: contains(search) },
-            { entityId: contains(search) },
+            { entityId: contains(search.replace(/^REQ-/i, '')) },
           ] : []),
           ...((search || actor) ? [{
             actor: {
@@ -134,8 +136,9 @@ router.get(
             entityType: log.entityType,
             entityLabel: ENTITY_LABELS[log.entityType] ?? log.entityType,
             entityId: log.entityId,
+            recordReference: log.entityType === 'BorrowRequest' ? 'REQ-' + log.entityId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6).padStart(6, '0') : (details && typeof details === 'object' && 'label' in details && typeof details.label === 'string' ? details.label : log.entityId),
             details,
-            summary: readableSummary(log.action, log.entityType, details),
+            summary: readableSummary(log.action, log.entityType, details, log.entityId),
             createdAt: log.createdAt,
           };
         }),
