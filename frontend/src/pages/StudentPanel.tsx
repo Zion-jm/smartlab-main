@@ -556,7 +556,7 @@ function RequestFormScaffold({
   const updateForm = (field: keyof typeof form, value: string) => {
     setSubmitError(null);
     setSubmitSuccess(null);
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value, ...(field === 'timeStart' && prev.timeEnd && prev.timeEnd <= value ? { timeEnd: '' } : {}) }));
   };
 
   const handleEquipmentChange = (id: string, quantity: number, max: number) => {
@@ -778,7 +778,7 @@ function RequestFormScaffold({
                     </label>
                     <DropdownField
                       value={form.timeEnd}
-                      options={timeOptions}
+                      options={timeOptions.filter(option => !form.timeStart || option.value > form.timeStart)}
                       placeholder="Select end time"
                       onChange={(value) => updateForm('timeEnd', value)}
                       className="text-xs font-normal"
@@ -909,10 +909,13 @@ function RequestFormScaffold({
       <div className="bg-white border border-[#e5e7eb] rounded-2xl p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm font-semibold text-[#111827]">Request summary</p>
+          <p role="status" className="mt-1 text-xs font-semibold text-[#b91c1c]">
+            {conflictBlocked ? 'Room unavailable: choose another time or room.' : timeRangeError || (!academicContext ? 'Academic period is unavailable. Refresh before submitting.' : loading ? 'Loading request options…' : submitting ? 'Submitting request…' : '')}
+          </p>
           <div className="text-xs text-[#6b7280] space-y-1">
             <p>
               {equipmentSelections.length === 0
-                ? 'No equipment reserved. You can still submit a request without equipment.'
+                ? (useLabRoom ? 'No equipment selected. Equipment is optional for a computer lab request.' : 'Select at least one equipment item to submit this request.')
                 : `${equipmentSelections.length} equipment types · ${equipmentSelections.reduce((sum, [, qty]) => sum + qty, 0)} units selected.`}
             </p>
             {selectedEquipmentDetails.length > 0 && (
@@ -966,6 +969,7 @@ function RequestFormScaffold({
     </form>
     {conflictModalOpen && (
       <ConflictDetailModal
+        actionLabel="submitting"
         conflicts={conflictCheck.conflicts}
         onClose={() => setConflictModalOpen(false)}
       />

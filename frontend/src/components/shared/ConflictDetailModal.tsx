@@ -4,10 +4,11 @@ import type { ScheduleConflict } from '../../hooks/useScheduleConflictCheck';
 
 export type ConflictDetailModalProps = {
   conflicts: ScheduleConflict[];
+  actionLabel?: 'saving' | 'submitting';
   onClose: () => void;
 };
 
-export function ConflictDetailModal({ conflicts, onClose }: ConflictDetailModalProps) {
+export function ConflictDetailModal({ conflicts, onClose, actionLabel = 'saving' }: ConflictDetailModalProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -28,7 +29,7 @@ export function ConflictDetailModal({ conflicts, onClose }: ConflictDetailModalP
         <span className="record-detail-symbol"><CalendarX2 size={22} strokeWidth={1.75} aria-hidden="true" /></span>
         <div className="min-w-0 flex-1">
           <h2 id={titleId} className="text-lg font-bold text-[#451a1a]">Conflict details</h2>
-          <p className="mt-1 text-xs leading-5 text-[#786565]">Review overlapping reservations before saving.</p>
+          <p className="mt-1 text-xs leading-5 text-[#786565]">Review overlapping reservations before {actionLabel}.</p>
         </div>
         <button type="button" autoFocus onClick={onClose} aria-label="Close conflict details" className="record-detail-close"><X size={20} aria-hidden="true" /></button>
       </header>

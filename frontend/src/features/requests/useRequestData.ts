@@ -217,7 +217,7 @@ export const useRequestResources = (): ResourceHookState => {
         .filter((room) => room.id)
         .map((room) => ({
           value: room.id,
-          label: (room.name || room.roomNumber || '').trim() || 'Unnamed room',
+          label: [room.roomNumber?.trim(), room.name?.trim()].filter(Boolean).join(' – ') || 'Unnamed room',
           isComputerLab: Boolean(room.isComputerLab),
         }));
 

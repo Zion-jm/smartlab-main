@@ -131,7 +131,7 @@ router.post(
           return { id: 'conflict-' + index, type: 'faculty' in conflict ? 'lab_schedule' : 'borrow_request',
             severity: conflict.status === 'PENDING' ? 'medium' : 'high', title: 'Existing reservation',
             message: 'This room has an overlapping reservation.', details: {
-              location: conflict.room?.roomNumber ?? conflict.room?.name ?? 'Lab room',
+              location: [conflict.room?.roomNumber, conflict.room?.name].filter(Boolean).join(' – ') || 'Lab room',
               date_needed: formatDate(conflict.scheduleDate ?? conflict.dateNeeded),
               day_of_week: formatDayOfWeek(conflict.dayOfWeek), time_start: formatTime(conflict.timeStart),
               time_end: formatTime(conflict.timeEnd), status: conflict.status ?? 'Approved',
@@ -144,7 +144,7 @@ router.post(
           const facultyName = conflict.faculty?.user
             ? `${conflict.faculty.user.firstName ?? ''} ${conflict.faculty.user.lastName ?? ''}`.trim()
             : null;
-          const location = conflict.room?.name ?? conflict.room?.roomNumber ?? 'Lab room';
+          const location = [conflict.room?.roomNumber, conflict.room?.name].filter(Boolean).join(' – ') || 'Lab room';
           const timeStartLabel = formatTime(conflict.timeStart);
           const timeEndLabel = formatTime(conflict.timeEnd);
 
@@ -173,7 +173,7 @@ router.post(
           const requesterName = conflict.requester
             ? `${conflict.requester.firstName ?? ''} ${conflict.requester.lastName ?? ''}`.trim()
             : 'Unknown requester';
-          const location = conflict.room?.name ?? conflict.room?.roomNumber ?? 'Lab room';
+          const location = [conflict.room?.roomNumber, conflict.room?.name].filter(Boolean).join(' – ') || 'Lab room';
           const timeStartLabel = formatTime(conflict.timeStart);
           const timeEndLabel = formatTime(conflict.timeEnd);
 
