@@ -113,6 +113,7 @@ export const borrowRequestApi = {
 
 // Users API
 export const userApi = {
+  getStats: () => api.get('/users/stats/overview'),
   sendPasswordReset: (id:string) => api.post('/users/'+encodeURIComponent(id)+'/password-reset'),
   getById: (id: string) => api.get('/users/' + encodeURIComponent(id)),
   getPage: (params?: Record<string, unknown>) => api.get('/users', { params }),

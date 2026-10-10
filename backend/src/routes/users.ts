@@ -14,6 +14,22 @@ import { recordRequiredAuditLog } from '../services/auditLogService';
 
 const router = Router();
 
+router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN), async (_req, res) => {
+  try {
+    const [activeStudents, activeFaculty, administrators, archivedStudents, archivedFaculty, archivedAdministrators, pendingReactivation] = await Promise.all([
+      prisma.user.count({ where: { role: UserRole.STUDENT, status: UserStatus.ACTIVE } }),
+      prisma.user.count({ where: { role: UserRole.FACULTY, status: UserStatus.ACTIVE } }),
+      prisma.user.count({ where: { role: UserRole.ADMIN, status: UserStatus.ACTIVE } }),
+      prisma.user.count({ where: { role: UserRole.STUDENT, status: UserStatus.DEACTIVATED } }),
+      prisma.user.count({ where: { role: UserRole.FACULTY, status: UserStatus.DEACTIVATED } }),
+      prisma.user.count({ where: { role: UserRole.ADMIN, status: UserStatus.DEACTIVATED } }),
+      prisma.reactivationRequest.count({ where: { status: 'PENDING' } }),
+    ]);
+    res.json({ activeStudents, activeFaculty, administrators, archivedAccounts: archivedStudents + archivedFaculty + archivedAdministrators,
+      archivedBreakdown: { students: archivedStudents, faculty: archivedFaculty, administrators: archivedAdministrators }, pendingReactivation });
+  } catch (error) { sendError(error, res); }
+});
+
 
 const ROLE_VALUE_TO_ID: Record<UserRole, number> = {
   ADMIN: 1,

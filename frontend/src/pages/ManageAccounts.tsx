@@ -22,6 +22,7 @@ import { DEFAULT_TABLE_PAGE_SIZE } from '../components/shared/tablePaginationCon
 
 type RoleFilter = 'all' | 'ADMIN' | 'FACULTY' | 'STUDENT';
 type StatusFilter = 'all' | 'ACTIVE' | 'DEACTIVATED';
+type AccountStats = { activeStudents:number; activeFaculty:number; administrators:number; archivedAccounts:number; archivedBreakdown:{students:number;faculty:number;administrators:number}; pendingReactivation:number };
 
 const roleFilterOptions: { label: string; value: RoleFilter }[] = [
   { label: 'All', value: 'all' },
@@ -114,6 +115,7 @@ export default function ManageAccounts() {
   const [serverTotal, setServerTotal] = useState(0);
   const [accountPage, setAccountPage] = useState(1);
   const [accountPageSize, setAccountPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
+  const [stats, setStats] = useState<AccountStats | null>(null);
 
   const NewAccountInputs = [searchParams];
   const [NewAccountPrevious, setNewAccountPrevious] = useState<unknown[] | null>(null);
@@ -204,6 +206,11 @@ export default function ManageAccounts() {
     await performFetchAccounts();
   }, [performFetchAccounts]);
 
+  const fetchStats = useCallback(async () => {
+    try { const response = await userApi.getStats(); setStats(response.data); }
+    catch { setStats(null); }
+  }, []);
+
   const fetchDirectoryOptions = useCallback(async () => {
     
       return Promise.all([
@@ -234,6 +241,11 @@ export default function ManageAccounts() {
   }, []);
 
   useEffect(() => { void performFetchAccounts(); }, [performFetchAccounts]);
+  useEffect(() => {
+    let current = true;
+    userApi.getStats().then(response => { if (current) setStats(response.data); }).catch(() => { if (current) setStats(null); });
+    return () => { current = false; };
+  }, []);
 
   useEffect(() => {
     const next = new URLSearchParams();
@@ -361,6 +373,20 @@ export default function ManageAccounts() {
   return (
     <AdminLayout>
       <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
+        <section aria-label="Account totals" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {[
+            {label:'Active students',value:stats?.activeStudents,detail:'Can access the student portal',role:'STUDENT' as RoleFilter,status:'ACTIVE' as StatusFilter},
+            {label:'Active faculty',value:stats?.activeFaculty,detail:'Can access the faculty portal',role:'FACULTY' as RoleFilter,status:'ACTIVE' as StatusFilter},
+            {label:'Administrators',value:stats?.administrators,detail:'Active administrator accounts',role:'ADMIN' as RoleFilter,status:'ACTIVE' as StatusFilter},
+            {label:'Archived accounts',value:stats?.archivedAccounts,detail:stats?`${stats.archivedBreakdown.students} students · ${stats.archivedBreakdown.faculty} faculty`: 'Preserved historical accounts',role:'all' as RoleFilter,status:'DEACTIVATED' as StatusFilter},
+            {label:'Pending reactivation',value:stats?.pendingReactivation,detail:'Archived users awaiting review',role:'all' as RoleFilter,status:'DEACTIVATED' as StatusFilter},
+          ].map(card => {
+            const active=roleFilter===card.role&&statusFilter===card.status&&!search.trim();
+            return <button key={card.label} type="button" onClick={()=>{setSearch('');setRoleFilter(card.role);setStatusFilter(card.status);}} aria-pressed={active} className={`rounded-2xl border p-4 text-left shadow-sm transition ${active?'border-[#800000] bg-[#fff5f2] ring-2 ring-[#800000]/10':'border-[#ead7d3] bg-white hover:border-[#c98f83]'}`}>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-[#786565]">{card.label}</span><strong className="mt-1 block text-2xl text-[#321d1d]">{card.value ?? '—'}</strong><span className={`mt-1 block text-xs ${card.label==='Pending reactivation'&&(card.value??0)>0?'font-semibold text-amber-700':'text-[#786565]'}`}>{card.detail}</span>
+            </button>;
+          })}
+        </section>
         <FilterToolbar
           searchValue={search}
           onSearchChange={setSearch}
@@ -377,7 +403,7 @@ export default function ManageAccounts() {
           compactFilters
           ribbonSummary="Account search and filters"
           bottomControl={<div ref={setAdvancedTogglePortalTarget} />}
-          onRefresh={fetchAccounts}
+          onRefresh={async()=>{await Promise.all([fetchAccounts(),fetchStats()]);}}
           refreshing={accountsLoading}
           refreshError={Boolean(accountsError)}
           className="mb-1"
@@ -475,7 +501,7 @@ export default function ManageAccounts() {
           statusStyles={statusStyles}
           departmentOptions={departmentOptions}
           programOptions={programOptions}
-          onUpdated={() => fetchAccounts()}
+          onUpdated={() => Promise.all([fetchAccounts(),fetchStats()]).then(()=>undefined)}
         />
       )}
     </AdminLayout>

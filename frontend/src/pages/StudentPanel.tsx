@@ -446,6 +446,13 @@ function RequestFormScaffold({
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [locationReset, setLocationReset] = useState(0);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [standingModalOpen, setStandingModalOpen] = useState(false);
+
+  const [previousStandingError, setPreviousStandingError] = useState<string | null>(null);
+  if (standingError !== previousStandingError) {
+    setPreviousStandingError(standingError);
+    if (standingError) setStandingModalOpen(true);
+  }
 
   const StudentInputs = [editingRequest, studentProgramId, studentYearLevel];
   const [StudentPrevious, setStudentPrevious] = useState<unknown[] | null>(null);
@@ -681,7 +688,9 @@ function RequestFormScaffold({
 
   return (
     <>
-      <form className="space-y-4" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit} aria-disabled={Boolean(standingError)}>
+        {standingError && <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><strong>Request submission is unavailable</strong><p className="mt-1">{standingError} You may review existing requests while an administrator confirms your record.</p></div>}
+      <fieldset disabled={Boolean(standingError)} className="contents">
       {(loading || error) && (
         <div
           className={`rounded-2xl border px-4 py-3 text-sm ${
@@ -969,6 +978,7 @@ function RequestFormScaffold({
           </button>
         </div>
       </div>
+      </fieldset>
     </form>
     {conflictModalOpen && (
       <ConflictDetailModal
@@ -977,6 +987,15 @@ function RequestFormScaffold({
         onClose={() => setConflictModalOpen(false)}
       />
     )}
+    <ConfirmationModal
+      isOpen={standingModalOpen}
+      title="You cannot submit a request yet"
+      message={standingError ?? ''}
+      confirmLabel="View my requests"
+      cancelLabel="Close"
+      onConfirm={() => { setStandingModalOpen(false); onViewRequests?.(); }}
+      onClose={() => setStandingModalOpen(false)}
+    />
     </>
   );
 }

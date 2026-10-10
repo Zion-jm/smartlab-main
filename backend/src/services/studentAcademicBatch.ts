@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { Prisma, StudentAcademicStatus } from '@prisma/client';
+import { Prisma, StudentAcademicStatus, UserStatus } from '@prisma/client';
 import { DomainError, ValidationError } from './domainError';
 import { recordRequiredAuditLog } from './auditLogService';
+import { accountStatusChanged } from './accountReactivationService';
 
 type BatchInput = { mode: 'SETUP' | 'PROMOTE'; academicYearId: string; sourceYearId?: string; studentIds: string[] };
 export async function previewAcademicBatch(tx: Prisma.TransactionClient, input: BatchInput) {
@@ -27,7 +28,7 @@ export async function previewAcademicBatch(tx: Prisma.TransactionClient, input: 
       status:graduating ? 'GRADUATED' : input.mode === 'PROMOTE' ? 'CONTINUING' : 'ENROLLED',requiresGraduationReview:graduating };
   }) };
 }
-export async function commitAcademicBatch(tx: Prisma.TransactionClient, input: BatchInput & { rows: {studentId:string;fingerprint:string;programId:string;yearLevel:number|null;status:StudentAcademicStatus}[];reason:string }, actorUserId:string) {
+export async function commitAcademicBatch(tx: Prisma.TransactionClient, input: BatchInput & { rows: {studentId:string;fingerprint:string;programId:string;yearLevel:number|null;status:StudentAcademicStatus;archiveAccount?:boolean}[];reason:string }, actorUserId:string) {
   if (typeof input.reason !== 'string' || !input.reason.trim() || input.reason.length > 500 || !Array.isArray(input.rows) || !input.rows.length || input.rows.some(row => !row || typeof row !== 'object')) throw new ValidationError('Selected rows and a reason of at most 500 characters are required.');
   const preview = await previewAcademicBatch(tx,{...input,studentIds:input.rows.map(row=>row.studentId)});
   const batchId=randomUUID();
@@ -35,11 +36,20 @@ export async function commitAcademicBatch(tx: Prisma.TransactionClient, input: B
     const current=preview.rows.find(item=>item.studentId===row.studentId)!;
     if(current.blocked || current.fingerprint !== row.fingerprint) throw new DomainError(409,'A selected record changed or already exists. Reload the preview; no records were saved.');
     if(!Object.values(StudentAcademicStatus).includes(row.status) || (row.yearLevel !== null && (!Number.isInteger(row.yearLevel)||row.yearLevel<1||row.yearLevel>4)) || (['ENROLLED','CONTINUING'].includes(row.status)&&row.yearLevel===null)) throw new ValidationError('Review each selected status and year level (1–4).');
+    if (row.archiveAccount && row.status !== StudentAcademicStatus.GRADUATED) throw new ValidationError('Only a student confirmed as graduated can be archived in this batch.');
     if(typeof row.programId !== 'string') throw new ValidationError('Select a valid program.');
     const program=await tx.program.findUnique({where:{id:row.programId}});
     if(!program) throw new ValidationError('Select a valid program.');
     const saved=await tx.studentAcademicRecord.create({data:{studentId:row.studentId,academicYearId:input.academicYearId,programId:program.id,programCode:program.code,programName:program.name,yearLevel:row.yearLevel,status:row.status}});
     await recordRequiredAuditLog(tx,{actorUserId,action:'CREATE',entityType:'StudentAcademicRecord',entityId:saved.id,details:{label:`${current.name} · ${preview.destination.year}`,batchId,mode:input.mode,sourceYear:preview.source?.year ?? null,reason:input.reason.trim(),next:{programId:program.id,yearLevel:row.yearLevel,status:row.status}}});
+    if (row.archiveAccount) {
+      const previous = await tx.user.findUniqueOrThrow({ where: { id: row.studentId }, select: { id:true,email:true,status:true,updatedAt:true } });
+      if (previous.status === UserStatus.ACTIVE) {
+        const archived = await tx.user.update({ where: { id: row.studentId, updatedAt: previous.updatedAt }, data: { status: UserStatus.DEACTIVATED, sessionVersion: { increment: 1 } }, select: { id:true,email:true,status:true,updatedAt:true } });
+        await recordRequiredAuditLog(tx,{actorUserId,action:'RETIRE',entityType:'User',entityId:archived.id,details:{label:archived.email,batchId,reason:`Graduation confirmed for ${preview.destination.year}`,previous:previous.status,next:archived.status}});
+        await accountStatusChanged(tx, archived, previous.status);
+      }
+    }
   }
   return {created:input.rows.length,batchId};
 }
