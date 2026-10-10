@@ -13,7 +13,7 @@ export const normalizeSchedule = (schedule: ApiLabSchedule & { borrowRequest?: {
   const weekdayIndex = schedule.dayOfWeek ?? (dateValue ? dateToWeekdayIndex(dateValue) : null);
   const displayDay = typeof weekdayIndex === 'number' ? labels[weekdayIndex] : '—';
   const dayOfWeekIndex = typeof weekdayIndex === 'number' ? weekdayIndex : null;
-  const roomLabel = schedule.room?.name || schedule.room?.roomNumber || 'Unassigned lab';
+  const roomLabel = [schedule.room?.roomNumber?.trim(), schedule.room?.name?.trim()].filter(Boolean).join(' – ') || 'Unassigned lab';
   const isComputerLab = Boolean(schedule.room?.isComputerLab);
   const facultyName = `${schedule.faculty?.user?.firstName ?? ''} ${schedule.faculty?.user?.lastName ?? ''}`.trim() || 'Unassigned';
   const subjectLabel = schedule.subject?.name || schedule.subject?.code || 'Lab Session';

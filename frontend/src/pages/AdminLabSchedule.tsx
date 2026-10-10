@@ -211,7 +211,7 @@ export default function AdminLabSchedule() {
         .filter((item) => item.id)
         .map((item) => ({
           value: item.id,
-          label: (item.name || item.roomNumber || '').trim() || 'Unnamed',
+          label: [item.roomNumber?.trim(), item.name?.trim()].filter(Boolean).join(' – ') || 'Unnamed',
           isComputerLab: Boolean(item.isComputerLab),
         }));
 
