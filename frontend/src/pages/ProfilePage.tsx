@@ -87,7 +87,7 @@ function SectionHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 border-b border-[#eadfd9] pb-5 sm:flex-row sm:items-start sm:justify-between">
+    <div className="profile-section-heading mb-6 flex flex-col gap-4 border-b border-[#eadfd9] pb-5 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#9d6a4e]">{eyebrow}</p>
         <h2 className="text-xl font-semibold tracking-[-0.02em] text-[#321d1d]">{title}</h2>
@@ -242,7 +242,23 @@ export default function ProfilePage({
   }, [role, user]);
 
   return (
-    <div className={`profile-page ${role !== 'ADMIN' ? 'profile-page--portal' : ''} mx-auto w-full max-w-[1180px] px-2 py-4 sm:px-4 sm:py-7 lg:px-6`}>
+    <div className={`profile-page ${role !== 'ADMIN' ? 'profile-page--portal' : 'profile-page--admin'} mx-auto w-full max-w-[1180px] px-2 py-4 sm:px-4 sm:py-7 lg:px-6`}>
+      {role === 'ADMIN' ? (
+        <header className="profile-summary overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-[#fffaf7] p-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#800000] text-sm font-bold text-white">{initialsFor(user)}</div>
+              <div className="min-w-0"><p className="text-xs text-[#967348]">YOUR PROFILE</p><h1 className="mt-1 break-words text-xl font-semibold text-[#321d1d]">{displayName}</h1><p className="mt-1 text-xs text-[#786565]">Manage your contact details and account security.</p></div>
+            </div>
+            <span className="rounded-full bg-[#f4eee8] px-3 py-1 text-xs font-semibold text-[#57322d]">{user?.status === 'ACTIVE' ? 'Active' : user ? 'Deactivated' : 'Loading account'}</span>
+          </div>
+          <dl className="grid gap-4 border-t border-[#ead7d3] p-5 sm:grid-cols-3">
+            <div><dt className="text-[11px] uppercase text-[#9a8985]">Account type</dt><dd className="mt-1 text-sm font-semibold">{roleLabels[role]}</dd></div>
+            <div className="min-w-0"><dt className="text-[11px] uppercase text-[#9a8985]">Email address</dt><dd className="mt-1 break-words text-sm">{user?.email || '—'}</dd></div>
+            <div><dt className="text-[11px] uppercase text-[#9a8985]">Phone number</dt><dd className="mt-1 text-sm">{user?.phone || 'Not provided'}</dd></div>
+          </dl>
+        </header>
+      ) : (
       <div className="profile-page__header mb-7 flex flex-col justify-between gap-5 border-b border-[#e8ddd8] pb-7 sm:flex-row sm:items-end">
         <div className="profile-page__introduction">
           <div className="profile-page__breadcrumb mb-3 flex items-center gap-2 text-xs font-medium text-[#9a8985]">
@@ -250,7 +266,6 @@ export default function ProfilePage({
             <ChevronIcon />
             <span className="text-[#7a1d20]">Profile</span>
           </div>
-          {role === 'ADMIN' && (<h1 className="text-[clamp(1.8rem,4vw,2.65rem)] font-semibold tracking-[-0.04em] text-[#321d1d]">Your profile</h1>)}
           <p className="profile-page__intro mt-2 max-w-xl text-sm leading-6 text-[#756969]">
             Keep your contact details current so the SmartLab team can reach you when it matters.
           </p>
@@ -265,6 +280,8 @@ export default function ProfilePage({
           </div>
         </div>
       </div>
+
+      )}
 
       {user === null && (
         <div className="mb-6 flex items-start gap-3 rounded-2xl border border-[#ead5c8] bg-[#fff9f5] px-4 py-3.5 text-sm text-[#754b39]" role="status">

@@ -908,3 +908,14 @@
  .equipment-range-report td:nth-child(6)::before { content: 'Units returned'; }
  .equipment-range-report td:nth-child(7)::before { content: 'Unreturned'; }
 }
+
+/* Admin profile follows the full-width settings workspace. */
+.profile-page--admin { max-width: none; padding: 1rem 1.5rem; }
+.profile-page--admin > .grid { gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #c8aaa2; }
+.profile-page--admin > .grid > section { padding: 1.25rem; background: #fff; border-color: #e5e7eb; box-shadow: 0 1px 3px #0000001a; }
+.profile-page--admin .profile-section-heading { margin: -1.25rem -1.25rem 1.25rem; padding: 1.1rem 1.25rem; border-color: #f0ece9; }
+.profile-page--admin .profile-section-heading > div > p:first-child { display: none; }
+.profile-page--admin .profile-section-heading h2 { font-size: .875rem; letter-spacing: normal; }
+.profile-page--admin .profile-section-heading p { font-size: .75rem; line-height: 1.5; }
+.profile-page--admin button { border-radius: .75rem; }
+@media (max-width: 639px) { .profile-page--admin { padding: 1rem .75rem; } }
