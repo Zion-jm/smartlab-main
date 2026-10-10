@@ -12,9 +12,9 @@ export default function StudentAcademicBatch({yearId,years,studentIds,programs,o
  const preview=async()=>{setBusy(true);setError('');setRows(null);try{const response=await studentAcademicApi.previewBatch({mode,academicYearId:yearId,sourceYearId,studentIds});setRows(response.data.rows.map((row:Row)=>({...row,selected:!row.blocked&&!row.requiresGraduationReview,archiveAccount:false})));}catch(e){fail(e);}finally{setBusy(false);}};
  const save=async()=>{setBusy(true);setError('');try{await studentAcademicApi.commitBatch({mode,academicYearId:yearId,sourceYearId,reason,rows:selected.map(({studentId,fingerprint,programId,yearLevel,status,archiveAccount})=>({studentId,fingerprint,programId,yearLevel,status,archiveAccount}))});setConfirm(false);setRows(null);onSaved();}catch(e){setConfirm(false);fail(e);}finally{setBusy(false);}};
  const change=(id:string,patch:Partial<Row>)=>setRows(current=>current?.map(row=>row.studentId===id?{...row,...patch}:row)??null);
- return <section aria-label="Bulk academic records" className="mt-6 rounded-2xl border border-[#dfc9c3] bg-[#fffaf8] p-5 shadow-sm">
+ return <section aria-label="Bulk academic records" className="mt-5 border-t-2 border-[#c8aaa2] pt-5">
   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a15c45]">Bulk tools</p>
-  <h3 className="mt-1 text-base font-semibold text-[#321d1d]">Set up or promote this page</h3>
+  <h3 className="mt-1 text-base font-semibold text-[#321d1d]">Bulk setup and yearly promotion</h3>
   <p className="mt-1 text-xs leading-5 text-[#786565]">Destination: <strong>{target}</strong> · {studentIds.length} students. Existing destination records are protected and history remains unchanged.</p>
   <fieldset disabled={busy||confirm} className="mt-3 space-y-3">
    <div className="grid gap-3 sm:grid-cols-3"><label className="text-xs">Operation<select className={control} value={mode} onChange={e=>{setMode(e.target.value);setRows(null);}}><option value="SETUP">Set up from current profiles</option><option value="PROMOTE">Promote from previous year</option></select></label>
