@@ -1,3 +1,4 @@
+import { CalendarDays, Search, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
@@ -7,7 +8,7 @@ import { manilaTodayForPicker, formatDate, formatTimeRange } from '../../utils/d
 
 type PlanningRequest = { id: string; academicYearId: string; termId: string; reference: string; requester: string; quantity: number; status: string; dateNeeded: string; timeStart: string | null; timeEnd: string | null; location: string };
 type PlanningRow = { id: string; name: string; archived: boolean; usable: number; checkedOut: number; reserved: number; available: number; pending: number; requests: PlanningRequest[] };
-const times = Array.from({ length: 28 }, (_, i) => { const minutes = 450 + i * 30; const value = String(Math.floor(minutes / 60)).padStart(2, '0') + ':' + String(minutes % 60).padStart(2, '0'); return { value, label: value }; });
+const times = Array.from({ length: 28 }, (_, i) => { const minutes = 450 + i * 30; const value = String(Math.floor(minutes / 60)).padStart(2, '0') + ':' + String(minutes % 60).padStart(2, '0'); return { value, label: (Math.floor(minutes / 60) % 12 || 12) + ':' + String(minutes % 60).padStart(2, '0') + (minutes < 720 ? ' AM' : ' PM') }; });
 const dateKey = (date: Date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
 
 export default function EquipmentAvailabilityPlanner() {
@@ -31,19 +32,23 @@ export default function EquipmentAvailabilityPlanner() {
     return () => { active = false; };
   }, [query]);
   const changed = !query || !date || query.date !== dateKey(date) || query.timeStart !== (mode === 'time' ? start : undefined) || query.timeEnd !== (mode === 'time' ? end : undefined);
-  return <section className="space-y-4 rounded-2xl border border-[#ead7d3] bg-white p-4 sm:p-6">
-    <div><h2 className="text-lg font-semibold">Availability by date and time</h2><p className="mt-1 text-sm text-[#786565]">All academic periods share this stock. Pending demand does not reduce availability. Checked-out units remain unavailable until returned.</p></div>
-    <form className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2" onSubmit={event => {
+  return <section className="space-y-4 rounded-2xl border border-[#ead7d3] bg-white p-4 shadow-sm sm:p-5">
+    <header className="-mx-4 -mt-4 flex items-center gap-3 rounded-t-2xl border-b border-[#ead7d3] bg-[#fffaf7] p-4 sm:-mx-5 sm:-mt-5 sm:p-5">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#800000] text-white shadow-sm"><CalendarDays size={22} aria-hidden="true" /></span>
+      <div><h2 className="text-base font-semibold text-[#321d1d]">Equipment availability</h2><p className="mt-1 text-xs text-[#786565]">Plan equipment use for a day or a specific time. All times are in Manila time.</p></div>
+    </header>
+    <form className="grid grid-cols-2 items-end gap-4 xl:grid-cols-4" onSubmit={event => {
       event.preventDefault();
       if (!date || (mode === 'time' && end <= start)) { setError('Select a date and an end time later than the start.'); return; }
       setError(''); setLoading(true); setExpanded(null);
       setQuery({ date: dateKey(date), ...(mode === 'time' ? { timeStart: start, timeEnd: end } : {}) });
     }}>
-      <div><p className="mb-1 text-xs">Date</p><StyledDatePicker browsing value={date} onChange={setDate} /></div>
-      <div><p className="mb-1 text-xs">View</p><DropdownField value={mode} onChange={setMode} options={[{ value: 'day', label: 'Whole day' }, { value: 'time', label: 'Specific time' }]} /></div>
-      {mode === 'time' && <><div><p className="mb-1 text-xs">From</p><DropdownField value={start} onChange={setStart} options={times} /></div><div><p className="mb-1 text-xs">To</p><DropdownField value={end} onChange={setEnd} options={times} /></div></>}
-      <button className="min-h-11 rounded-lg bg-[#800000] px-4 py-2 text-sm font-semibold text-white" type="submit">{loading ? 'Checking…' : 'Check availability'}</button>
+      <div className="col-span-2 min-w-0 sm:col-span-1"><p className="mb-2 text-xs font-semibold text-[#786565]">Date</p><StyledDatePicker browsing value={date} onChange={setDate} /></div>
+      <div className="col-span-2 min-w-0 sm:col-span-1"><p className="mb-2 text-xs font-semibold text-[#786565]">Time coverage</p><DropdownField value={mode} onChange={setMode} options={[{ value: 'day', label: 'Whole day' }, { value: 'time', label: 'Specific time' }]} /></div>
+      {mode === 'time' && <><div className="min-w-0"><p className="mb-2 text-xs font-semibold text-[#786565]">From</p><DropdownField value={start} onChange={setStart} options={times} /></div><div className="min-w-0"><p className="mb-2 text-xs font-semibold text-[#786565]">To</p><DropdownField value={end} onChange={setEnd} options={times} /></div></>}
+      <div className="col-span-2 flex justify-end border-t border-[#eee4df] pt-4 xl:col-span-4"><button disabled={loading} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#800000] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#650000] disabled:opacity-60 sm:w-auto" type="submit"><Search size={16} aria-hidden="true" />{loading ? 'Checking…' : 'Check availability'}</button></div>
     </form>
+    <div className="flex items-start gap-2 rounded-xl bg-[#faf8f6] px-3 py-2.5 text-xs leading-5 text-[#786565]"><Info size={15} className="mt-0.5 shrink-0 text-[#967348]" aria-hidden="true" /><p>Stock is shared across academic periods. Pending requests do not reserve stock. Checked-out units remain unavailable until returned.</p></div>
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     {query && !changed && !loading && !error && <>
       <p className="text-sm text-[#786565]">{query.date} · {query.timeStart ? query.timeStart + '–' + query.timeEnd : 'Whole day'} (Manila time). Reserved and pending figures show peak simultaneous quantities, not daily totals. Availability uses current stock, including outstanding loans.</p>
