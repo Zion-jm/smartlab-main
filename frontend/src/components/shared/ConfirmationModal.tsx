@@ -5,6 +5,7 @@ interface ConfirmationModalProps {
   title: string;
   message: string;
   confirmLabel?: string;
+  cancelLabel?: string;
   confirmingLabel?: string;
   isConfirming?: boolean;
   onConfirm: () => void;
@@ -16,6 +17,7 @@ export default function ConfirmationModal({
   title,
   message,
   confirmLabel = 'Confirm',
+  cancelLabel = 'Keep request',
   confirmingLabel = 'Saving…',
   isConfirming = false,
   onConfirm,
@@ -73,7 +75,7 @@ export default function ConfirmationModal({
             disabled={isConfirming}
             className="rounded-full border border-[#e5e7eb] px-4 py-2 text-xs font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Keep request
+            {cancelLabel}
           </button>
           <button
             type="button"

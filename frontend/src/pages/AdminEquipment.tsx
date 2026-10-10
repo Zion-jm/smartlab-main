@@ -1,3 +1,4 @@
+import ConfirmationModal from '../components/shared/ConfirmationModal';
 import EquipmentAvailabilityPlanner from '../components/equipment/EquipmentAvailabilityPlanner';
 import { useRef } from 'react';
 import { isAxiosError } from 'axios';
@@ -76,6 +77,7 @@ export default function AdminEquipment() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<EquipmentDrawerMode>('create');
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentItem | null>(null);
+  const [lifecycleAction, setLifecycleAction] = useState<{ item: EquipmentItem; action: 'archive' | 'restore' } | null>(null);
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const [usageRequests, setUsageRequests] = useState<BorrowRequest[]>([]);
   const [usageLoading, setUsageLoading] = useState(true);
@@ -237,10 +239,10 @@ export default function AdminEquipment() {
 
   const handleArchive = async (item: EquipmentItem) => {
     if (archivingId) return;
-    if (!confirm(`Archive "${item.name}"? It will be unavailable for new loans. History and existing loans will be kept.`)) return;
     setArchivingId(item.id);
     try {
       await equipmentApi.retire(item.id);
+      setLifecycleAction(null);
       await loadData();
       toast.success(`"${item.name}" archived successfully.`);
     } catch (error) {
@@ -252,10 +254,11 @@ export default function AdminEquipment() {
   };
 
   const handleRestore = async (item: EquipmentItem) => {
-    if (archivingId || !confirm(`Restore "${item.name}"? Availability will depend on its current stock.`)) return;
+    if (archivingId) return;
     setArchivingId(item.id);
     try {
       await equipmentApi.restore(item.id);
+      setLifecycleAction(null);
       await loadData();
       toast.success('Equipment restored.');
     } catch (error) {
@@ -386,7 +389,7 @@ export default function AdminEquipment() {
             {paginatedEquipment.map(item => <article key={item.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white">
               <header className="space-y-2 border-b border-[#f1e6e3] bg-[#fffaf7] p-3"><h3 className="break-words text-sm font-semibold text-[#57322d]">{item.name}</h3><span className={'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ' + statusBadges[item.status].className}>{item.retiredAt ? 'Archived' : statusBadges[item.status].label}</span></header>
               <div className="p-3"><p className="mb-3 break-words text-xs leading-relaxed text-[#786565]">{item.description || 'No description provided'}</p><dl className="grid grid-cols-3 gap-2 text-center">{[['Available', item.availableQuantity], ['Checked out', item.borrowedQuantity], ['Damaged', item.damagedQuantity]].map(([label, count]) => <div key={label} className="rounded-xl bg-[#faf7f5] py-3"><dt className="text-[10px] text-[#786565]">{label}</dt><dd className="mt-1 text-lg font-semibold text-[#321d1d]">{count}</dd></div>)}</dl><p className="mt-2 text-right text-xs text-[#786565]">{item.totalQuantity} total units</p></div>
-              <footer className="grid grid-cols-2 gap-2 border-t border-[#f1e6e3] p-3"><TextActionButton label="Edit" icon="edit" onClick={() => openDrawer('edit', item)} /><TextActionButton label={archivingId === item.id ? 'Saving…' : item.retiredAt ? 'Restore' : 'Archive'} icon={item.retiredAt ? 'restore' : 'archive'} onClick={() => item.retiredAt ? handleRestore(item) : handleArchive(item)} disabled={archivingId !== null} busy={archivingId === item.id} /></footer>
+              <footer className="grid grid-cols-2 gap-2 border-t border-[#f1e6e3] p-3"><TextActionButton label="Edit" icon="edit" onClick={() => openDrawer('edit', item)} /><TextActionButton label={archivingId === item.id ? 'Saving…' : item.retiredAt ? 'Restore' : 'Archive'} icon={item.retiredAt ? 'restore' : 'archive'} onClick={() => setLifecycleAction({ item, action: item.retiredAt ? 'restore' : 'archive' })} disabled={archivingId !== null} busy={archivingId === item.id} /></footer>
             </article>)}
           </div>
           <div className="hidden md:block"><TableContainer>
@@ -431,7 +434,7 @@ export default function AdminEquipment() {
                         />
                         <TextActionButton
                           label={archivingId === item.id ? 'Saving…' : item.retiredAt ? 'Restore' : 'Archive'}
-                          onClick={() => item.retiredAt ? handleRestore(item) : handleArchive(item)}
+                          onClick={() => setLifecycleAction({ item, action: item.retiredAt ? 'restore' : 'archive' })}
                           variant="default" icon={item.retiredAt ? 'restore' : 'archive'} disabled={archivingId !== null} busy={archivingId === item.id}
                         />
                       </TableActionsCell>
@@ -653,6 +656,22 @@ export default function AdminEquipment() {
             </div>
         </div>
       </div>
+      <ConfirmationModal
+        isOpen={Boolean(lifecycleAction)}
+        title={lifecycleAction?.action === 'restore' ? 'Restore equipment?' : 'Archive equipment?'}
+        message={lifecycleAction?.action === 'restore'
+          ? `Restore "${lifecycleAction.item.name}"? Availability will depend on its current stock.`
+          : `Archive "${lifecycleAction?.item.name ?? ''}"? It will be unavailable for new loans. History and existing loans will be kept.`}
+        confirmLabel={lifecycleAction?.action === 'restore' ? 'Restore equipment' : 'Archive equipment'}
+        cancelLabel="Cancel"
+        isConfirming={archivingId !== null}
+        confirmingLabel="Saving…"
+        onClose={() => { if (!archivingId) setLifecycleAction(null); }}
+        onConfirm={() => {
+          if (!lifecycleAction || archivingId) return;
+          void (lifecycleAction.action === 'restore' ? handleRestore(lifecycleAction.item) : handleArchive(lifecycleAction.item));
+        }}
+      />
       <EquipmentDrawer
         open={drawerOpen}
         mode={drawerMode}
