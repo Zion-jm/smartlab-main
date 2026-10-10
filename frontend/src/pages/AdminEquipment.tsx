@@ -1,3 +1,4 @@
+import EquipmentAvailabilityPlanner from '../components/equipment/EquipmentAvailabilityPlanner';
 import { useRef } from 'react';
 import { isAxiosError } from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -26,15 +27,16 @@ import AcademicPeriodFilter, { type AcademicPeriodSelection } from '../component
 import FilterToolbar from '../components/FilterToolbar';
 import ResetFiltersButton from '../components/shared/ResetFiltersButton';
 
-type EquipmentView = 'table' | 'calendar';
+type EquipmentView = 'table' | 'calendar' | 'availability';
 
 const equipmentViewTabs: Array<{ id: EquipmentView; label: string }> = [
   { id: 'table', label: 'Inventory' },
   { id: 'calendar', label: 'Usage Calendar' },
+  { id: 'availability', label: 'Availability' },
 ];
 
 const isEquipmentView = (value: string | null): value is EquipmentView =>
-  value === 'table' || value === 'calendar';
+  value === 'table' || value === 'calendar' || value === 'availability';
 
 const statusBadges: Record<EquipmentStatus, { label: string; className: string }> = {
   AVAILABLE: { label: 'Available', className: 'bg-[#dcfce7] text-[#166534]' },
@@ -323,7 +325,7 @@ export default function AdminEquipment() {
         subtext: `${stats.inventory?.lowStockCount ?? 0} low in stock`,
       },
       {
-        title: 'Borrowed',
+        title: 'Currently checked out',
         value: stats.inventory?.borrowedQuantity ?? 0,
         subtext: `${stats.today?.itemsReserved ?? 0} reserved today`,
       },
@@ -378,7 +380,7 @@ export default function AdminEquipment() {
           <div className="space-y-3 md:hidden">
             {paginatedEquipment.map(item => <article key={item.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white">
               <header className="space-y-2 border-b border-[#f1e6e3] bg-[#fffaf7] p-3"><h3 className="break-words text-sm font-semibold text-[#57322d]">{item.name}</h3><span className={'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ' + statusBadges[item.status].className}>{item.retiredAt ? 'Archived' : statusBadges[item.status].label}</span></header>
-              <div className="p-3"><p className="mb-3 break-words text-xs leading-relaxed text-[#786565]">{item.description || 'No description provided'}</p><dl className="grid grid-cols-3 gap-2 text-center">{[['Available', item.availableQuantity], ['Borrowed', item.borrowedQuantity], ['Damaged', item.damagedQuantity]].map(([label, count]) => <div key={label} className="rounded-xl bg-[#faf7f5] py-3"><dt className="text-[10px] text-[#786565]">{label}</dt><dd className="mt-1 text-lg font-semibold text-[#321d1d]">{count}</dd></div>)}</dl><p className="mt-2 text-right text-xs text-[#786565]">{item.totalQuantity} total units</p></div>
+              <div className="p-3"><p className="mb-3 break-words text-xs leading-relaxed text-[#786565]">{item.description || 'No description provided'}</p><dl className="grid grid-cols-3 gap-2 text-center">{[['Available', item.availableQuantity], ['Checked out', item.borrowedQuantity], ['Damaged', item.damagedQuantity]].map(([label, count]) => <div key={label} className="rounded-xl bg-[#faf7f5] py-3"><dt className="text-[10px] text-[#786565]">{label}</dt><dd className="mt-1 text-lg font-semibold text-[#321d1d]">{count}</dd></div>)}</dl><p className="mt-2 text-right text-xs text-[#786565]">{item.totalQuantity} total units</p></div>
               <footer className="grid grid-cols-2 gap-2 border-t border-[#f1e6e3] p-3"><TextActionButton label="Edit" icon="edit" onClick={() => openDrawer('edit', item)} /><TextActionButton label={archivingId === item.id ? 'Saving…' : item.retiredAt ? 'Restore' : 'Archive'} icon={item.retiredAt ? 'restore' : 'archive'} onClick={() => item.retiredAt ? handleRestore(item) : handleArchive(item)} disabled={archivingId !== null} busy={archivingId === item.id} /></footer>
             </article>)}
           </div>
@@ -387,7 +389,7 @@ export default function AdminEquipment() {
               <TableHead>
                 <TableHeaderCell>Equipment</TableHeaderCell>
                 <TableHeaderCell>Available</TableHeaderCell>
-                <TableHeaderCell>Borrowed</TableHeaderCell>
+                <TableHeaderCell>Currently checked out</TableHeaderCell>
                 <TableHeaderCell>Damaged</TableHeaderCell>
                 <TableHeaderCell>Status</TableHeaderCell>
                 <TableHeaderCell align="right" width="8rem">Actions</TableHeaderCell>
@@ -580,7 +582,7 @@ export default function AdminEquipment() {
             icon: <Plus aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />,
             onClick: () => openDrawer('create'),
           }}
-          filters={equipmentFilterPanel}
+          filters={viewMode === 'availability' ? <p className="text-sm text-[#786565]">Availability includes reservations across all academic periods.</p> : equipmentFilterPanel}
           className="mb-1"
           filtersActiveCount={viewMode === 'table' ? appliedFilters.length : 0}
           defaultFiltersOpen={appliedFilters.length > 0}
@@ -634,7 +636,7 @@ export default function AdminEquipment() {
               {viewMode === 'table' && (
                 <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
               )}
-              {viewMode === 'table' ? renderTable() : (
+              {viewMode === 'table' ? renderTable() : viewMode === 'availability' ? <EquipmentAvailabilityPlanner /> : (
                 <EquipmentUsageCalendar
                   equipment={equipment}
                   requests={usageRequests}

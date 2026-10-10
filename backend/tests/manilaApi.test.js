@@ -100,6 +100,28 @@ describe('Manila API date boundaries on local smartlab_test',()=>{
       await db.equipment.delete({where:{id:extra.id}});
     }
   });
+  test('admin planner uses peak reservations and keeps pending demand advisory',async()=>{
+    const item=await db.equipment.create({data:{name:tag+'-planner',totalQuantity:10,availableQuantity:8,borrowedQuantity:2}});
+    const ids=[];
+    try {
+      for(const [status,from,to,quantity] of [['APPROVED','08:00','09:00',3],['APPROVED','09:00','10:00',4],['PENDING','08:00','10:00',5],['BORROWED','08:00','09:00',2]]) {
+        ids.push((await db.borrowRequest.create({data:{requestType:'EQUIPMENT',usageLocation:'Planner venue',requestedBy:admin.id,academicYearId:year.id,termId:term.id,dateNeeded:start,status,timeStart:new Date(day+'T'+from+':00+08:00'),timeEnd:new Date(day+'T'+to+':00+08:00'),items:{create:{equipmentId:item.id,quantity}}}})).id);
+      }
+      let result=await apiRequest('GET','/equipment-conflicts/planning?date='+day,null,token);
+      expect(result.status).toBe(200);
+      let row=result.data.data.find(r=>r.id===item.id);
+      expect(row).toMatchObject({reserved:4,pending:5,checkedOut:2,available:4,usable:10});
+      expect(row.requests).toHaveLength(4);expect(row.requests[0].location).toBe('Planner venue');
+      result=await apiRequest('GET','/equipment-conflicts/planning?date='+day+'&timeStart=08:00&timeEnd=09:00',null,token);
+      row=result.data.data.find(r=>r.id===item.id);expect(row.reserved).toBe(3);expect(row.available).toBe(5);
+      await db.equipment.update({where:{id:item.id},data:{retiredAt:new Date(),status:'UNAVAILABLE'}});
+      result=await apiRequest('GET','/equipment-conflicts/planning?date='+day,null,token);
+      expect(result.data.data.find(r=>r.id===item.id).available).toBe(0);
+      expect((await apiRequest('GET','/equipment-conflicts/planning?date=2035-02-30',null,token)).status).toBe(400);
+      expect((await apiRequest('GET','/equipment-conflicts/planning?date='+day+'&timeStart=09:00&timeEnd=08:00',null,token)).status).toBe(400);
+      expect((await apiRequest('GET','/equipment-conflicts/planning?date='+day,null,null)).status).toBe(401);
+    } finally {await db.borrowRequest.deleteMany({where:{id:{in:ids}}});await db.equipment.delete({where:{id:item.id}});}
+  });
   test('invalid date-only inputs return validation errors',async()=>{
     expect((await apiRequest('GET','/audit-logs?from=2035-02-30',null,token)).status).toBe(400);
     expect((await apiRequest('GET','/lab-schedules?dateFrom=2035-02-30',null,token)).status).toBe(400);
