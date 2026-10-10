@@ -17,6 +17,7 @@ interface DropdownFieldProps<T extends string> {
   id?: string;
   testId?: string;
   portal?: boolean;
+  menuZIndex?: number;
   menuMinWidth?: number;
   nowrapOptions?: boolean;
   selectedLabel?: string;
@@ -33,6 +34,7 @@ export default function DropdownField<T extends string>({
   id,
   testId,
   portal = false,
+  menuZIndex = 1000,
   menuMinWidth = 112,
   nowrapOptions = false,
   selectedLabel,
@@ -133,7 +135,7 @@ export default function DropdownField<T extends string>({
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       if (!open) {
-        setOpen(true);
+        openMenu();
         setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
       } else if (options[highlightedIndex]) {
         selectOption(options[highlightedIndex]);
@@ -217,7 +219,7 @@ export default function DropdownField<T extends string>({
           renderMenu(
           <div
             ref={menuRef}
-            style={portal ? { position: 'fixed', ...menuPosition, zIndex: 1000, marginTop: 0 } : undefined}
+            style={portal ? { position: 'fixed', ...menuPosition, zIndex: menuZIndex, marginTop: 0 } : undefined}
             id={listboxId}
             role="listbox"
             aria-label={labelText ? String(labelText) : placeholder}
