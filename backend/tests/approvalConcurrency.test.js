@@ -43,7 +43,7 @@ describe('Shared approvals and schedule conflicts on local smartlab_test',()=>{
     const q=await db.borrowRequest.create({data:{requestType:'LABORATORY',requestedBy:faculty.id,facultyId:profile.id,roomId:r.id,academicYearId:year.id,termId:term.id,dateNeeded:new Date(date),timeStart:new Date(clock(start)),timeEnd:new Date(clock(end)),status,items:{create:items.map(([e,quantity])=>({equipmentId:e.id,quantity}))}}});requests.push(q.id);return q;
   }
   const approve=(q,route='borrow',auth=token)=>apiRequest('PATCH',route==='borrow'?'/borrow-requests/'+q.id+'/approve':'/lab-schedules/approve-request/'+q.id,null,auth);
-  const payload=(r,{start=8,end=10,type='ONE_TIME'}={})=>({roomId:r.id,facultyId:profile.id,academicYearId:year.id,termId:term.id,scheduleType:type,scheduleDate:type==='ONE_TIME'?date:null,dayOfWeek:day,timeStart:clock(start),timeEnd:clock(end)});
+  const payload=(r,{start=8,end=10,type='ONE_TIME'}={})=>({yearLevel:1,roomId:r.id,facultyId:profile.id,academicYearId:year.id,termId:term.id,scheduleType:type,scheduleDate:type==='ONE_TIME'?date:null,dayOfWeek:day,timeStart:clock(start),timeEnd:clock(end)});
   const create=(r,options)=>apiRequest('POST','/lab-schedules/admin/create',payload(r,options),token);
   function oneWinner(results){expect(results.filter(r=>[200,201].includes(r.status))).toHaveLength(1);expect(results.every(r=>[200,201,409].includes(r.status))).toBe(true);}
   test.each(['borrow','schedule'])('%s approval requires admin authentication',async route=>{

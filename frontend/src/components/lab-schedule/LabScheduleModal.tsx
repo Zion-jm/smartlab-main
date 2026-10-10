@@ -183,6 +183,7 @@ export default function LabScheduleModal({
       { field: 'facultyId', label: 'Faculty' },
       { field: 'programId', label: 'Program' },
       { field: 'subjectId', label: 'Subject' },
+      { field: 'yearLevel', label: 'Year level' },
     ];
 
     if (formValues.scheduleType === 'ONE_TIME') {
@@ -255,7 +256,7 @@ export default function LabScheduleModal({
       facultyId: formValues.facultyId,
       programId: formValues.programId,
       subjectId: formValues.subjectId,
-      yearLevel: formValues.yearLevel ? Number(formValues.yearLevel) : null,
+      yearLevel: Number(formValues.yearLevel),
       scheduleType,
       scheduleDate,
       dayOfWeek,
@@ -459,9 +460,12 @@ export default function LabScheduleModal({
           />
           <DropdownField
             label="Year level"
+            required
+            id="schedule-yearLevel"
+            error={fieldErrors.yearLevel}
             value={formValues.yearLevel}
             options={yearOptions}
-            placeholder="Optional"
+            placeholder="Select year level"
             onChange={(value) => handleSelectChange('yearLevel', value)}
           />
         </div>

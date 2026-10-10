@@ -163,6 +163,7 @@ describe('Lab Schedules', () => {
 
     test('returns 400 when required fields are missing', async () => {
       const { status, data } = await apiRequest('POST', '/lab-schedules/admin/create', {
+        yearLevel: 1,
         scheduleType: 'ONE_TIME',
       }, adminToken);
       expect(status).toBe(400);
@@ -173,6 +174,7 @@ describe('Lab Schedules', () => {
       const start = makeScheduleDate(5, 4);
       const earlyEnd = makeScheduleDate(5, 2); // 2 hours BEFORE start
       const { status, data } = await apiRequest('POST', '/lab-schedules/admin/create', {
+        yearLevel: 1,
         roomId,
         facultyId: facultyProfileId,
         scheduleType: 'ONE_TIME',
@@ -189,6 +191,7 @@ describe('Lab Schedules', () => {
     test('returns 400 for ONE_TIME without scheduleDate', async () => {
       const someStart = makeScheduleDate(6, 6);
       const { status, data } = await apiRequest('POST', '/lab-schedules/admin/create', {
+        yearLevel: 1,
         roomId,
         facultyId: facultyProfileId,
         scheduleType: 'ONE_TIME',
@@ -204,6 +207,7 @@ describe('Lab Schedules', () => {
     test('faculty cannot create admin schedules (403)', async () => {
       const s = makeScheduleDate(7);
       const { status } = await apiRequest('POST', '/lab-schedules/admin/create', {
+        yearLevel: 1,
         roomId,
         facultyId: facultyProfileId,
         scheduleType: 'ONE_TIME',
@@ -231,6 +235,7 @@ describe('Lab Schedules', () => {
       }, adminToken);
 
       const { status, data } = await apiRequest('POST', '/lab-schedules/admin/create', {
+        yearLevel: 1,
         roomId,
         facultyId: facultyProfileId,
         scheduleType: 'ONE_TIME',
@@ -299,6 +304,7 @@ describe('Lab Schedules', () => {
     test('admin can delete a schedule', async () => {
       const disposeDate = makeScheduleDate(50);
       const { data: created } = await apiRequest('POST', '/lab-schedules/admin/create', {
+        yearLevel: 1,
         roomId,
         facultyId: facultyProfileId,
         scheduleType: 'ONE_TIME',

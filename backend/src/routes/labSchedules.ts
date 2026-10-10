@@ -265,6 +265,10 @@ router.post(
         scheduleType: scheduleTypeInput, timeStart, timeEnd,
         academicYearId, termId,
       } = req.body;
+      if (!Number.isInteger(yearLevel) || yearLevel < 1 || yearLevel > 4) {
+        res.status(400).json({ error: 'Year level is required and must be between 1 and 4.' });
+        return;
+      }
       const periodSelection = await resolveAcademicPeriodSelection(
         prisma,
         { academicYearId, termId },
@@ -522,6 +526,11 @@ router.put(
         scheduleType: scheduleTypeInput, timeStart, timeEnd,
         academicYearId, termId,
       } = req.body;
+
+      if (yearLevel !== undefined && (!Number.isInteger(yearLevel) || yearLevel < 1 || yearLevel > 4)) {
+        res.status(400).json({ error: 'Year level is required and must be between 1 and 4.' });
+        return;
+      }
 
       const existing = await prisma.labSchedule.findUnique({
         where: { id },

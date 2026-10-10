@@ -23,5 +23,6 @@
   "frontendPagination.test.js",
   "prismaLifecycle.test.js",
   "chromiumPdf.test.js",
-  "testEnvironment.test.js"
+  "testEnvironment.test.js",
+  "scheduleYearLevel.test.js"
 ]
