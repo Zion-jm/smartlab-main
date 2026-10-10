@@ -32,13 +32,13 @@ const statusMeta: Record<
   },
   APPROVED: {
     label: 'Approved',
-    className: 'bg-[#dbeafe] text-[#1d4ed8] border-[#bfdbfe]',
-    dotClassName: 'bg-[#2563eb]',
+    className: 'bg-[#dcfce7] text-[#166534] border-[#86efac]',
+    dotClassName: 'bg-[#16a34a]',
   },
   BORROWED: {
     label: 'Borrowed',
-    className: 'bg-[#dcfce7] text-[#166534] border-[#bbf7d0]',
-    dotClassName: 'bg-[#16a34a]',
+    className: 'bg-[#dbeafe] text-[#1d4ed8] border-[#93c5fd]',
+    dotClassName: 'bg-[#2563eb]',
   },
   RETURNED: {
     label: 'Returned',
@@ -307,10 +307,11 @@ export default function EquipmentUsageCalendar({
                       return (
                         <div
                           key={request.id}
-                          className={`truncate rounded-lg border px-2 py-1 text-[10px] font-semibold ${meta.className}`}
-                          title={`${getRequestEquipmentLabel(request)} — ${request.requesterName}`}
+                          className={`rounded-lg border px-2 py-1 text-[10px] font-semibold ${meta.className}`}
+                          title={`${meta.label} — ${getRequestEquipmentLabel(request)} — ${request.requesterName}`}
                         >
-                          {getRequestEquipmentLabel(request)}
+                          <span className="flex items-center gap-1.5"><span className={`h-2 w-2 shrink-0 rounded-full ${meta.dotClassName}`} aria-hidden="true" />{meta.label}</span>
+                          <span className="mt-0.5 block truncate">{getRequestEquipmentLabel(request)}</span>
                         </div>
                       );
                     })}
