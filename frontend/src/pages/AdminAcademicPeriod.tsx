@@ -1,7 +1,7 @@
-import StudentAcademicRecords from '../components/admin/StudentAcademicRecords';
 import { dateToDateKey } from '../utils/dateTime';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Archive, CalendarRange, CheckCircle2, Clock3, History, RefreshCw, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Archive, ArrowRight, CalendarRange, CheckCircle2, Clock3, GraduationCap, History, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmationModal from '../components/shared/ConfirmationModal';
 import { academicPeriodApi } from '../services/api';
@@ -468,7 +468,12 @@ export default function AdminAcademicPeriod() {
           </div>
         </section>
       </div>
-      <div className="mx-auto mb-5 px-4"><StudentAcademicRecords years={data?.academicYears ?? []} /></div>
+      <div className="mx-auto mb-5 px-4">
+        <section className="flex flex-col gap-4 rounded-2xl border border-[#ead7d3] bg-linear-to-r from-[#fff8f5] to-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3"><span className="rounded-xl bg-[#f8e9e5] p-2.5 text-[#800000]"><GraduationCap className="h-5 w-5" /></span><div><h2 className="font-semibold text-[#321d1d]">Student academic records</h2><p className="mt-1 max-w-2xl text-sm leading-5 text-[#786565]">Confirm yearly standing, prepare promotions, and review graduation separately from the active-period setting.</p></div></div>
+          <Link to="/admin/student-records" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#800000] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#680000]">Manage student records <ArrowRight className="h-4 w-4" /></Link>
+        </section>
+      </div>
       <ConfirmationModal
         isOpen={pendingActivation !== null}
         title="Activate academic period?"

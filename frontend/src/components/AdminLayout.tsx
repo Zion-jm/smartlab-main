@@ -134,6 +134,13 @@ const baseAdminNavItems: PortalNavItem[] = [
     description: 'Set the active academic year and semester without changing historical records.',
   },
   {
+    id: 'student-records',
+    to: '/admin/student-records',
+    icon: UsersIcon,
+    label: 'Student Records',
+    description: 'Confirm yearly standing, promotions, and graduation outcomes.',
+  },
+  {
     id: 'audit-logs',
     to: '/admin/audit-logs',
     icon: AuditLogIcon,
@@ -151,7 +158,7 @@ const adminNavGroups: PortalNavGroup[] = [
   {
     id: 'system-administration',
     label: 'System Administration',
-    items: baseAdminNavItems.filter((item) => ['users', 'directory', 'academic-period', 'audit-logs'].includes(item.id)),
+    items: baseAdminNavItems.filter((item) => ['users', 'directory', 'academic-period', 'student-records', 'audit-logs'].includes(item.id)),
   },
 ];
 

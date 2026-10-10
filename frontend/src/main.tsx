@@ -15,6 +15,7 @@ import AdminEquipment from './pages/AdminEquipment'
 import AdminRequests from './pages/AdminRequests'
 import AdminReports from './pages/AdminReports'
 import AdminAcademicPeriod from './pages/AdminAcademicPeriod'
+import AdminStudentRecords from './pages/AdminStudentRecords'
 import AdminAuditLogs from './pages/AdminAuditLogs'
 import StudentPanel from './pages/StudentPanel'
 import ProfileRoute from './pages/ProfileRoute'
@@ -102,6 +103,14 @@ createRoot(document.getElementById('root')!).render(
           element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
               <AdminAcademicPeriod />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/student-records"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminStudentRecords />
             </ProtectedRoute>
           }
         />
