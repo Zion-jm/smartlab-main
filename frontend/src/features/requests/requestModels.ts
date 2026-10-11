@@ -1,6 +1,6 @@
 import type { EquipmentItem } from '../../types/equipment';
 import type { BorrowRequestStatus } from '../../types/requests';
-import { dateToDateKey } from '../../utils/dateTime';
+import { dateToDateKey, dateToTimeString } from '../../utils/dateTime';
 
 export const timeOptions: { value: string; label: string }[] = (() => {
   const options: { value: string; label: string }[] = [];
@@ -16,6 +16,18 @@ export const timeOptions: { value: string; label: string }[] = (() => {
   }
   return options;
 })();
+
+/** Start-time choices that have not elapsed in Manila for the selected day. */
+export const requestStartTimeOptions = (dateKey: string, now = new Date()) => {
+  if (!dateKey || dateKey !== dateToDateKey(now)) return timeOptions;
+  const currentTime = dateToTimeString(now);
+  // A request starts in the future. At an exact slot boundary that slot has
+  // already begun, so it is intentionally excluded as well.
+  return timeOptions.filter(option => option.value > currentTime);
+};
+
+export const requestTimeHasElapsed = (dateKey: string, time: string, now = new Date()) =>
+  Boolean(dateKey && time && dateKey === dateToDateKey(now) && time <= dateToTimeString(now));
 
 export type SelectOption = {
   value: string;

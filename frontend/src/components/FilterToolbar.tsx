@@ -34,6 +34,7 @@ interface FilterToolbarProps {
   filters?: ReactNode;
   filtersActiveCount?: number;
   defaultFiltersOpen?: boolean;
+  defaultRibbonExpanded?: boolean;
   compactFilters?: boolean;
   extraContent?: ReactNode;
   ribbonSummary?: ReactNode;
@@ -56,6 +57,7 @@ export default function FilterToolbar({
   filters,
   filtersActiveCount = 0,
   defaultFiltersOpen = false,
+  defaultRibbonExpanded,
   compactFilters = false,
   extraContent,
   ribbonSummary,
@@ -79,6 +81,7 @@ export default function FilterToolbar({
   return (
     <div className={`filter-toolbar filter-toolbar--sticky ${className ?? ''}`}>
       <ControlRibbon
+        defaultExpanded={defaultRibbonExpanded}
         onRefresh={onRefresh}
         refreshing={refreshing}
         refreshError={refreshError}

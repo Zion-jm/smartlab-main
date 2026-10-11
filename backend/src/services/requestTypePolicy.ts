@@ -1,6 +1,6 @@
 import { PrismaClient, UserRole } from '@prisma/client';
 import { RequestActionError } from './requestActionError';
-import { parseManilaDate, manilaDateKey } from '../utils/manilaTime';
+import { assertFutureManilaRequestWindow, parseManilaDate, manilaDateKey } from '../utils/manilaTime';
 
 // New and edited requests must explicitly declare their intent. Legacy is history only.
 export async function resolveRequestIntent(db: PrismaClient, body: Record<string, any>, role: UserRole, items: { equipmentId: string; quantity: number }[]) {
@@ -12,6 +12,8 @@ export async function resolveRequestIntent(db: PrismaClient, body: Record<string
   const start = parseManilaDate(body.timeStart), end = parseManilaDate(body.timeEnd);
   if (!start || !end || !Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) throw new RequestActionError(400, 'Choose a valid start and end time.');
   if (manilaDateKey(start) !== manilaDateKey(body.dateNeeded) || manilaDateKey(end) !== manilaDateKey(body.dateNeeded)) throw new RequestActionError(400, 'Start and end times must be on the requested date.');
+  try { assertFutureManilaRequestWindow(body.dateNeeded, start); }
+  catch (error) { throw new RequestActionError(400, error instanceof Error ? error.message : 'Choose a valid future request time.'); }
   if (!await db.facultyProfile.findUnique({ where: { id: body.facultyId } })) throw new RequestActionError(400, 'Select a valid supervising faculty member.');
   if (type === 'LABORATORY') {
     const room = typeof body.roomId === 'string' ? await db.room.findUnique({ where: { id: body.roomId } }) : null;

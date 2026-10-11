@@ -1,6 +1,7 @@
 import DropdownField from '../shared/DropdownField';
 import ScheduleDetailModal from './ScheduleDetailModal';
 import { useMemo, useState } from 'react';
+import { Maximize2 } from 'lucide-react';
 import type { LabSchedule } from '../../types/labSchedule';
 import { manilaTodayForPicker } from '../../utils/dateTime';
 import { calendarColors, chartDayOrder, chartHourMarks, chartMinuteEnd, chartMinuteStart, chartRowHeight, chartSlotMinutes, chartSlotPercents, chartTotalMinutes, clampMinutes, dayNames, formatClockLabel, getMonthLabel, minutesFromIso, occursOnDate, sameDay, scheduleTypeLabel } from './scheduleViewUtils';
@@ -11,9 +12,12 @@ export type ChartViewProps = {
   onSelectSchedule?: (scheduleId: string) => void;
   dayLabels?: readonly string[];
   showEmptyGrid?: boolean;
+  selectedLab?: string;
+  onSelectedLabChange?: (lab: string) => void;
+  onExpand?: () => void;
 };
 
-export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false }: ChartViewProps) {
+export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand }: ChartViewProps) {
   const [labOverride, setLabOverride] = useState<string | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<LabSchedule | null>(null);
 
@@ -35,11 +39,17 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
 
   const selectedLab = useMemo(() => {
     if (!labs.length) return '';
+    if (controlledLab && labs.includes(controlledLab)) return controlledLab;
     if (labOverride && labs.includes(labOverride)) {
       return labOverride;
     }
     return labs[0];
-  }, [labOverride, labs]);
+  }, [controlledLab, labOverride, labs]);
+
+  const selectLab = (value: string) => {
+    setLabOverride(value || null);
+    onSelectedLabChange?.(value);
+  };
 
   const dataset = useMemo(() => {
     if (!selectedLab) return [];
@@ -105,7 +115,8 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
           </div>
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</label>
-            <DropdownField value={selectedLab} onChange={value => setLabOverride(value || null)} options={labs.map(lab => ({value:lab,label:lab}))} placeholder="No labs available" disabled={!labs.length} className="min-w-[140px]" />
+            <DropdownField value={selectedLab} onChange={selectLab} options={labs.map(lab => ({value:lab,label:lab}))} placeholder="No labs available" disabled={!labs.length} className="min-w-[140px]" />
+            {onExpand && <button type="button" onClick={onExpand} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Expand weekly lab utilization chart"><Maximize2 size={15} aria-hidden="true" />Expand</button>}
           </div>
         </div>
 

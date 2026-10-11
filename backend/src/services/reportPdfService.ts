@@ -18,6 +18,12 @@ import { academicPeriodWhere } from './academicPeriodService';
 const REPORT_TIME_ZONE = 'Asia/Manila';
 const REPORT_PAGE_ROWS = 15;
 
+const renderReportSignatories = () => `
+  <div class="signatures">
+    <div><strong>Prepared by:</strong><span style="display:block;margin-top:8mm;border-top:1px solid #111"></span><em style="margin-top:1.5mm">Laboratory Assistant</em></div>
+    <div><strong>Noted by:</strong><span style="display:block;margin-top:8mm;border-top:1px solid #111"></span><em style="margin-top:1.5mm">Academic Head</em></div>
+  </div>`;
+
 
 export type BorrowRequestReportScope = 'period' | 'filtered';
 
@@ -285,10 +291,7 @@ const renderPage = (
         </table>
       </div>
       <div class="page-footer">
-        <div class="signatures">
-          <div><strong>Prepared by:</strong><em>Laboratory Assistant</em></div>
-          <div><strong>Noted by:</strong><em>Head, CCIS Laboratory</em></div>
-        </div>
+        ${renderReportSignatories()}
         <footer class="institution-footer">
           <div>
             <p>PUP A. Mabini Campus, Anonas Street, Sta. Mesa, Manila 1016</p>
@@ -644,10 +647,7 @@ const renderSchedulePage = (
         </table>
       </div>
       <div class="page-footer">
-        <div class="signatures">
-          <div><strong>Prepared by:</strong><em>Laboratory Assistant</em></div>
-          <div><strong>Noted by:</strong><em>Head, CCIS Laboratory</em></div>
-        </div>
+        ${renderReportSignatories()}
         <footer class="institution-footer">
           <div>
             <p>PUP A. Mabini Campus, Anonas Street, Sta. Mesa, Manila 1016</p>
@@ -822,10 +822,7 @@ const renderScheduleAnalysisDocument = (
             </table>
           </div>
           <div class="page-footer">
-            <div class="signatures">
-              <div><strong>Prepared by:</strong><em>Laboratory Assistant</em></div>
-              <div><strong>Noted by:</strong><em>Head, CCIS Laboratory</em></div>
-            </div>
+            ${renderReportSignatories()}
             <footer class="institution-footer">
               <div>
                 <p>PUP A. Mabini Campus, Anonas Street, Sta. Mesa, Manila 1016</p>
@@ -1052,10 +1049,7 @@ const renderDemandPage = (
         </table>
       </div>
       <div class="page-footer">
-        <div class="signatures">
-          <div><strong>Prepared by:</strong><em>Laboratory Assistant</em></div>
-          <div><strong>Noted by:</strong><em>Head, CCIS Laboratory</em></div>
-        </div>
+        ${renderReportSignatories()}
         <footer class="institution-footer">
           <div>
             <p>PUP A. Mabini Campus, Anonas Street, Sta. Mesa, Manila 1016</p>
@@ -1541,10 +1535,7 @@ const renderEquipmentPage = (
         <table>${table}</table>
       </div>
       <div class="page-footer">
-        <div class="signatures">
-          <div><strong>Prepared by:</strong><em>Laboratory Assistant</em></div>
-          <div><strong>Noted by:</strong><em>Head, CCIS Laboratory</em></div>
-        </div>
+        ${renderReportSignatories()}
         <footer class="institution-footer">
           <div>
             <p>PUP A. Mabini Campus, Anonas Street, Sta. Mesa, Manila 1016</p>

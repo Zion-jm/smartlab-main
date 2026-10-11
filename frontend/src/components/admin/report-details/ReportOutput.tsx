@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import '../reportDocumentStyles.css';
 import { formatPeriodLabel, type DateRange } from './reportData';
+import { ReportSignatories } from '../PrintableReportDocument';
 
 export type FixedOutputMenuPosition = {
   top: number;
@@ -91,18 +92,7 @@ export function FormalReportFrame({
 
       {children}
 
-      <footer className="report-document-signatures report-document-print-only">
-        <div>
-          <p>Prepared by:</p>
-          <div className="mt-8 border-b border-[#555]" />
-          <p className="mt-1 italic">Laboratory Assistant</p>
-        </div>
-        <div>
-          <p>Noted by:</p>
-          <div className="mt-8 border-b border-[#555]" />
-          <p className="mt-1 italic">Head, CCIS Laboratory</p>
-        </div>
-      </footer>
+      <ReportSignatories className="report-document-print-only" />
       <div className="report-document-footer report-document-print-only">
         <div>
           <p>PUP A. Mabini Campus, Anonas Street, Sta. Mesa, Manila 1016</p>

@@ -11,7 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 import AdminLayout from '../components/AdminLayout';
 
@@ -61,6 +61,27 @@ const isScheduleView = (value: string | null): value is ScheduleView =>
 
 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+function ExpandedChartDialog({ schedules, computerLabNames, selectedLab, onSelectedLabChange, onSelectSchedule, onClose }: { schedules: LabSchedule[]; computerLabNames: string[]; selectedLab: string; onSelectedLabChange: (lab: string) => void; onSelectSchedule: (id: string) => void; onClose: () => void }) {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKeyDown);
+    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener('keydown', onKeyDown); };
+  }, [onClose]);
+  return <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 p-[2.5vw]" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <section role="dialog" aria-modal="true" aria-labelledby="expanded-chart-title" className="flex h-[95vh] w-[95vw] flex-col overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-2xl">
+      <header className="flex items-center justify-between border-b border-[#ead7d3] bg-[#fffaf8] px-5 py-4">
+        <div><h2 id="expanded-chart-title" className="text-base font-bold text-[#321d1d]">Weekly Lab Utilization</h2><p className="text-xs text-[#786565]">Expanded chart view</p></div>
+        <button type="button" autoFocus onClick={onClose} aria-label="Close expanded chart" className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#786565] transition hover:bg-[#f6e8e4] hover:text-[#800000] focus-visible:outline-2 focus-visible:outline-[#800000]"><X size={20} /></button>
+      </header>
+      <div className="min-h-0 flex-1 overflow-auto">
+        <ChartView dayLabels={dayNames} showEmptyGrid schedules={schedules} computerLabNames={computerLabNames} onSelectSchedule={onSelectSchedule} selectedLab={selectedLab} onSelectedLabChange={onSelectedLabChange} />
+      </div>
+    </section>
+  </div>;
+}
+
 export default function AdminLabSchedule() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [schedules, setSchedules] = useState<LabSchedule[]>([]);
@@ -96,16 +117,9 @@ export default function AdminLabSchedule() {
     academicYearId: searchParams.get('academicYearId') ?? '',
     termId: searchParams.get('termId') ?? '',
   }));
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(
-    () =>
-      Boolean(
-        searchParams.get('source') ||
-          searchParams.get('type') ||
-          searchParams.get('room') ||
-          searchParams.get('program') ||
-          searchParams.get('faculty')
-      )
-  );
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
+  const [chartExpanded, setChartExpanded] = useState(false);
+  const [chartLab, setChartLab] = useState('');
 
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches);
   useEffect(() => { const query = window.matchMedia('(max-width: 767px)'); const change = () => setMobile(query.matches); query.addEventListener('change', change); return () => query.removeEventListener('change', change); }, []);
@@ -522,6 +536,7 @@ export default function AdminLabSchedule() {
           className="mobile-schedule-ribbon mb-1"
           filtersActiveCount={appliedFilters.length}
           defaultFiltersOpen={appliedFilters.length > 0}
+          defaultRibbonExpanded={false}
           compactFilters
           ribbonSummary={scheduleRibbonSummary}
           bottomControl={advancedFilterToggle}
@@ -592,7 +607,7 @@ export default function AdminLabSchedule() {
                 </>
               )
             ) : viewMode === 'chart' ? (
-              <ChartView dayLabels={dayNames} showEmptyGrid schedules={filteredSchedules} computerLabNames={computerLabNames} onSelectSchedule={handleViewSchedule} />
+              <ChartView dayLabels={dayNames} showEmptyGrid schedules={filteredSchedules} computerLabNames={computerLabNames} onSelectSchedule={handleViewSchedule} selectedLab={chartLab} onSelectedLabChange={setChartLab} onExpand={() => setChartExpanded(true)} />
             ) : (
               <CalendarView dayLabels={dayNames} schedules={filteredSchedules} />
             )}
@@ -620,6 +635,8 @@ export default function AdminLabSchedule() {
           handleEditSchedule(id);
         }} />
       )}
+
+      {chartExpanded && <ExpandedChartDialog schedules={filteredSchedules} computerLabNames={computerLabNames} selectedLab={chartLab} onSelectedLabChange={setChartLab} onSelectSchedule={id => { setChartExpanded(false); handleViewSchedule(id); }} onClose={() => setChartExpanded(false)} />}
     </AdminLayout>
   );
 }

@@ -101,21 +101,26 @@ export function ReportDocumentFooter() {
     </footer>
   );
 }
+export function ReportSignatories({ className = '' }: { className?: string }) {
+  return (
+    <div className={`report-document-signatures ${className}`.trim()}>
+      <div>
+        <p>Prepared by:</p>
+        <div className="report-document-signature-line" aria-hidden="true" />
+        <p>Laboratory Assistant</p>
+      </div>
+      <div>
+        <p>Noted by:</p>
+        <div className="report-document-signature-line" aria-hidden="true" />
+        <p>Academic Head</p>
+      </div>
+    </div>
+  );
+}
 export function ReportDocumentPageFooter() {
   return (
     <div className="print-report-page-footer">
-      <div className="report-document-signatures">
-        <div>
-          <p>Prepared by:</p>
-          <div className="report-document-signature-line" />
-          <p>Laboratory Assistant</p>
-        </div>
-        <div>
-          <p>Noted by:</p>
-          <div className="report-document-signature-line" />
-          <p>Head, CCIS Laboratory</p>
-        </div>
-      </div>
+      <ReportSignatories />
       <ReportDocumentFooter />
     </div>
   );

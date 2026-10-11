@@ -6,6 +6,7 @@ import { RequestActionError } from './requestActionError';
 import { inventoryTransaction } from './inventoryTransaction';
 import { borrowRequestInclude } from './borrowRequestService';
 import { calendarWeekday, checkScheduleConflicts, ConflictCheckInput, hasTimeOverlap, minutesFromDate, sameDay } from './labScheduleService';
+import { assertFutureManilaRequestWindow } from '../utils/manilaTime';
 
 export async function assertRoomAvailable(tx: Prisma.TransactionClient, input: ConflictCheckInput, excludeRequestId?: string) {
   if ((await checkScheduleConflicts(input, tx)).length) throw new RequestActionError(409, 'Room schedule conflict. Refresh and choose another time.');
@@ -31,6 +32,9 @@ export async function approveRequest(prisma: PrismaClient, input: { id: string; 
     const request = await tx.borrowRequest.findUnique({ where: { id: input.id }, include: borrowRequestInclude });
     if (!request) throw new RequestActionError(404, 'Request not found');
     if (request.status !== RequestStatus.PENDING) throw new RequestActionError(409, 'Only pending requests can be approved.');
+    if (!request.timeStart) throw new RequestActionError(400, 'The request does not have a valid start time.');
+    try { assertFutureManilaRequestWindow(request.dateNeeded, request.timeStart); }
+    catch { throw new RequestActionError(409, 'This request can no longer be approved because its start time has passed or its date is unavailable.'); }
     if (request.requestType === 'LABORATORY' && request.requester.role !== UserRole.FACULTY) throw new RequestActionError(403, 'Only faculty can reserve a computer laboratory.');
     if (request.requestType === 'EQUIPMENT' && input.requireSchedule) throw new RequestActionError(400, 'Equipment-only requests cannot create a laboratory schedule.');
     const createSchedule = request.requestType === 'LABORATORY';

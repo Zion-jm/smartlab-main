@@ -159,6 +159,8 @@
   color: #333;
   font-family: "STIX Two Text", Georgia, serif;
   font-size: 10pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .report-document-signature-line {
@@ -406,7 +408,13 @@
 }
 
 .print-report-page-footer .report-document-signature-line {
-  display: none;
+  display: block;
+  margin-top: 7mm;
+  border-bottom: 1px solid #222;
+}
+
+.print-report-page-footer .report-document-signatures > div > p:last-child {
+  margin-top: 1.5mm;
 }
 
 .print-report-page-footer .print-report-footer {

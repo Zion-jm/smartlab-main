@@ -28,3 +28,12 @@ export const manilaWeekday = (value: Date | string): number => new Date(manilaDa
 export const manilaMinutes = (value: Date): number => (value.getUTCHours() * 60 + value.getUTCMinutes() + 480) % 1440;
 export const formatManilaDate = (value: Date | string): string => parseManilaDate(value).toLocaleDateString('en-PH', { timeZone: MANILA_TIME_ZONE, year: 'numeric', month: 'short', day: 'numeric' });
 export const formatManilaTime = (value: Date | string): string => parseManilaDate(value).toLocaleTimeString('en-PH', { timeZone: MANILA_TIME_ZONE, hour: '2-digit', minute: '2-digit' });
+export function assertFutureManilaRequestWindow(dateNeeded: Date | string, timeStart: Date | string, now = new Date()): void {
+  const dayKey = manilaDateKey(dateNeeded);
+  const start = parseManilaDate(timeStart);
+  if (Number.isNaN(start.getTime())) throw new ValidationError('Choose a valid start time.');
+  if (manilaWeekday(dayKey) === 0) throw new ValidationError('Requests cannot be submitted for Sundays.');
+  const todayKey = manilaDateKey(now);
+  if (dayKey < todayKey) throw new ValidationError('Choose today or a future date.');
+  if (dayKey === todayKey && start.getTime() <= now.getTime()) throw new ValidationError('Choose a start time that has not already passed.');
+}

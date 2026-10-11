@@ -8,8 +8,9 @@ import { ConflictDetailModal } from '../components/shared/ConflictDetailModal';
 import { ConflictStatusCard } from '../components/shared/ConflictStatusCard';
 import { MyRequestsPreview } from '../features/requests/MyRequestsPreview';
 import { PanelSection } from '../features/requests/PanelSection';
-import { type ApiBorrowRequest, type RequestResources, type RequestRow, formatReference, timeOptions, toDateInputValue, toManilaTimeInputValue } from '../features/requests/requestModels';
+import { type ApiBorrowRequest, type RequestResources, type RequestRow, formatReference, requestStartTimeOptions, requestTimeHasElapsed, timeOptions, toDateInputValue, toManilaTimeInputValue } from '../features/requests/requestModels';
 import { type SchedulesState, useLabSchedules, useMyBorrowRequests, useRequestResources } from '../features/requests/useRequestData';
+import { useRequestClock } from '../features/requests/useRequestClock';
 
 import ScheduleDataTable from '../components/lab-schedule/ScheduleDataTable';
 
@@ -60,7 +61,7 @@ const tabs = [
   {
     id: 'request',
     label: 'New Request',
-    description: 'Request equipment at least 3 days in advance.',
+    description: 'Request available equipment for today or a future weekday.',
   },
   {
     id: 'requests',
@@ -532,10 +533,14 @@ function RequestFormScaffold({
     return labRoomOptions.find((r) => r.value === form.labId) ?? null;
   }, [useLabRoom, form.labId, labRoomOptions]);
 
+  const requestClock = useRequestClock();
+  const startTimeOptions = requestStartTimeOptions(form.dateNeeded, requestClock);
+
   const timeRangeError = useMemo(() => {
+    if (requestTimeHasElapsed(form.dateNeeded, form.timeStart, requestClock)) return 'Choose a start time that has not already passed in Philippine time.';
     if (!form.timeStart || !form.timeEnd || form.timeStart < form.timeEnd) return null;
     return 'Choose an end time later than the start time so your session has a duration.';
-  }, [form.timeStart, form.timeEnd]);
+  }, [form.dateNeeded, form.timeStart, form.timeEnd, requestClock]);
 
   const conflictParams = useMemo(() => {
     const params = {
@@ -566,7 +571,11 @@ function RequestFormScaffold({
   const updateForm = (field: keyof typeof form, value: string) => {
     setSubmitError(null);
     setSubmitSuccess(null);
-    setForm((prev) => ({ ...prev, [field]: value, ...(field === 'timeStart' && prev.timeEnd && prev.timeEnd <= value ? { timeEnd: '' } : {}) }));
+    setForm((prev) => {
+      const clearEnd = field === 'timeStart' && prev.timeEnd && prev.timeEnd <= value;
+      const clearElapsedRange = field === 'dateNeeded' && requestTimeHasElapsed(value, prev.timeStart, requestClock);
+      return { ...prev, [field]: value, ...(clearEnd ? { timeEnd: '' } : {}), ...(clearElapsedRange ? { timeStart: '', timeEnd: '' } : {}) };
+    });
   };
 
   const handleEquipmentChange = (id: string, quantity: number, max: number) => {
@@ -719,7 +728,7 @@ function RequestFormScaffold({
         title={editingRequest ? `Edit ${formatReference(editingRequest.id)}` : 'Request details'}
         helper={editingRequest
           ? 'Edit your request below. Your changes will be sent to the administrator for review.'
-          : 'Choose equipment, a borrowing time, and a usage location. Submit at least 3 days in advance.'}
+          : 'Choose equipment, a borrowing time, and a usage location. Same-day requests are allowed while the selected time is still available.'}
       >
         <div className="request-form-sections rounded-2xl border border-[#f1f5f9] bg-[#fdfdfd] divide-y divide-[#f1f5f9]">
           <section className="space-y-4 p-4 lg:p-5">
@@ -765,6 +774,7 @@ function RequestFormScaffold({
                     <FieldLabel text="Date of use" required showMissing={missingFields.includes('dateNeeded')} />
                   </label>
                   <StyledDatePicker
+                    minimumLeadDays={0}
                     value={form.dateNeeded ? new Date(form.dateNeeded + 'T00:00:00') : null}
                     onChange={(date) => updateForm('dateNeeded', date ? date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0') : '')}
                     placeholder="Select a date"
@@ -778,7 +788,7 @@ function RequestFormScaffold({
                     </label>
                     <DropdownField
                       value={form.timeStart}
-                      options={timeOptions}
+                      options={startTimeOptions}
                       placeholder="Select start time"
                       onChange={(value) => updateForm('timeStart', value)}
                       className="text-xs font-normal"

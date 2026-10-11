@@ -15,6 +15,8 @@ interface StyledDatePickerProps {
   disabled?: boolean;
   required?: boolean;
   className?: string;
+  /** Number of Manila calendar days after today that may first be selected. */
+  minimumLeadDays?: number;
 }
 
 export function StyledDatePicker({
@@ -27,15 +29,18 @@ export function StyledDatePicker({
   disabled = false,
   required = false,
   className = '',
+  minimumLeadDays = 3,
 }: StyledDatePickerProps) {
-  // Calculate min date (today + 3 days)
+  // Date-only adapters use the Manila calendar day, regardless of the browser's
+  // local timezone. Request forms allow today; callers with a different policy
+  // can opt into a later minimum without changing every date picker globally.
   const minDate = useMemo(() => {
     const today = manilaTodayForPicker();
     today.setHours(0, 0, 0, 0);
     const min = new Date(today);
-    min.setDate(today.getDate() + 3);
+    min.setDate(today.getDate() + Math.max(0, minimumLeadDays));
     return min;
-  }, []);
+  }, [minimumLeadDays]);
 
   // Disable Sundays (day 0)
   const isDateDisabled = (date: Date) => {
