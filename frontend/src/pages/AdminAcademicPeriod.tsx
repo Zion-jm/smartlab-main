@@ -498,34 +498,36 @@ export default function AdminAcademicPeriod() {
               <p className="mt-1 text-xs text-[#6b7280]">Recent changes to the system-wide active period.</p>
             </div>
           </div>
-          <div className="divide-y divide-[#f3f4f6]">
-            {visibleHistoryEntries.map((entry) => (
-              <div key={entry.id} data-testid={`row-academic-period-history-${entry.id}`} className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 rounded-lg bg-[#fef3e2] p-2 text-[#9a7b4f]"><Clock3 className="h-4 w-4" /></div>
-                  <div>
-                    <p className="text-sm font-semibold text-[#1f2937]">{historyLabel(entry)}</p>
-                    <p className="mt-1 text-xs text-[#6b7280]">
-                      {entry.actor.name} · {formatDateTime(entry.createdAt)}
-                    </p>
-                    {entry.details?.reason && <p className="mt-1 text-xs italic text-[#9ca3af]">“{entry.details.reason}”</p>}
+          <div className="p-5 lg:p-6">
+            <div className="overflow-hidden rounded-xl border border-[#ead7d3] divide-y divide-[#f3f4f6]">
+              {visibleHistoryEntries.map((entry) => (
+                <div key={entry.id} data-testid={`row-academic-period-history-${entry.id}`} className="flex min-h-20 flex-wrap items-center justify-between gap-5 px-5 py-5 lg:px-6">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="mt-0.5 rounded-lg bg-[#fef3e2] p-2 text-[#9a7b4f]"><Clock3 className="h-4 w-4" /></div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[#1f2937]">{historyLabel(entry)}</p>
+                      <p className="mt-1 text-xs leading-5 text-[#6b7280]">
+                        {entry.actor.name} · {formatDateTime(entry.createdAt)}
+                      </p>
+                      {entry.details?.reason && <p className="mt-1 text-xs italic leading-5 text-[#9ca3af]">“{entry.details.reason}”</p>}
+                    </div>
                   </div>
+                  {entry.details?.previous && <span className="shrink-0 text-xs leading-5 text-[#9ca3af]">Previous: {entry.details.previous.year} · {entry.details.previous.term}</span>}
                 </div>
-                {entry.details?.previous && <span className="text-xs text-[#9ca3af]">Previous: {entry.details.previous.year} · {entry.details.previous.term}</span>}
-              </div>
-            ))}
-            {(data?.history.length ?? 0) === 0 && <p className="px-5 py-6 text-sm text-[#6b7280]">No changes have been recorded yet.</p>}
+              ))}
+              {(data?.history.length ?? 0) === 0 && <p className="px-5 py-8 text-sm text-[#6b7280]">No changes have been recorded yet.</p>}
+            </div>
+            <TablePagination
+              currentPage={safeHistoryPage}
+              pageSize={historyPageSize}
+              totalItems={historyEntries.length}
+              onPageChange={setHistoryPage}
+              onPageSizeChange={(pageSize) => {
+                setHistoryPageSize(pageSize);
+                setHistoryPage(1);
+              }}
+            />
           </div>
-          <TablePagination
-            currentPage={safeHistoryPage}
-            pageSize={historyPageSize}
-            totalItems={historyEntries.length}
-            onPageChange={setHistoryPage}
-            onPageSizeChange={(pageSize) => {
-              setHistoryPageSize(pageSize);
-              setHistoryPage(1);
-            }}
-          />
         </section>
       </div>
       <ConfirmationModal
