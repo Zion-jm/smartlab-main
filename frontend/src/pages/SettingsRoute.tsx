@@ -79,24 +79,44 @@ function SettingsPage() {
 
   return (
     <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
-      <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-        <div className="flex items-start gap-3 border-b border-[#f3f4f6] px-5 py-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f6efe8] text-[#800000]">
-            <SettingsNavIcon size={19} />
+      <header className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-[#fffaf7] p-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#800000] text-white">
+              <SettingsNavIcon size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-[#967348]">WORKSPACE PREFERENCES</p>
+              <h1 className="mt-1 text-xl font-semibold text-[#321d1d]">Workspace settings</h1>
+              <p className="mt-1 text-xs text-[#786565]">Choose how SmartLab opens and organizes your admin workspace.</p>
+            </div>
+          </div>
+          <span className="rounded-full bg-[#f4eee8] px-3 py-1 text-xs font-semibold text-[#57322d]">Saved locally</span>
+        </div>
+        <dl className="grid gap-4 border-t border-[#ead7d3] p-5 sm:grid-cols-3">
+          <div>
+            <dt className="text-[11px] uppercase text-[#9a8985]">Applies to</dt>
+            <dd className="mt-1 text-sm font-semibold">This account</dd>
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-[#1f2937]">Workspace settings</h1>
-            <p className="mt-1 text-xs leading-5 text-[#6b7280]">
-              Choose how SmartLab opens and organizes admin workspace pages. Preferences are saved for this account on this device.
-            </p>
+            <dt className="text-[11px] uppercase text-[#9a8985]">Stored on</dt>
+            <dd className="mt-1 text-sm">This device</dd>
           </div>
+          <div>
+            <dt className="text-[11px] uppercase text-[#9a8985]">Takes effect</dt>
+            <dd className="mt-1 text-sm">Next time a workspace page opens</dd>
+          </div>
+        </dl>
+      </header>
+
+      <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+
+      <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <div className="border-b border-[#f3f4f6] px-5 py-4">
+          <h2 className="text-sm font-semibold text-[#1f2937]">Workspace defaults</h2>
+          <p className="mt-1 text-xs leading-5 text-[#6b7280]">Set the default layout used when you open admin workspace pages.</p>
         </div>
         <div className="p-5">
-          <div className="border-b border-[#f1e3df] pb-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#9a7b4f]">Interface preferences</p>
-            <h2 className="mt-1 text-base font-semibold text-[#1f2937]">Workspace defaults</h2>
-            <p className="mt-1 text-xs leading-5 text-[#6b7280]">These defaults apply the next time you open a workspace page. You can still change its controls at any time.</p>
-          </div>
           <PreferenceRow
             title="Hide ribbon controls by default"
             description="Hide search and filters when you first open a page. Select Show controls to use them."
