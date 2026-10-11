@@ -1,5 +1,5 @@
 import { Pencil, RefreshCw, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { studentAcademicApi } from '../../services/api';
 import ConfirmationModal from '../shared/ConfirmationModal';
 import DropdownField from '../shared/DropdownField';
@@ -16,15 +16,31 @@ const statusStyles:Record<string,string>={ENROLLED:'bg-green-100 text-green-700'
 const inputClass='mt-1.5 min-h-11 w-full rounded-xl border border-[#d8c7c3] bg-white px-3 text-sm text-[#1f2937] outline-none transition focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/10';
 const errorText=(error:unknown)=>(error as {response?:{data?:{error?:string}}})?.response?.data?.error??'Unable to save or load academic records. Please try again.';
 
-export default function StudentAcademicRecords({years,onRefresh,refreshing=false,lastUpdated}:{years:{id:string;year:string;isActive:boolean}[];onRefresh?:()=>void|Promise<void>;refreshing?:boolean;lastUpdated?:Date|null}) {
- const [yearId,setYearId]=useState(''),[search,setSearch]=useState(''),[results,setResults]=useState<Results|null>(null),[selected,setSelected]=useState<Student|null>(null);
+type InitialBatch = {mode:'SETUP'|'PROMOTE';sourceYearId:string;autoPreview:boolean};
+
+export default function StudentAcademicRecords({years,onRefresh,refreshing=false,lastUpdated,initialYearId='',initialBatch}:{years:{id:string;year:string;isActive:boolean}[];onRefresh?:()=>void|Promise<void>;refreshing?:boolean;lastUpdated?:Date|null;initialYearId?:string;initialBatch?:InitialBatch}) {
+ const validInitialYearId=years.some(item=>item.id===initialYearId)?initialYearId:'';
+ const [yearId,setYearId]=useState(validInitialYearId),[search,setSearch]=useState(''),[results,setResults]=useState<Results|null>(null),[selected,setSelected]=useState<Student|null>(null);
  const [programId,setProgramId]=useState(''),[level,setLevel]=useState(''),[status,setStatus]=useState('ENROLLED'),[reason,setReason]=useState('');
  const [loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[confirm,setConfirm]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState(''),[pageSize,setPageSize]=useState(15);
  const version=useRef(0),year=years.find(item=>item.id===yearId),previous=selected?.studentAcademicRecords[0];
+ const initialLoadStarted=useRef(false);
  const resetResults=()=>{version.current++;setLoading(false);setResults(null);setSelected(null);setError('');setSuccess('');};
  const load=async(page=1,size=pageSize)=>{if(!yearId){setError('Select an academic year.');return;}const requestVersion=++version.current;setLoading(true);setSelected(null);setError('');setSuccess('');try{const response=await studentAcademicApi.list({academicYearId:yearId,search,page,pageSize:size});if(requestVersion===version.current)setResults(response.data);}catch(e){if(requestVersion===version.current){setResults(null);setError(errorText(e));}}finally{if(requestVersion===version.current)setLoading(false);}};
  const edit=(student:Student)=>{const record=student.studentAcademicRecords[0];setSelected(student);setProgramId(record?.programId??'');setLevel(record?.yearLevel!=null?String(record.yearLevel):'');setStatus(record?.status??'ENROLLED');setReason('');setError('');setSuccess('');};
  const save=async()=>{if(!selected)return;setSaving(true);setError('');try{const response=await studentAcademicApi.save({studentId:selected.id,academicYearId:yearId,programId,yearLevel:level?Number(level):null,status,reason,expectedUpdatedAt:previous?.updatedAt??null});setResults(current=>current?{...current,students:current.students.map(student=>student.id===selected.id?{...student,studentAcademicRecords:[response.data.record]}:student)}:current);setSelected(null);setConfirm(false);setSuccess('Academic record saved. Existing requests and account access were not changed.');}catch(e){setConfirm(false);setError(errorText(e));}finally{setSaving(false);}};
+ useEffect(()=>{
+  if(!validInitialYearId||initialLoadStarted.current)return;
+  initialLoadStarted.current=true;
+  const requestVersion=++version.current;
+  let mounted=true;
+  setLoading(true);
+  void studentAcademicApi.list({academicYearId:validInitialYearId,search:'',page:1,pageSize})
+   .then(response=>{if(mounted&&requestVersion===version.current)setResults(response.data);})
+   .catch(e=>{if(mounted&&requestVersion===version.current)setError(errorText(e));})
+   .finally(()=>{if(mounted&&requestVersion===version.current)setLoading(false);});
+  return()=>{mounted=false;};
+ },[pageSize,validInitialYearId]);
  return <><section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f3f4f6] px-5 py-4"><h2 className="text-sm font-semibold text-[#1f2937]">Find student records</h2><div className="flex items-center gap-3">{lastUpdated&&<span className="hidden text-xs text-[#6b7280] sm:inline">Updated {lastUpdated.toLocaleTimeString([],{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit'})}</span>}{onRefresh&&<button type="button" onClick={()=>void onRefresh()} disabled={refreshing} className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-1.5 text-xs font-medium text-[#4b5563] transition hover:bg-[#f8f9fa] disabled:cursor-wait disabled:opacity-50 lg:px-4 lg:py-2 lg:text-sm"><RefreshCw className={`h-4 w-4 ${refreshing?'animate-spin':''}`}/>Refresh</button>}</div></div>
   <div className="p-4 lg:p-5">
@@ -44,6 +60,6 @@ export default function StudentAcademicRecords({years,onRefresh,refreshing=false
   <ConfirmationModal isOpen={confirm} title="Save student academic record?" message={`Record ${selected?.firstName??''} ${selected?.lastName??''} as ${statusLabels[status]?.toLowerCase()}${level?`, Year ${level}`:''}, for ${year?.year??''}? Existing requests and account access will not change.`} confirmLabel="Save academic record" confirmingLabel="Saving…" cancelLabel="Go back" isConfirming={saving} onConfirm={()=>void save()} onClose={()=>{if(!saving)setConfirm(false);}}/>
   </div>
  </section>
- {results&&!loading&&!selected&&<><div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]"/><StudentAcademicBatch key={`${yearId}-${search}-${results.page}`} yearId={yearId} years={years} studentIds={results.students.map(student=>student.id)} programs={results.programs} onSaved={()=>{void load(results.page).then(()=>setSuccess('Batch saved.'));}}/></>}
+ {results&&!loading&&!selected&&<><div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]"/><StudentAcademicBatch key={`${yearId}-${search}-${results.page}`} yearId={yearId} years={years} studentIds={results.students.map(student=>student.id)} programs={results.programs} initialOpen={Boolean(initialBatch)} initialMode={initialBatch?.mode} initialSourceYearId={initialBatch?.sourceYearId} autoPreview={initialBatch?.autoPreview} onSaved={()=>{void load(results.page).then(()=>setSuccess('Batch saved.'));}}/></>}
  </>;
 }

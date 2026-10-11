@@ -1,21 +1,32 @@
 import { CheckCircle2, ChevronDown, LockKeyhole, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { studentAcademicApi } from '../../services/api';
 import ConfirmationModal from '../shared/ConfirmationModal';
 import DropdownField from '../shared/DropdownField';
 
 type Row={studentId:string;name:string;email:string;blocked:string|null;fingerprint:string;programId:string;yearLevel:number|null;status:string;sourceYearLevel:number|null;requiresGraduationReview:boolean;selected:boolean;archiveAccount:boolean};
-type Props={yearId:string;years:{id:string;year:string}[];studentIds:string[];programs:{id:string;code:string;name:string}[];onSaved:()=>void};
+type Props={yearId:string;years:{id:string;year:string}[];studentIds:string[];programs:{id:string;code:string;name:string}[];onSaved:()=>void;initialOpen?:boolean;initialMode?:'SETUP'|'PROMOTE';initialSourceYearId?:string;autoPreview?:boolean};
 const control='mt-1.5 min-h-11 w-full rounded-xl border border-[#dcc8c2] bg-white px-3 text-sm text-[#321d1d] outline-none transition focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/10';
 
-export default function StudentAcademicBatch({yearId,years,studentIds,programs,onSaved}:Props){
- const [open,setOpen]=useState(false),[mode,setMode]=useState('SETUP'),[sourceYearId,setSource]=useState(''),[rows,setRows]=useState<Row[]|null>(null),[reason,setReason]=useState(''),[busy,setBusy]=useState(false),[confirm,setConfirm]=useState(false),[error,setError]=useState('');
+export default function StudentAcademicBatch({yearId,years,studentIds,programs,onSaved,initialOpen=false,initialMode='SETUP',initialSourceYearId='',autoPreview=false}:Props){
+ const [open,setOpen]=useState(initialOpen),[mode,setMode]=useState(initialMode),[sourceYearId,setSource]=useState(initialSourceYearId),[rows,setRows]=useState<Row[]|null>(null),[reason,setReason]=useState(''),[busy,setBusy]=useState(autoPreview),[confirm,setConfirm]=useState(false),[error,setError]=useState('');
+ const autoPreviewStarted=useRef(false);
  const selected=rows?.filter(row=>row.selected&&!row.blocked)??[],blockedCount=rows?.filter(row=>row.blocked).length??0,availableCount=(rows?.length??0)-blockedCount;
  const target=years.find(year=>year.id===yearId)?.year;
  const fail=(e:unknown)=>setError((e as {response?:{data?:{error?:string}}})?.response?.data?.error??'Unable to process batch. Reload and try again.');
  const preview=async()=>{setBusy(true);setError('');setRows(null);try{const response=await studentAcademicApi.previewBatch({mode,academicYearId:yearId,sourceYearId,studentIds});setRows(response.data.rows.map((row:Row)=>({...row,selected:!row.blocked&&!row.requiresGraduationReview,archiveAccount:false})));}catch(e){fail(e);}finally{setBusy(false);}};
  const save=async()=>{setBusy(true);setError('');try{await studentAcademicApi.commitBatch({mode,academicYearId:yearId,sourceYearId,reason,rows:selected.map(({studentId,fingerprint,programId,yearLevel,status,archiveAccount})=>({studentId,fingerprint,programId,yearLevel,status,archiveAccount}))});setConfirm(false);setRows(null);setReason('');onSaved();}catch(e){setConfirm(false);fail(e);}finally{setBusy(false);}};
  const change=(id:string,patch:Partial<Row>)=>setRows(current=>current?.map(row=>row.studentId===id?{...row,...patch}:row)??null);
+ useEffect(()=>{
+  if(!autoPreview||autoPreviewStarted.current||!studentIds.length||(initialMode==='PROMOTE'&&!initialSourceYearId))return;
+  autoPreviewStarted.current=true;
+  let mounted=true;
+  void studentAcademicApi.previewBatch({mode:initialMode,academicYearId:yearId,sourceYearId:initialSourceYearId,studentIds})
+   .then(response=>{if(mounted)setRows(response.data.rows.map((row:Row)=>({...row,selected:!row.blocked&&!row.requiresGraduationReview,archiveAccount:false})));})
+   .catch(e=>{if(mounted)fail(e);})
+   .finally(()=>{if(mounted)setBusy(false);});
+  return()=>{mounted=false;};
+ },[autoPreview,initialMode,initialSourceYearId,studentIds,yearId]);
  return <section aria-label="Bulk academic records" className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
   <button type="button" onClick={()=>setOpen(value=>!value)} aria-expanded={open} className={`flex min-h-16 w-full items-center justify-between gap-4 bg-[#fffaf8] px-5 py-4 text-left transition hover:bg-[#fff7f4] ${open?'border-b border-[#f1e3df]':''}`}><span><span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-[#a15c45]">Bulk tools</span><span className="mt-0.5 block font-semibold text-[#321d1d]">Bulk setup and yearly promotion</span><span className="mt-0.5 block text-xs text-[#786565]">Prepare several records from profiles or a previous academic year.</span></span><span className="flex shrink-0 items-center gap-2 text-sm font-semibold text-[#800000]">{open?'Close':'Open bulk tools'}<ChevronDown className={`h-4 w-4 transition ${open?'rotate-180':''}`}/></span></button>
   {open&&<div>

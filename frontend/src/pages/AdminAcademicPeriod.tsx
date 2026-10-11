@@ -6,6 +6,7 @@ import ConfirmationModal from '../components/shared/ConfirmationModal';
 import DropdownField from '../components/shared/DropdownField';
 import { academicPeriodApi } from '../services/api';
 import { toast } from '../stores/toastStore';
+import { useNavigate } from 'react-router-dom';
 
 type AcademicYearRecord = {
   id: string;
@@ -52,6 +53,11 @@ type AcademicPeriodPayload = {
 const defaultTerms = ['1st Semester', '2nd Semester', 'Summer Term'];
 const NEW_ACADEMIC_YEAR_VALUE = '__new_academic_year__';
 
+const getAcademicYearStart = (value: string) => {
+  const match = /^(\d{4})-(\d{4})$/.exec(value);
+  return match ? Number(match[1]) : null;
+};
+
 const getErrorMessage = (error: unknown) => {
   const responseMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
   return responseMessage || 'The academic period could not be saved. Please try again.';
@@ -95,6 +101,7 @@ const getAcademicYearValidationMessage = (value: string) => {
 };
 
 export default function AdminAcademicPeriod() {
+  const navigate = useNavigate();
   const [data, setData] = useState<AcademicPeriodPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -107,6 +114,7 @@ export default function AdminAcademicPeriod() {
   const [termName, setTermName] = useState('');
   const [reason, setReason] = useState('');
   const [pendingActivation, setPendingActivation] = useState<{ year: string; termName: string } | null>(null);
+  const [promotionPrompt, setPromotionPrompt] = useState<{ destinationYearId: string; destinationYear: string; sourceYearId: string; sourceYear: string } | null>(null);
 
   const performLoadData = useCallback(async () => {
     
@@ -200,6 +208,8 @@ export default function AdminAcademicPeriod() {
 
   const confirmActivation = async () => {
     if (!pendingActivation) return;
+    const previousYear = data?.current?.academicYear ?? null;
+    const destinationYear = pendingActivation.year;
     setSaving(true);
     setError(null);
     try {
@@ -213,6 +223,16 @@ export default function AdminAcademicPeriod() {
       setReason('');
       setPendingActivation(null);
       toast.success(current ? `${current.label} is now active.` : 'Academic period activated successfully.');
+      const previousStart = previousYear ? getAcademicYearStart(previousYear.year) : null;
+      const destinationStart = getAcademicYearStart(destinationYear);
+      if (previousYear && current?.academicYear && previousStart !== null && destinationStart !== null && destinationStart > previousStart) {
+        setPromotionPrompt({
+          destinationYearId: current.academicYear.id,
+          destinationYear: current.academicYear.year,
+          sourceYearId: previousYear.id,
+          sourceYear: previousYear.year,
+        });
+      }
     } catch (saveError) {
       console.error('Failed to activate academic period', saveError);
       setError(getErrorMessage(saveError));
@@ -462,6 +482,29 @@ export default function AdminAcademicPeriod() {
         isConfirming={saving}
         onConfirm={() => void confirmActivation()}
         onClose={() => setPendingActivation(null)}
+      />
+      <ConfirmationModal
+        isOpen={promotionPrompt !== null}
+        title="Prepare student records for the new year?"
+        message={
+          promotionPrompt
+            ? `${promotionPrompt.destinationYear} is now active. Review promotion proposals from ${promotionPrompt.sourceYear}. No student record or account will change until you review and save the selected proposals.`
+            : ''
+        }
+        confirmLabel="Review promotions"
+        cancelLabel="Do this later"
+        onConfirm={() => {
+          if (!promotionPrompt) return;
+          const query = new URLSearchParams({
+            yearId: promotionPrompt.destinationYearId,
+            operation: 'PROMOTE',
+            sourceYearId: promotionPrompt.sourceYearId,
+            bulk: 'open',
+            preview: 'true',
+          });
+          navigate(`/admin/student-records?${query.toString()}`);
+        }}
+        onClose={() => setPromotionPrompt(null)}
       />
     </AdminLayout>
   );
