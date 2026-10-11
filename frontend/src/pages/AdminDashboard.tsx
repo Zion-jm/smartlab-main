@@ -45,7 +45,7 @@ const StatsCard = ({ icon: Icon, iconGradient, title, value, isRed }: StatsCardP
 );
 
 const Card = ({ title, actions, children, className = '' }: { title: string; actions?: React.ReactNode; children: React.ReactNode; className?: string }) => (
-  <section className={`dashboard-section flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white shadow-sm ${className}`}>
+  <section className={`dashboard-section flex min-w-0 flex-col self-start rounded-2xl border border-[#e5e7eb] bg-white shadow-sm ${className}`}>
     <div className="flex items-center justify-between gap-3 border-b border-[#f1e3df] px-5 py-4">
       <h2 className="text-sm font-semibold text-[#1f2937]">{title}</h2>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
@@ -467,7 +467,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <div className="grid gap-4 xl:grid-cols-4 xl:items-stretch">
+        <div className="grid items-start gap-4 xl:grid-cols-4">
         <Card
           className="xl:order-1 xl:col-span-3"
           title="System overview"
