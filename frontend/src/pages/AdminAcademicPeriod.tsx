@@ -499,7 +499,7 @@ export default function AdminAcademicPeriod() {
             </div>
           </div>
           <div className="p-5 lg:p-6">
-            <div className="overflow-hidden rounded-xl border border-[#ead7d3] divide-y divide-[#f3f4f6]">
+            <div className="overflow-hidden divide-y divide-[#f3f4f6]">
               {visibleHistoryEntries.map((entry) => (
                 <div key={entry.id} data-testid={`row-academic-period-history-${entry.id}`} className="flex min-h-20 flex-wrap items-center justify-between gap-5 px-5 py-5 lg:px-6">
                   <div className="flex min-w-0 items-start gap-3">
