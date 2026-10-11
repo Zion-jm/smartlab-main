@@ -57,7 +57,7 @@ export default function TablePagination({
             type="button"
             onClick={() => onPageChange(1)}
             disabled={safePage <= 1}
-            className="hidden sm:inline-flex rounded-lg border border-[#d1d5db] bg-white px-2.5 py-1.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40"
+            className="hidden h-10 min-w-[3.25rem] items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-2.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex"
             aria-label="First page"
           >
             <span className="hidden sm:inline">First</span>
@@ -67,7 +67,7 @@ export default function TablePagination({
             type="button"
             onClick={() => onPageChange(safePage - 1)}
             disabled={safePage <= 1}
-            className="rounded-lg border border-[#d1d5db] bg-white px-2.5 py-1.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-10 min-w-[4.75rem] items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-2.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Previous page"
           >
             <span className="hidden sm:inline">Previous</span>
@@ -82,7 +82,7 @@ export default function TablePagination({
             type="button"
             onClick={() => onPageChange(safePage + 1)}
             disabled={safePage >= totalPages}
-            className="rounded-lg border border-[#d1d5db] bg-white px-2.5 py-1.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-10 min-w-[4.75rem] items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-2.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Next page"
           >
             <span className="hidden sm:inline">Next</span>
@@ -92,7 +92,7 @@ export default function TablePagination({
             type="button"
             onClick={() => onPageChange(totalPages)}
             disabled={safePage >= totalPages}
-            className="hidden sm:inline-flex rounded-lg border border-[#d1d5db] bg-white px-2.5 py-1.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40"
+            className="hidden h-10 min-w-[3.25rem] items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-2.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex"
             aria-label="Last page"
           >
             <span className="hidden sm:inline">Last</span>
