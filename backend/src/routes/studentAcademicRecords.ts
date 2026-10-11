@@ -34,6 +34,7 @@ router.get('/', async (req, res) => {
     if (!academicYearId || !await prisma.academicYear.findUnique({ where: { id: academicYearId } })) throw new ValidationError('Select an existing academic year.');
     const search = String(req.query.search ?? '').trim().slice(0, 100);
     const page = Math.max(1, Math.min(100000, Number(req.query.page) || 1));
+    const pageSize = Math.max(10, Math.min(100, Number(req.query.pageSize) || 15));
     if (!Number.isInteger(page)) throw new ValidationError('Invalid page.');
     const where: Prisma.UserWhereInput = { AND: [
       { OR: [{ role: UserRole.STUDENT }, { studentAcademicRecords: { some: { academicYearId } } }] },
@@ -41,14 +42,14 @@ router.get('/', async (req, res) => {
     ] };
     const [total, students, programs] = await Promise.all([
       prisma.user.count({ where }),
-      prisma.user.findMany({ where, orderBy: [{ lastName: 'asc' }, { id: 'asc' }], skip: (page - 1) * 25, take: 25,
+      prisma.user.findMany({ where, orderBy: [{ lastName: 'asc' }, { id: 'asc' }], skip: (page - 1) * pageSize, take: pageSize,
         select: { id: true, firstName: true, lastName: true, email: true, status: true,
           studentProfile: { select: { programId: true, yearLevel: true } },
           studentAcademicRecords: { where: { academicYearId } },
         } }),
       prisma.program.findMany({ select: { id: true, code: true, name: true }, orderBy: { code: 'asc' } }),
     ]);
-    res.json({ total, page, pageSize: 25, students, programs });
+    res.json({ total, page, pageSize, students, programs });
   } catch (error) { sendError(error, res); }
 });
 router.post('/', async (req, res) => {

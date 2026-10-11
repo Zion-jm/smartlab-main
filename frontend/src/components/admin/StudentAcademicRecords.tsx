@@ -1,84 +1,44 @@
-import StudentAcademicBatch from './StudentAcademicBatch';
+import { Pencil, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { studentAcademicApi } from '../../services/api';
 import ConfirmationModal from '../shared/ConfirmationModal';
+import TablePagination from '../shared/TablePagination';
+import { IconActionButton } from '../shared/TableActionButtons';
+import { Table, TableActionsCell, TableBody, TableCell, TableContainer, TableHead, TableHeaderCell, TableRow, TableTitleCell } from '../shared/Table';
+import StudentAcademicBatch from './StudentAcademicBatch';
 
-type RecordEntry = { id: string; programId: string; programCode: string; programName: string; yearLevel: number | null; status: string; updatedAt: string };
-type Student = { id: string; firstName: string; lastName: string; email: string; status: string; studentProfile: { programId: string | null; yearLevel: number | null } | null; studentAcademicRecords: RecordEntry[] };
-type Results = { total: number; page: number; pageSize: number; students: Student[]; programs: { id: string; name: string; code: string }[] };
-const statusLabels: Record<string, string> = { ENROLLED: 'Enrolled', CONTINUING: 'Continuing', GRADUATED: 'Graduated', WITHDRAWN: 'Withdrawn' };
-const inputClass = 'mt-1.5 min-h-11 w-full rounded-xl border border-[#dcc8c2] bg-white px-3 text-sm text-[#321d1d] outline-none transition focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/10';
-const errorText = (error: unknown) => (error as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Unable to save or load academic records. Please try again.';
+type RecordEntry = { id:string; programId:string; programCode:string; programName:string; yearLevel:number|null; status:string; updatedAt:string };
+type Student = { id:string; firstName:string; lastName:string; email:string; status:string; studentProfile:{programId:string|null;yearLevel:number|null}|null; studentAcademicRecords:RecordEntry[] };
+type Results = { total:number; page:number; pageSize:number; students:Student[]; programs:{id:string;name:string;code:string}[] };
+const statusLabels:Record<string,string>={ENROLLED:'Enrolled',CONTINUING:'Continuing',GRADUATED:'Graduated',WITHDRAWN:'Withdrawn'};
+const statusStyles:Record<string,string>={ENROLLED:'bg-green-100 text-green-700',CONTINUING:'bg-blue-100 text-blue-700',GRADUATED:'bg-violet-100 text-violet-700',WITHDRAWN:'bg-gray-100 text-gray-700'};
+const inputClass='mt-1.5 min-h-11 w-full rounded-xl border border-[#dcc8c2] bg-white px-3 text-sm text-[#321d1d] outline-none transition focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/10';
+const errorText=(error:unknown)=>(error as {response?:{data?:{error?:string}}})?.response?.data?.error??'Unable to save or load academic records. Please try again.';
 
-export default function StudentAcademicRecords({ years }: { years: { id: string; year: string; isActive: boolean }[] }) {
-  const [yearId, setYearId] = useState('');
-  const [search, setSearch] = useState('');
-  const [results, setResults] = useState<Results | null>(null);
-  const [selected, setSelected] = useState<Student | null>(null);
-  const [programId, setProgramId] = useState('');
-  const [level, setLevel] = useState('');
-  const [status, setStatus] = useState('ENROLLED');
-  const [reason, setReason] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [confirm, setConfirm] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const version = useRef(0);
-  const year = years.find(item => item.id === yearId);
-  const previous = selected?.studentAcademicRecords[0];
-  const resetResults = () => { version.current++; setLoading(false); setResults(null); setSelected(null); setError(''); setSuccess(''); };
-  const load = async (page = 1) => {
-    if (!yearId) { setError('Select an academic year.'); return; }
-    const requestVersion = ++version.current;
-    setLoading(true); setSelected(null); setError(''); setSuccess('');
-    try { const response = await studentAcademicApi.list({ academicYearId: yearId, search, page }); if (requestVersion === version.current) setResults(response.data); }
-    catch (e) { if (requestVersion === version.current) { setResults(null); setError(errorText(e)); } }
-    finally { if (requestVersion === version.current) setLoading(false); }
-  };
-  const edit = (student: Student) => {
-    const record = student.studentAcademicRecords[0]; setSelected(student); setProgramId(record?.programId ?? ''); setLevel(record?.yearLevel != null ? String(record.yearLevel) : ''); setStatus(record?.status ?? 'ENROLLED'); setReason(''); setError(''); setSuccess('');
-  };
-  const save = async () => {
-    if (!selected) return;
-    setSaving(true); setError('');
-    try {
-      const response = await studentAcademicApi.save({ studentId: selected.id, academicYearId: yearId, programId, yearLevel: level ? Number(level) : null, status, reason, expectedUpdatedAt: previous?.updatedAt ?? null });
-      setResults(current => current ? { ...current, students: current.students.map(student => student.id === selected.id ? { ...student, studentAcademicRecords: [response.data.record] } : student) } : current);
-      setSelected(null); setConfirm(false); setSuccess('Academic record saved. Existing requests and account access were not changed.');
-    } catch (e) { setConfirm(false); setError(errorText(e)); }
-    finally { setSaving(false); }
-  };
-  return <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white p-4 shadow-sm lg:p-5">
-    <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-base font-semibold text-[#321d1d]">Find student records</h2><p className="mt-1 text-xs text-[#786565]">Choose a year, then search by name or email.</p></div><p className="max-w-xl text-xs text-[#8a6f68]">Changing the selected year does not promote, demote, or archive an account.</p></div>
-    <div className="mt-4 grid gap-3 rounded-xl border border-[#ead7d3] bg-[#faf7f5] p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-      <label className="text-xs">Academic year<select className={inputClass} value={yearId} disabled={saving || confirm} onChange={e => { setYearId(e.target.value); resetResults(); }}><option value="">Select academic year</option>{years.map(item => <option key={item.id} value={item.id}>{item.year}{item.isActive ? ' · Active' : ''}</option>)}</select></label>
-      <label className="text-xs">Student name or email<input className={inputClass} value={search} disabled={saving || confirm} onChange={e => { setSearch(e.target.value); resetResults(); }} /></label>
-      <button type="button" disabled={loading || saving || confirm} onClick={() => void load()} className="min-h-11 self-end rounded-xl bg-[#800000] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#680000] disabled:opacity-50">{loading ? 'Loading…' : 'Load records'}</button>
-    </div>
-    {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
-    {success && <p role="status" className="mt-3 text-sm text-green-800">{success}</p>}
-    {results && !loading && <>
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold text-[#321d1d]">{results.total} students · {year?.year}</p><p className="text-xs text-[#786565]">No record means standing has not been confirmed for this year.</p></div>
-      <div className="mt-3 grid gap-2">{results.students.map(student => { const record = student.studentAcademicRecords[0]; return <div key={student.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#eee1dd] bg-white px-4 py-3 transition hover:border-[#d9bbb3] hover:bg-[#fffdfc]">
-        <div><p className="text-sm font-semibold">{student.firstName} {student.lastName}</p><p className="text-xs text-[#786565]">{student.email} · Account {student.status.toLowerCase()}</p><p className="mt-1 text-sm">{record ? `${record.programCode} · ${record.yearLevel == null ? 'No year level' : `Year ${record.yearLevel}`} · ${statusLabels[record.status]}` : 'No academic record'}</p></div>
-        <button type="button" disabled={saving || confirm} onClick={() => edit(student)} className="min-h-11 rounded-xl border border-[#dcbeb7] bg-white px-4 text-sm font-semibold text-[#800000] transition hover:bg-[#fff5f2]">{record ? 'Edit record' : 'Add record'}</button>
-      </div>; })}</div>
-      <div className="mt-4 flex items-center justify-end gap-3 border-t border-[#ead7d3] pt-4 text-xs"><button type="button" disabled={results.page <= 1 || loading || saving || confirm} className="min-h-10 rounded-lg border border-[#ead7d3] px-3 disabled:opacity-40" onClick={() => void load(results.page - 1)}>Previous</button><span className="font-medium text-[#514343]">Page {results.page} of {Math.max(1, Math.ceil(results.total / results.pageSize))}</span><button type="button" disabled={results.page * results.pageSize >= results.total || loading || saving || confirm} className="min-h-10 rounded-lg border border-[#ead7d3] px-3 disabled:opacity-40" onClick={() => void load(results.page + 1)}>Next</button></div>
-    </>}
-    {results && !loading && !selected && <StudentAcademicBatch key={`${yearId}-${search}-${results.page}`} yearId={yearId} years={years} studentIds={results.students.map(student => student.id)} programs={results.programs} onSaved={() => { void load(results.page).then(() => setSuccess('Batch saved. Existing records and account access were not changed.')); }} />}
-    {selected && <form className="mt-5 rounded-xl border border-[#ead7d3] bg-[#faf7f5] p-4" onSubmit={e => { e.preventDefault(); setConfirm(true); }}>
-      <h3 className="font-semibold">{selected.firstName} {selected.lastName} · {year?.year}</h3>
-      <p className="mt-1 text-xs text-[#786565]">Confirm that these details belong to this year. Adding the first record enables year-specific enrollment checks for future requests; missing years will require administrator review.</p>
-      {!previous && selected.studentProfile && <button type="button" disabled={saving || confirm} className="mt-2 min-h-11 text-sm font-semibold text-[#800000] underline" onClick={() => { setProgramId(selected.studentProfile?.programId ?? ''); setLevel(selected.studentProfile?.yearLevel != null ? String(selected.studentProfile.yearLevel) : ''); }}>Use current profile as a starting point</button>}
-      <fieldset disabled={saving || confirm} className="mt-3 grid gap-3 sm:grid-cols-3">
-        <label className="text-xs">Program *<select required className={inputClass} value={programId} onChange={e => setProgramId(e.target.value)}><option value="">Select program</option>{results?.programs.map(program => <option key={program.id} value={program.id}>{program.code} – {program.name}</option>)}</select></label>
-        <label className="text-xs">Academic status *<select className={inputClass} value={status} onChange={e => setStatus(e.target.value)}>{Object.entries(statusLabels).map(([key,label]) => <option key={key} value={key}>{label}</option>)}</select></label>
-        <label className="text-xs">Year level{['ENROLLED','CONTINUING'].includes(status) ? ' *' : ' (optional)'}<select required={['ENROLLED','CONTINUING'].includes(status)} className={inputClass} value={level} onChange={e => setLevel(e.target.value)}><option value="">Select year level</option>{[1,2,3,4].map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-        <label className="text-xs sm:col-span-3">Reason / source of confirmation *<input required maxLength={500} className={inputClass} value={reason} onChange={e => setReason(e.target.value)} /></label>
-      </fieldset>
-      <div className="mt-4 flex gap-3"><button type="submit" disabled={saving || confirm || !reason.trim()} className="min-h-11 rounded-xl bg-[#800000] px-4 text-sm font-semibold text-white disabled:opacity-50">Review and save</button><button type="button" disabled={saving || confirm} onClick={() => setSelected(null)} className="min-h-11 px-4 text-sm">Cancel</button></div>
-    </form>}
-    <ConfirmationModal isOpen={confirm} title="Save student academic record?" message={`Record ${selected?.firstName ?? ''} ${selected?.lastName ?? ''} as ${statusLabels[status]?.toLowerCase()}${level ? `, Year ${level}` : ''}, for ${year?.year ?? ''}? This does not change their account access, current profile, or existing requests.`} confirmLabel="Save academic record" confirmingLabel="Saving…" cancelLabel="Go back" isConfirming={saving} onConfirm={() => void save()} onClose={() => { if (!saving) setConfirm(false); }} />
-  </section>;
+export default function StudentAcademicRecords({years}:{years:{id:string;year:string;isActive:boolean}[]}) {
+ const [yearId,setYearId]=useState(''),[search,setSearch]=useState(''),[results,setResults]=useState<Results|null>(null),[selected,setSelected]=useState<Student|null>(null);
+ const [programId,setProgramId]=useState(''),[level,setLevel]=useState(''),[status,setStatus]=useState('ENROLLED'),[reason,setReason]=useState('');
+ const [loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[confirm,setConfirm]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState(''),[pageSize,setPageSize]=useState(15);
+ const version=useRef(0),year=years.find(item=>item.id===yearId),previous=selected?.studentAcademicRecords[0];
+ const resetResults=()=>{version.current++;setLoading(false);setResults(null);setSelected(null);setError('');setSuccess('');};
+ const load=async(page=1,size=pageSize)=>{if(!yearId){setError('Select an academic year.');return;}const requestVersion=++version.current;setLoading(true);setSelected(null);setError('');setSuccess('');try{const response=await studentAcademicApi.list({academicYearId:yearId,search,page,pageSize:size});if(requestVersion===version.current)setResults(response.data);}catch(e){if(requestVersion===version.current){setResults(null);setError(errorText(e));}}finally{if(requestVersion===version.current)setLoading(false);}};
+ const edit=(student:Student)=>{const record=student.studentAcademicRecords[0];setSelected(student);setProgramId(record?.programId??'');setLevel(record?.yearLevel!=null?String(record.yearLevel):'');setStatus(record?.status??'ENROLLED');setReason('');setError('');setSuccess('');};
+ const save=async()=>{if(!selected)return;setSaving(true);setError('');try{const response=await studentAcademicApi.save({studentId:selected.id,academicYearId:yearId,programId,yearLevel:level?Number(level):null,status,reason,expectedUpdatedAt:previous?.updatedAt??null});setResults(current=>current?{...current,students:current.students.map(student=>student.id===selected.id?{...student,studentAcademicRecords:[response.data.record]}:student)}:current);setSelected(null);setConfirm(false);setSuccess('Academic record saved. Existing requests and account access were not changed.');}catch(e){setConfirm(false);setError(errorText(e));}finally{setSaving(false);}};
+ return <section className="rounded-2xl border border-[#ead7d3] bg-white p-4 shadow-sm lg:p-5">
+  <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-base font-semibold text-[#321d1d]">Find student records</h2><p className="mt-1 text-xs text-[#786565]">Choose a year, then search by name or email.</p></div><p className="text-xs text-[#8a6f68]">Selecting a year never changes student standing.</p></div>
+  <div className="mt-4 grid gap-3 rounded-xl border border-[#ead7d3] bg-[#faf7f5] p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+   <label className="text-xs font-medium">Academic year<select className={inputClass} value={yearId} disabled={saving||confirm} onChange={e=>{setYearId(e.target.value);resetResults();}}><option value="">Select academic year</option>{years.map(item=><option key={item.id} value={item.id}>{item.year}{item.isActive?' · Active':''}</option>)}</select></label>
+   <label className="text-xs font-medium">Student name or email<input className={inputClass} placeholder="Search all students" value={search} disabled={saving||confirm} onChange={e=>{setSearch(e.target.value);resetResults();}}/></label>
+   <button type="button" disabled={loading||saving||confirm} onClick={()=>void load()} className="min-h-11 self-end rounded-xl bg-[#800000] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#680000] disabled:opacity-50">{loading?'Loading…':'Load records'}</button>
+  </div>
+  {error&&<p role="alert" className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}{success&&<p role="status" className="mt-3 rounded-xl bg-green-50 px-3 py-2 text-sm text-green-800">{success}</p>}
+  {results&&!loading&&<><div className="mt-5 flex items-center justify-between gap-2"><p className="text-sm font-semibold text-[#321d1d]">{results.total} students · {year?.year}</p><p className="text-xs text-[#786565]">Amber means no record is configured.</p></div>
+   <div className="mt-3 space-y-2 md:hidden">{results.students.map(student=>{const record=student.studentAcademicRecords[0];return <article key={student.id} className="rounded-xl border border-[#ead7d3] p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="font-semibold text-[#321d1d]">{student.firstName} {student.lastName}</h3><p className="break-all text-xs text-[#786565]">{student.email}</p></div><button type="button" onClick={()=>edit(student)} className="rounded-lg border border-[#dcbeb7] p-2 text-[#800000]" aria-label={`Edit ${student.firstName} ${student.lastName}`}><Pencil className="h-4 w-4"/></button></div><div className="mt-3 flex flex-wrap gap-2 text-xs">{record?<><span className="rounded-full bg-[#f6efec] px-2.5 py-1">{record.programCode}</span><span className="rounded-full bg-[#f6efec] px-2.5 py-1">{record.yearLevel?`Year ${record.yearLevel}`:'No year level'}</span><span className={`rounded-full px-2.5 py-1 font-semibold ${statusStyles[record.status]}`}>{statusLabels[record.status]}</span></>:<span className="rounded-full bg-amber-100 px-2.5 py-1 font-semibold text-amber-800">Record missing</span>}</div></article>;})}</div>
+   <div className="mt-3 hidden overflow-hidden rounded-xl border border-[#ead7d3] md:block"><TableContainer><Table><TableHead><TableHeaderCell>Student</TableHeaderCell><TableHeaderCell>Program</TableHeaderCell><TableHeaderCell>Year level</TableHeaderCell><TableHeaderCell>Standing</TableHeaderCell><TableHeaderCell>Account</TableHeaderCell><TableHeaderCell align="right" width="5rem">Action</TableHeaderCell></TableHead><TableBody>{results.students.map(student=>{const record=student.studentAcademicRecords[0];return <TableRow key={student.id}><TableTitleCell title={`${student.firstName} ${student.lastName}`} subtitle={student.email}/><TableCell>{record?.programCode??<span className="font-medium text-amber-700">Not configured</span>}</TableCell><TableCell>{record?.yearLevel?`Year ${record.yearLevel}`:'—'}</TableCell><TableCell>{record?<span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyles[record.status]}`}>{statusLabels[record.status]}</span>:<span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">Missing</span>}</TableCell><TableCell><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${student.status==='ACTIVE'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>{student.status==='ACTIVE'?'Active':'Archived'}</span></TableCell><TableActionsCell><IconActionButton icon="edit" label={`Edit ${student.firstName} ${student.lastName}`} onClick={()=>edit(student)}/></TableActionsCell></TableRow>;})}</TableBody></Table></TableContainer></div>
+   <TablePagination currentPage={results.page} pageSize={results.pageSize} totalItems={results.total} pageSizeOptions={[15,25,50]} onPageChange={page=>void load(page)} onPageSizeChange={size=>{setPageSize(size);void load(1,size);}}/>
+   {!selected&&<StudentAcademicBatch key={`${yearId}-${search}-${results.page}`} yearId={yearId} years={years} studentIds={results.students.map(student=>student.id)} programs={results.programs} onSaved={()=>{void load(results.page).then(()=>setSuccess('Batch saved.'));}}/>}
+  </>}
+  {selected&&<div className="fixed inset-0 z-50 bg-black/35" onClick={()=>!saving&&!confirm&&setSelected(null)} role="presentation"><aside className="ml-auto flex h-full w-full max-w-xl flex-col bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="academic-record-drawer-title" onClick={e=>e.stopPropagation()}><header className="flex items-start justify-between border-b border-[#ead7d3] px-5 py-4"><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#a15c45]">{year?.year}</p><h2 id="academic-record-drawer-title" className="mt-1 text-lg font-semibold text-[#321d1d]">{selected.firstName} {selected.lastName}</h2><p className="mt-1 text-xs text-[#786565]">{selected.email}</p></div><button type="button" disabled={saving||confirm} onClick={()=>setSelected(null)} className="rounded-lg p-2 text-[#786565] hover:bg-[#faf7f5]" aria-label="Close academic record editor"><X className="h-5 w-5"/></button></header><form className="flex flex-1 flex-col overflow-y-auto" onSubmit={e=>{e.preventDefault();setConfirm(true);}}><div className="flex-1 space-y-4 p-5"><p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">Confirm these details for this academic year. Existing requests and historical records will remain unchanged.</p>{!previous&&selected.studentProfile&&<button type="button" disabled={saving||confirm} className="text-sm font-semibold text-[#800000] underline" onClick={()=>{setProgramId(selected.studentProfile?.programId??'');setLevel(selected.studentProfile?.yearLevel!=null?String(selected.studentProfile.yearLevel):'');}}>Use current profile as a starting point</button>}<fieldset disabled={saving||confirm} className="space-y-4"><label className="block text-xs font-medium">Program *<select required className={inputClass} value={programId} onChange={e=>setProgramId(e.target.value)}><option value="">Select program</option>{results?.programs.map(program=><option key={program.id} value={program.id}>{program.code} – {program.name}</option>)}</select></label><div className="grid gap-4 sm:grid-cols-2"><label className="text-xs font-medium">Academic status *<select className={inputClass} value={status} onChange={e=>setStatus(e.target.value)}>{Object.entries(statusLabels).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label><label className="text-xs font-medium">Year level{['ENROLLED','CONTINUING'].includes(status)?' *':' (optional)'}<select required={['ENROLLED','CONTINUING'].includes(status)} className={inputClass} value={level} onChange={e=>setLevel(e.target.value)}><option value="">Select year level</option>{[1,2,3,4].map(value=><option key={value} value={value}>{value}</option>)}</select></label></div><label className="block text-xs font-medium">Reason / source of confirmation *<textarea required maxLength={500} rows={4} className={`${inputClass} py-3`} value={reason} onChange={e=>setReason(e.target.value)}/></label></fieldset></div><footer className="flex justify-end gap-3 border-t border-[#ead7d3] bg-[#fffaf8] p-4"><button type="button" disabled={saving||confirm} onClick={()=>setSelected(null)} className="min-h-11 rounded-xl border border-[#ead7d3] px-4 text-sm font-semibold">Cancel</button><button type="submit" disabled={saving||confirm||!reason.trim()} className="min-h-11 rounded-xl bg-[#800000] px-5 text-sm font-semibold text-white disabled:opacity-50">Review and save</button></footer></form></aside></div>}
+  <ConfirmationModal isOpen={confirm} title="Save student academic record?" message={`Record ${selected?.firstName??''} ${selected?.lastName??''} as ${statusLabels[status]?.toLowerCase()}${level?`, Year ${level}`:''}, for ${year?.year??''}? Existing requests and account access will not change.`} confirmLabel="Save academic record" confirmingLabel="Saving…" cancelLabel="Go back" isConfirming={saving} onConfirm={()=>void save()} onClose={()=>{if(!saving)setConfirm(false);}}/>
+ </section>;
 }

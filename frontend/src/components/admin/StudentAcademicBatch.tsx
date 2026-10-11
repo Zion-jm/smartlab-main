@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { studentAcademicApi } from '../../services/api';
 import ConfirmationModal from '../shared/ConfirmationModal';
@@ -5,6 +6,7 @@ type Row = {studentId:string;name:string;email:string;blocked:string|null;finger
 type Props = {yearId:string;years:{id:string;year:string}[];studentIds:string[];programs:{id:string;code:string;name:string}[];onSaved:()=>void};
 const control='mt-1.5 min-h-11 w-full rounded-xl border border-[#dcc8c2] bg-white px-3 text-sm text-[#321d1d] outline-none transition focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/10';
 export default function StudentAcademicBatch({yearId,years,studentIds,programs,onSaved}:Props) {
+ const [open,setOpen]=useState(false);
  const [mode,setMode]=useState('SETUP'),[sourceYearId,setSource]=useState(''),[rows,setRows]=useState<Row[]|null>(null),[reason,setReason]=useState(''),[busy,setBusy]=useState(false),[confirm,setConfirm]=useState(false),[error,setError]=useState('');
  const selected=rows?.filter(row=>row.selected&&!row.blocked)??[];
  const target=years.find(year=>year.id===yearId)?.year;
@@ -13,6 +15,8 @@ export default function StudentAcademicBatch({yearId,years,studentIds,programs,o
  const save=async()=>{setBusy(true);setError('');try{await studentAcademicApi.commitBatch({mode,academicYearId:yearId,sourceYearId,reason,rows:selected.map(({studentId,fingerprint,programId,yearLevel,status,archiveAccount})=>({studentId,fingerprint,programId,yearLevel,status,archiveAccount}))});setConfirm(false);setRows(null);onSaved();}catch(e){setConfirm(false);fail(e);}finally{setBusy(false);}};
  const change=(id:string,patch:Partial<Row>)=>setRows(current=>current?.map(row=>row.studentId===id?{...row,...patch}:row)??null);
  return <section aria-label="Bulk academic records" className="mt-5 border-t-2 border-[#c8aaa2] pt-5">
+  <button type="button" onClick={()=>setOpen(value=>!value)} aria-expanded={open} className="flex min-h-16 w-full items-center justify-between gap-4 rounded-xl border border-[#ead7d3] bg-[#fffaf8] px-4 py-3 text-left transition hover:border-[#d6b5ac]"><span><span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-[#a15c45]">Bulk tools</span><span className="mt-0.5 block font-semibold text-[#321d1d]">Bulk setup and yearly promotion</span><span className="mt-0.5 block text-xs text-[#786565]">Prepare several records from profiles or a previous academic year.</span></span><span className="flex shrink-0 items-center gap-2 text-sm font-semibold text-[#800000]">{open?'Close':'Open bulk tools'}<ChevronDown className={`h-4 w-4 transition ${open?'rotate-180':''}`}/></span></button>
+  {open&&<div className="px-1 pt-5">
   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a15c45]">Bulk tools</p>
   <h3 className="mt-1 text-base font-semibold text-[#321d1d]">Bulk setup and yearly promotion</h3>
   <p className="mt-1 text-xs leading-5 text-[#786565]">Destination: <strong>{target}</strong> · {studentIds.length} students. Existing destination records are protected and history remains unchanged.</p>
@@ -28,5 +32,6 @@ export default function StudentAcademicBatch({yearId,years,studentIds,programs,o
   </fieldset>
   {error&&<p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
   <ConfirmationModal isOpen={confirm} title="Save academic batch?" message={`Create ${selected.length} records for ${target}? ${selected.filter(row=>row.status==='GRADUATED').length} selected students will be marked graduated and ${selected.filter(row=>row.archiveAccount).length} accounts will be archived. Existing records and history will be preserved.`} confirmLabel="Save selected records" confirmingLabel="Saving…" cancelLabel="Go back" isConfirming={busy} onConfirm={()=>void save()} onClose={()=>{if(!busy)setConfirm(false);}}/>
+  </div>}
  </section>;
 }
