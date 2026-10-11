@@ -19,7 +19,7 @@ const errorText=(error:unknown)=>(error as {response?:{data?:{error?:string}}})?
 type InitialBatch = {mode:'SETUP'|'PROMOTE';sourceYearId:string;autoPreview:boolean};
 
 export default function StudentAcademicRecords({years,onRefresh,refreshing=false,lastUpdated,initialYearId='',initialBatch}:{years:{id:string;year:string;isActive:boolean}[];onRefresh?:()=>void|Promise<void>;refreshing?:boolean;lastUpdated?:Date|null;initialYearId?:string;initialBatch?:InitialBatch}) {
- const validInitialYearId=years.some(item=>item.id===initialYearId)?initialYearId:'';
+ const validInitialYearId=years.some(item=>item.id===initialYearId)?initialYearId:years.find(item=>item.isActive)?.id??'';
  const [yearId,setYearId]=useState(validInitialYearId),[search,setSearch]=useState(''),[results,setResults]=useState<Results|null>(null),[selected,setSelected]=useState<Student|null>(null);
  const [programId,setProgramId]=useState(''),[level,setLevel]=useState(''),[status,setStatus]=useState('ENROLLED'),[reason,setReason]=useState('');
  const [loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[confirm,setConfirm]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState(''),[pageSize,setPageSize]=useState(15);
