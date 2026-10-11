@@ -5,14 +5,56 @@ import { recordRequiredAuditLog } from './auditLogService';
 import { accountStatusChanged } from './accountReactivationService';
 
 type BatchInput = { mode: 'SETUP' | 'PROMOTE'; academicYearId: string; sourceYearId?: string; studentIds: string[] };
+const yearStart = (year: string) => /^\d{4}-\d{4}$/.test(year) && Number(year.slice(5)) === Number(year.slice(0,4)) + 1 ? Number(year.slice(0,4)) : NaN;
+
+export async function getAcademicYearTransitionSummary(tx: Prisma.TransactionClient, academicYearId: string, sourceYearId?: string) {
+  const destination = await tx.academicYear.findUnique({ where: { id: academicYearId } });
+  if (!destination) throw new ValidationError('Select a valid academic year.');
+  const activeStudents = await tx.user.findMany({
+    where: { role: 'STUDENT', status: UserStatus.ACTIVE },
+    select: {
+      id: true,
+      studentAcademicRecords: { where: { academicYearId: { in: [academicYearId, ...(sourceYearId ? [sourceYearId] : [])] } }, select: { academicYearId: true, yearLevel: true, status: true, programId: true } },
+    },
+  });
+  const configured = activeStudents.filter(student => student.studentAcademicRecords.some(record => record.academicYearId === academicYearId)).length;
+  const currentGraduationReview = activeStudents.filter(student => student.studentAcademicRecords.some(record => record.academicYearId === academicYearId && record.yearLevel === 4 && ['ENROLLED', 'CONTINUING'].includes(record.status))).length;
+  if (!sourceYearId) return { destination, activeStudents: activeStudents.length, configured, missing: activeStudents.length - configured, graduationReview: currentGraduationReview };
+
+  const source = await tx.academicYear.findUnique({ where: { id: sourceYearId } });
+  if (!source || yearStart(destination.year) !== yearStart(source.year) + 1) throw new ValidationError('Promotion requires consecutive academic years.');
+  let continuing = 0, graduationReview = 0, protectedRecords = 0, manualReview = 0;
+  for (const student of activeStudents) {
+    if (student.studentAcademicRecords.some(record => record.academicYearId === academicYearId)) { protectedRecords++; continue; }
+    const record = student.studentAcademicRecords.find(item => item.academicYearId === sourceYearId);
+    if (!record || !record.programId || !record.yearLevel || !['ENROLLED', 'CONTINUING'].includes(record.status)) { manualReview++; continue; }
+    if (record.yearLevel === 4) graduationReview++; else continuing++;
+  }
+  return { destination, source, activeStudents: activeStudents.length, configured, missing: activeStudents.length - configured, continuing, graduationReview, protectedRecords, manualReview };
+}
+
+export async function promoteStandardStudents(tx: Prisma.TransactionClient, input: { destinationYearId: string; sourceYearId: string; reason: string }, actorUserId: string) {
+  if (!input.reason?.trim()) throw new ValidationError('A reason is required.');
+  const summary = await getAcademicYearTransitionSummary(tx, input.destinationYearId, input.sourceYearId);
+  const students = await tx.user.findMany({
+    where: { role: 'STUDENT', status: UserStatus.ACTIVE, studentAcademicRecords: { some: { academicYearId: input.sourceYearId, yearLevel: { in: [1,2,3] }, status: { in: [StudentAcademicStatus.ENROLLED, StudentAcademicStatus.CONTINUING] } }, none: { academicYearId: input.destinationYearId } } },
+    select: { id:true, firstName:true, lastName:true, studentAcademicRecords: { where: { academicYearId: input.sourceYearId }, take: 1 } },
+  });
+  const batchId = randomUUID();
+  for (const student of students) {
+    const source = student.studentAcademicRecords[0];
+    const saved = await tx.studentAcademicRecord.create({ data: { studentId: student.id, academicYearId: input.destinationYearId, programId: source.programId, programCode: source.programCode, programName: source.programName, yearLevel: (source.yearLevel ?? 0) + 1, status: StudentAcademicStatus.CONTINUING } });
+    await recordRequiredAuditLog(tx,{actorUserId,action:'CREATE',entityType:'StudentAcademicRecord',entityId:saved.id,details:{label:`${student.firstName} ${student.lastName} · ${summary.destination.year}`,batchId,mode:'PROMOTE_STANDARD',sourceYear:summary.source?.year,reason:input.reason.trim(),next:{programId:source.programId,yearLevel:saved.yearLevel,status:saved.status}}});
+  }
+  return { created: students.length, batchId, summary: await getAcademicYearTransitionSummary(tx, input.destinationYearId, input.sourceYearId) };
+}
 export async function previewAcademicBatch(tx: Prisma.TransactionClient, input: BatchInput) {
   if (!['SETUP', 'PROMOTE'].includes(input.mode) || typeof input.academicYearId !== 'string' || !Array.isArray(input.studentIds) || !input.studentIds.length || input.studentIds.length > 100 || input.studentIds.some(id => typeof id !== 'string') || new Set(input.studentIds).size !== input.studentIds.length) throw new ValidationError('Select 1–100 distinct students and a destination year.');
   const destination = await tx.academicYear.findUnique({ where: { id: input.academicYearId } });
   if (!destination) throw new ValidationError('Select a valid destination year.');
   const source = input.mode === 'PROMOTE' && typeof input.sourceYearId === 'string' ? await tx.academicYear.findUnique({ where: { id: input.sourceYearId } }) : null;
   if (input.mode === 'PROMOTE') {
-    const start = (year: string) => /^\d{4}-\d{4}$/.test(year) && Number(year.slice(5)) === Number(year.slice(0,4)) + 1 ? Number(year.slice(0,4)) : NaN;
-    if (!source || start(destination.year) !== start(source.year) + 1) throw new ValidationError('Promotion requires consecutive academic years, for example 2026-2027 to 2027-2028.');
+    if (!source || yearStart(destination.year) !== yearStart(source.year) + 1) throw new ValidationError('Promotion requires consecutive academic years, for example 2026-2027 to 2027-2028.');
   }
   const students = await tx.user.findMany({ where: { id: { in: input.studentIds } }, select: { id:true, firstName:true,lastName:true,email:true,role:true,status:true,studentProfile:true,studentAcademicRecords:{where:{academicYearId:{in:[destination.id,...(source?[source.id]:[])]}}} } });
   if (students.length !== input.studentIds.length) throw new ValidationError('A selected student no longer exists.');

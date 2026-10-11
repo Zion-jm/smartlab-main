@@ -4,7 +4,7 @@ import { AlertTriangle, Archive, CalendarRange, CheckCircle2, Clock3, History, R
 import AdminLayout from '../components/AdminLayout';
 import ConfirmationModal from '../components/shared/ConfirmationModal';
 import DropdownField from '../components/shared/DropdownField';
-import { academicPeriodApi } from '../services/api';
+import { academicPeriodApi, studentAcademicApi } from '../services/api';
 import { toast } from '../stores/toastStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -49,6 +49,7 @@ type AcademicPeriodPayload = {
   suggestedTerms: string[];
   history: PeriodHistory[];
 };
+type AcademicSummary = { activeStudents:number; configured:number; missing:number; graduationReview:number; continuing?:number; protectedRecords?:number; manualReview?:number };
 
 const defaultTerms = ['1st Semester', '2nd Semester', 'Summer Term'];
 const NEW_ACADEMIC_YEAR_VALUE = '__new_academic_year__';
@@ -114,7 +115,10 @@ export default function AdminAcademicPeriod() {
   const [termName, setTermName] = useState('');
   const [reason, setReason] = useState('');
   const [pendingActivation, setPendingActivation] = useState<{ year: string; termName: string } | null>(null);
-  const [promotionPrompt, setPromotionPrompt] = useState<{ destinationYearId: string; destinationYear: string; sourceYearId: string; sourceYear: string } | null>(null);
+  const [activationSummary, setActivationSummary] = useState<AcademicSummary | null>(null);
+  const [promotionPrompt, setPromotionPrompt] = useState<({ destinationYearId: string; destinationYear: string; sourceYearId: string; sourceYear: string } & AcademicSummary) | null>(null);
+  const [confirmStandardPromotion, setConfirmStandardPromotion] = useState(false);
+  const [promoting, setPromoting] = useState(false);
 
   const performLoadData = useCallback(async () => {
     
@@ -203,6 +207,20 @@ export default function AdminAcademicPeriod() {
       return;
     }
 
+    setActivationSummary(null);
+    const currentYear = data?.current?.academicYear;
+    const currentStart = currentYear ? getAcademicYearStart(currentYear.year) : null;
+    const nextStart = getAcademicYearStart(normalizedYear);
+    if (currentYear && currentStart !== null && nextStart !== null && nextStart > currentStart) {
+      try {
+        const response = await studentAcademicApi.summary({ academicYearId: currentYear.id });
+        setActivationSummary(response.data as AcademicSummary);
+      } catch (summaryError) {
+        console.error('Failed to check current-year student records', summaryError);
+        setError('Student-record completeness could not be checked. Refresh and try again before changing the academic year.');
+        return;
+      }
+    }
     setPendingActivation({ year: normalizedYear, termName: normalizedTerm });
   };
 
@@ -226,12 +244,14 @@ export default function AdminAcademicPeriod() {
       const previousStart = previousYear ? getAcademicYearStart(previousYear.year) : null;
       const destinationStart = getAcademicYearStart(destinationYear);
       if (previousYear && current?.academicYear && previousStart !== null && destinationStart !== null && destinationStart > previousStart) {
-        setPromotionPrompt({
-          destinationYearId: current.academicYear.id,
-          destinationYear: current.academicYear.year,
-          sourceYearId: previousYear.id,
-          sourceYear: previousYear.year,
-        });
+        try {
+          const summaryResponse = await studentAcademicApi.summary({ academicYearId: current.academicYear.id, sourceYearId: previousYear.id });
+          setPromotionPrompt({ destinationYearId: current.academicYear.id, destinationYear: current.academicYear.year, sourceYearId: previousYear.id, sourceYear: previousYear.year, ...(summaryResponse.data as AcademicSummary) });
+        } catch (summaryError) {
+          console.error('Failed to prepare promotion summary', summaryError);
+          toast.error('The new year is active, but its promotion summary could not be loaded. Open Student Records to review promotions.');
+          setPromotionPrompt({ destinationYearId: current.academicYear.id, destinationYear: current.academicYear.year, sourceYearId: previousYear.id, sourceYear: previousYear.year, activeStudents: 0, configured: 0, missing: 0, graduationReview: 0, continuing: 0, protectedRecords: 0, manualReview: 0 });
+        }
       }
     } catch (saveError) {
       console.error('Failed to activate academic period', saveError);
@@ -241,6 +261,25 @@ export default function AdminAcademicPeriod() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const applyStandardPromotion = async () => {
+    if (!promotionPrompt) return;
+    setPromoting(true);
+    try {
+      const response = await studentAcademicApi.promoteStandard({ destinationYearId: promotionPrompt.destinationYearId, sourceYearId: promotionPrompt.sourceYearId, reason: `Standard yearly promotion from ${promotionPrompt.sourceYear} to ${promotionPrompt.destinationYear}` });
+      const created = Number(response.data?.created ?? 0);
+      toast.success(`${created} ${created === 1 ? 'student record was' : 'student records were'} promoted. Graduation and exception cases still require review.`);
+      setConfirmStandardPromotion(false);
+      const prompt = promotionPrompt;
+      setPromotionPrompt(null);
+      const query = new URLSearchParams({ yearId: prompt.destinationYearId, operation: 'PROMOTE', sourceYearId: prompt.sourceYearId, bulk: 'open', preview: 'true' });
+      navigate(`/admin/student-records?${query.toString()}`);
+    } catch (promotionError) {
+      console.error('Failed to apply standard promotion', promotionError);
+      toast.error(getErrorMessage(promotionError));
+      setConfirmStandardPromotion(false);
+    } finally { setPromoting(false); }
   };
 
   if (loading) {
@@ -474,38 +513,24 @@ export default function AdminAcademicPeriod() {
         title="Activate academic period?"
         message={
           pendingActivation
-            ? `Set ${pendingActivation.year} · ${pendingActivation.termName} as the active academic period? Existing schedules, requests, and reports will keep their original academic period.`
+            ? activationSummary && activationSummary.missing > 0
+              ? `${activationSummary.missing} of ${activationSummary.activeStudents} active students still have no record for ${data?.current?.academicYear.year}. ${activationSummary.graduationReview} Year 4 students also await graduation review. You can continue, but unresolved students may require manual review before promotion.`
+              : `Set ${pendingActivation.year} · ${pendingActivation.termName} as the active academic period? Existing schedules, requests, and reports will keep their original academic period.`
             : ''
         }
-        confirmLabel="Activate academic period"
+        confirmLabel={activationSummary?.missing ? 'Continue activating year' : 'Activate academic period'}
+        cancelLabel={activationSummary?.missing ? 'Review records first' : 'Cancel'}
         confirmingLabel="Activating…"
         isConfirming={saving}
         onConfirm={() => void confirmActivation()}
-        onClose={() => setPendingActivation(null)}
-      />
-      <ConfirmationModal
-        isOpen={promotionPrompt !== null}
-        title="Prepare student records for the new year?"
-        message={
-          promotionPrompt
-            ? `${promotionPrompt.destinationYear} is now active. Review promotion proposals from ${promotionPrompt.sourceYear}. No student record or account will change until you review and save the selected proposals.`
-            : ''
-        }
-        confirmLabel="Review promotions"
-        cancelLabel="Do this later"
-        onConfirm={() => {
-          if (!promotionPrompt) return;
-          const query = new URLSearchParams({
-            yearId: promotionPrompt.destinationYearId,
-            operation: 'PROMOTE',
-            sourceYearId: promotionPrompt.sourceYearId,
-            bulk: 'open',
-            preview: 'true',
-          });
-          navigate(`/admin/student-records?${query.toString()}`);
+        onClose={() => {
+          const shouldReview = Boolean(activationSummary?.missing && data?.current?.academicYear.id);
+          setPendingActivation(null);
+          if (shouldReview) navigate(`/admin/student-records?yearId=${data!.current!.academicYear.id}`);
         }}
-        onClose={() => setPromotionPrompt(null)}
       />
+      {promotionPrompt && !confirmStandardPromotion && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm" role="presentation" onClick={()=>setPromotionPrompt(null)}><section role="dialog" aria-modal="true" aria-labelledby="promotion-summary-title" onClick={event=>event.stopPropagation()} className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"><header className="border-b border-[#f1e3df] px-5 py-4"><p className="text-xs font-semibold uppercase tracking-wide text-[#a15c45]">New academic year</p><h2 id="promotion-summary-title" className="mt-1 text-lg font-semibold text-[#321d1d]">Prepare records for {promotionPrompt.destinationYear}</h2><p className="mt-1 text-sm text-[#786565]">Proposals are based on {promotionPrompt.sourceYear}. Review exceptions before confirming graduation, withdrawal, repeating status, or account archival.</p></header><div className="grid gap-3 p-5 sm:grid-cols-2"><div className="rounded-xl border border-green-200 bg-green-50 p-4"><p className="text-xs font-semibold text-green-700">Safe to continue</p><p className="mt-1 text-2xl font-bold text-green-800">{promotionPrompt.continuing ?? 0}</p><p className="mt-1 text-xs text-green-700">Year 1–3 students proposed for the next year level</p></div><div className="rounded-xl border border-amber-200 bg-amber-50 p-4"><p className="text-xs font-semibold text-amber-800">Graduation review</p><p className="mt-1 text-2xl font-bold text-amber-900">{promotionPrompt.graduationReview}</p><p className="mt-1 text-xs text-amber-800">Year 4 students requiring explicit confirmation</p></div><div className="rounded-xl border border-[#ead7d3] bg-[#faf7f5] p-4"><p className="text-xs font-semibold text-[#786565]">Manual review</p><p className="mt-1 text-2xl font-bold text-[#321d1d]">{promotionPrompt.manualReview ?? 0}</p><p className="mt-1 text-xs text-[#786565]">Missing, withdrawn, or incomplete source standings</p></div><div className="rounded-xl border border-blue-200 bg-blue-50 p-4"><p className="text-xs font-semibold text-blue-700">Already configured</p><p className="mt-1 text-2xl font-bold text-blue-800">{promotionPrompt.protectedRecords ?? 0}</p><p className="mt-1 text-xs text-blue-700">Protected destination records that will not be overwritten</p></div></div><footer className="flex flex-wrap justify-end gap-2 border-t border-[#f1e3df] px-5 py-4"><button type="button" onClick={()=>setPromotionPrompt(null)} className="min-h-10 rounded-full border border-[#e5e7eb] px-4 text-xs font-semibold">Do this later</button><button type="button" onClick={()=>{const query=new URLSearchParams({yearId:promotionPrompt.destinationYearId,operation:'PROMOTE',sourceYearId:promotionPrompt.sourceYearId,bulk:'open',preview:'true'});navigate(`/admin/student-records?${query.toString()}`);}} className="min-h-10 rounded-full border border-[#800000] px-4 text-xs font-semibold text-[#800000]">Review exceptions</button><button type="button" disabled={!promotionPrompt.continuing} onClick={()=>setConfirmStandardPromotion(true)} className="min-h-10 rounded-full bg-[#800000] px-4 text-xs font-semibold text-white disabled:opacity-50">Apply standard promotion</button></footer></section></div>}
+      <ConfirmationModal isOpen={confirmStandardPromotion} title="Apply standard promotion?" message={promotionPrompt?`Create ${promotionPrompt.continuing ?? 0} continuing records for ${promotionPrompt.destinationYear}. Year 4, exception, and existing destination records will remain unchanged for review.`:''} confirmLabel="Promote eligible students" confirmingLabel="Promoting…" cancelLabel="Go back" isConfirming={promoting} onConfirm={()=>void applyStandardPromotion()} onClose={()=>setConfirmStandardPromotion(false)}/>
     </AdminLayout>
   );
 }

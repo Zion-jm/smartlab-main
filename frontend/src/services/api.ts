@@ -292,7 +292,9 @@ export const reportsApi = {
 export default api;
 
 export const studentAcademicApi = {
+  summary: (params: { academicYearId: string; sourceYearId?: string }) => api.get('/student-academic-records/summary', { params }),
   previewBatch: (data: JsonPayload) => api.post('/student-academic-records/batch/preview', data),
+  promoteStandard: (data: JsonPayload) => api.post('/student-academic-records/batch/promote-standard', data),
   commitBatch: (data: JsonPayload) => api.post('/student-academic-records/batch/commit', data),
   list: (params: { academicYearId: string; search?: string; page?: number; pageSize?: number }) => api.get('/student-academic-records', { params }),
   save: (data: JsonPayload) => api.post('/student-academic-records', data),

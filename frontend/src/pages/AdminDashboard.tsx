@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
-import { equipmentApi, borrowRequestApi, userApi, labScheduleApi } from '../services/api';
+import { equipmentApi, borrowRequestApi, userApi, labScheduleApi, academicPeriodApi, studentAcademicApi } from '../services/api';
 import type { BorrowRequest } from '../types/requests';
 import type { ApiLabSchedule } from '../types/labSchedule';
 import { dateToDateKey, dateToTimeString, dateToWeekdayIndex } from '../utils/dateTime';
@@ -87,6 +87,14 @@ interface DashboardStats {
     thisWeek: number;
     activeNow: number;
   };
+  academicRecords: {
+    yearId: string;
+    year: string;
+    activeStudents: number;
+    configured: number;
+    missing: number;
+    graduationReview: number;
+  } | null;
 }
 
 const activeRequestStatuses = new Set(['APPROVED', 'BORROWED']);
@@ -142,11 +150,17 @@ export default function AdminDashboard() {
     setIsRefreshing(true);
     setDashboardError(null);
 
-    const [equipmentResult, usersResult, requestsResult, schedulesResult] = await Promise.allSettled([
+    const [equipmentResult, usersResult, requestsResult, schedulesResult, academicRecordsResult] = await Promise.allSettled([
       equipmentApi.getStats(),
       userApi.getAll(),
       borrowRequestApi.getAll({ status: 'ALL', sort: 'date-desc' }),
       labScheduleApi.getAll(),
+      academicPeriodApi.get().then(async ({data}) => {
+        const current = data?.current?.academicYear;
+        if (!current) return null;
+        const summary = await studentAcademicApi.summary({ academicYearId: current.id });
+        return { yearId: current.id, year: current.year, ...summary.data };
+      }),
     ]);
 
     const failedSources = [
@@ -154,10 +168,11 @@ export default function AdminDashboard() {
       usersResult.status === 'rejected' ? 'users' : null,
       requestsResult.status === 'rejected' ? 'requests' : null,
       schedulesResult.status === 'rejected' ? 'schedules' : null,
+      academicRecordsResult.status === 'rejected' ? 'student records' : null,
     ].filter(Boolean);
 
     if (failedSources.length > 0) {
-      const limit = [equipmentResult, usersResult, requestsResult, schedulesResult].find(result => result.status === 'rejected' && result.reason instanceof Error && /exceeds 1000|Data changed while loading/.test(result.reason.message));
+      const limit = [equipmentResult, usersResult, requestsResult, schedulesResult, academicRecordsResult].find(result => result.status === 'rejected' && result.reason instanceof Error && /exceeds 1000|Data changed while loading/.test(result.reason.message));
       setDashboardError(limit?.status === 'rejected' ? limit.reason.message : `Some dashboard data could not be loaded (${failedSources.join(', ')}). Showing the available data.`);
     }
 
@@ -222,6 +237,7 @@ export default function AdminDashboard() {
         thisWeek: thisWeekSchedules.length,
         activeNow: todaySchedules.filter((schedule) => scheduleIsActiveNow(schedule, todayKey, new Date())).length,
       },
+      academicRecords: academicRecordsResult.status === 'fulfilled' ? academicRecordsResult.value : null,
     };
 
     const currentActivities: ActivityEntry[] = [
@@ -351,6 +367,13 @@ export default function AdminDashboard() {
             <StatsCard icon={PackageIcon} iconGradient="bg-gradient-to-br from-emerald-400 to-teal-500" title="Equipment utilization" value={`${stats.equipment.utilizationRate}%`} />
           </div>
         </Card>
+
+        {stats.academicRecords && <Card title="Student records requiring attention" actions={<button type="button" onClick={()=>navigate(`/admin/student-records?yearId=${stats.academicRecords!.yearId}`)} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline lg:text-sm">Review student records <ArrowRightIcon /></button>}>
+          <div className={`flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 ${stats.academicRecords.missing||stats.academicRecords.graduationReview?'border-amber-200 bg-amber-50':'border-green-200 bg-green-50'}`}>
+            <div><p className="text-sm font-semibold text-[#321d1d]">{stats.academicRecords.year}</p><p className="mt-1 text-xs text-[#786565]">{stats.academicRecords.missing ? `${stats.academicRecords.missing} active ${stats.academicRecords.missing===1?'student has':'students have'} no record for the current year.` : 'Every active student has a current-year record.'}</p></div>
+            <div className="flex gap-6"><div><p className="text-2xl font-bold text-[#321d1d]">{stats.academicRecords.configured}</p><p className="text-[11px] text-[#786565]">Configured</p></div><div><p className={`text-2xl font-bold ${stats.academicRecords.missing?'text-amber-800':'text-green-700'}`}>{stats.academicRecords.missing}</p><p className="text-[11px] text-[#786565]">Missing</p></div><div><p className="text-2xl font-bold text-[#321d1d]">{stats.academicRecords.graduationReview}</p><p className="text-[11px] text-[#786565]">Year 4 review</p></div></div>
+          </div>
+        </Card>}
 
         
 
