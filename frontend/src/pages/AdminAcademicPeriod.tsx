@@ -4,6 +4,7 @@ import { AlertTriangle, Archive, CalendarRange, CheckCircle2, Clock3, History, R
 import AdminLayout from '../components/AdminLayout';
 import ConfirmationModal from '../components/shared/ConfirmationModal';
 import DropdownField from '../components/shared/DropdownField';
+import TablePagination from '../components/shared/TablePagination';
 import { academicPeriodApi, studentAcademicApi } from '../services/api';
 import { toast } from '../stores/toastStore';
 import { useNavigate } from 'react-router-dom';
@@ -119,6 +120,8 @@ export default function AdminAcademicPeriod() {
   const [promotionPrompt, setPromotionPrompt] = useState<({ destinationYearId: string; destinationYear: string; sourceYearId: string; sourceYear: string } & AcademicSummary) | null>(null);
   const [confirmStandardPromotion, setConfirmStandardPromotion] = useState(false);
   const [promoting, setPromoting] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyPageSize, setHistoryPageSize] = useState(15);
 
   const performLoadData = useCallback(async () => {
     
@@ -157,6 +160,13 @@ export default function AdminAcademicPeriod() {
   const nextAcademicYearSuggestion = useMemo(
     () => getNextAcademicYearSuggestion(data?.academicYears ?? []),
     [data?.academicYears]
+  );
+  const historyEntries = useMemo(() => data?.history ?? [], [data?.history]);
+  const historyTotalPages = Math.max(1, Math.ceil(historyEntries.length / historyPageSize));
+  const safeHistoryPage = Math.min(historyPage, historyTotalPages);
+  const visibleHistoryEntries = useMemo(
+    () => historyEntries.slice((safeHistoryPage - 1) * historyPageSize, safeHistoryPage * historyPageSize),
+    [historyEntries, historyPageSize, safeHistoryPage]
   );
   const academicYearFieldError =
     isAddingAcademicYear && yearTouched
@@ -489,7 +499,7 @@ export default function AdminAcademicPeriod() {
             </div>
           </div>
           <div className="divide-y divide-[#f3f4f6]">
-            {(data?.history ?? []).map((entry) => (
+            {visibleHistoryEntries.map((entry) => (
               <div key={entry.id} data-testid={`row-academic-period-history-${entry.id}`} className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 rounded-lg bg-[#fef3e2] p-2 text-[#9a7b4f]"><Clock3 className="h-4 w-4" /></div>
@@ -506,6 +516,16 @@ export default function AdminAcademicPeriod() {
             ))}
             {(data?.history.length ?? 0) === 0 && <p className="px-5 py-6 text-sm text-[#6b7280]">No changes have been recorded yet.</p>}
           </div>
+          <TablePagination
+            currentPage={safeHistoryPage}
+            pageSize={historyPageSize}
+            totalItems={historyEntries.length}
+            onPageChange={setHistoryPage}
+            onPageSizeChange={(pageSize) => {
+              setHistoryPageSize(pageSize);
+              setHistoryPage(1);
+            }}
+          />
         </section>
       </div>
       <ConfirmationModal
