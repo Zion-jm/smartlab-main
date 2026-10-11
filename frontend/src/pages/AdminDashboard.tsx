@@ -44,12 +44,12 @@ const StatsCard = ({ icon: Icon, iconGradient, title, value, isRed }: StatsCardP
 );
 
 const Card = ({ title, actions, children, className = '' }: { title: string; actions?: React.ReactNode; children: React.ReactNode; className?: string }) => (
-  <section className={`dashboard-section rounded-2xl border border-[#e5e7eb] bg-white shadow-sm ${className}`}>
+  <section className={`dashboard-section flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white shadow-sm ${className}`}>
     <div className="flex items-center justify-between gap-3 border-b border-[#f1e3df] px-5 py-4">
       <h2 className="text-sm font-semibold text-[#1f2937]">{title}</h2>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
-    <div className="p-4 lg:p-5">{children}</div>
+    <div className="flex-1 p-4 lg:p-5">{children}</div>
   </section>
 );
 
@@ -324,6 +324,12 @@ export default function AdminDashboard() {
   const inventoryTotal = Math.max(stats.equipment.totalQuantity, 0);
   const utilization = Math.min(100, Math.max(0, stats.equipment.utilizationRate));
   const attentionTotal = stats.requests.pending + stats.requests.overdue + stats.equipment.lowStockCount + (stats.academicRecords?.missing ?? 0);
+  const workloadItems = [
+    { label: 'Pending requests', value: stats.requests.pending, detail: 'Awaiting review', color: 'bg-[#800000]' },
+    { label: 'Upcoming reservations', value: stats.requests.upcoming, detail: 'Within the next 7 days', color: 'bg-[#d97706]' },
+    { label: 'Schedules this week', value: stats.schedules.thisWeek, detail: 'One-time and weekly entries', color: 'bg-[#967348]' },
+  ];
+  const workloadMax = Math.max(...workloadItems.map((item) => item.value), 1);
 
   return (
     <AdminLayout>
@@ -356,7 +362,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <div className="grid gap-4 xl:grid-cols-4 xl:items-start">
+        <div className="grid gap-4 xl:grid-cols-4 xl:items-stretch">
         <Card
           className="xl:order-1 xl:col-span-3"
           title="System overview"
@@ -386,6 +392,45 @@ export default function AdminDashboard() {
             <StatsCard icon={ClockIcon} iconGradient="bg-[#d97706]" title="Pending requests" value={stats.requests.pending} isRed={stats.requests.pending > 0} />
             <StatsCard icon={AlertTriangleIcon} iconGradient="bg-[#b91c1c]" title="Overdue returns" value={stats.requests.overdue} isRed={stats.requests.overdue > 0} />
             <StatsCard icon={PackageIcon} iconGradient="bg-[#15803d]" title="Equipment utilization" value={`${stats.equipment.utilizationRate}%`} />
+          </div>
+          <div className="mt-5 grid gap-4 border-t border-[#f1e3df] pt-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-[#321d1d]">Current workload</h3>
+                  <p className="mt-1 text-xs text-[#786565]">Work waiting for the administration team.</p>
+                </div>
+                <button type="button" onClick={() => navigate('/admin/requests')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline">
+                  Open requests <ArrowRightIcon />
+                </button>
+              </div>
+              <div className="space-y-3">
+                {workloadItems.map((item) => (
+                  <div key={item.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1">
+                    <div className="flex min-w-0 items-center justify-between gap-3 text-xs">
+                      <span className="font-medium text-[#4b5563]">{item.label}</span>
+                      <span className="hidden text-[#8b7771] sm:inline">{item.detail}</span>
+                    </div>
+                    <span className="row-span-2 text-sm font-bold text-[#321d1d]">{item.value}</span>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-[#f1e8e4]">
+                      <div className={`h-full rounded-full ${item.color}`} style={{ width: `${Math.max(item.value > 0 ? 8 : 0, Math.round((item.value / workloadMax) * 100))}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 rounded-xl bg-[#faf7f5] p-3 lg:min-w-[270px]">
+              {[
+                { label: 'Today', value: stats.requests.todayReserved },
+                { label: 'Labs today', value: stats.schedules.today },
+                { label: 'Active now', value: stats.schedules.activeNow },
+              ].map((item) => (
+                <div key={item.label} className="text-center">
+                  <p className="text-xl font-bold text-[#321d1d]">{item.value}</p>
+                  <p className="mt-1 text-[10px] leading-tight text-[#786565]">{item.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </Card>
 
@@ -450,7 +495,7 @@ export default function AdminDashboard() {
                 key={label}
                 type="button"
                 onClick={() => navigate(href)}
-                className={`group flex min-h-[76px] items-center gap-3 rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${primary?'border-[#800000] bg-[#800000] text-white':'border-[#e5e7eb] bg-white text-[#321d1d] hover:border-[#d8b4ad] hover:bg-[#fffaf8]'}`}
+                className={`group flex min-h-[66px] items-center gap-3 rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${primary?'border-[#800000] bg-[#800000] text-white':'border-[#e5e7eb] bg-white text-[#321d1d] hover:border-[#d8b4ad] hover:bg-[#fffaf8]'}`}
               >
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${primary?'bg-white/15':'bg-[#f7eeea] text-[#800000]'}`}><Icon size={18}/></span>
                 <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{label}</span><span className={`mt-1 block text-xs ${primary?'text-[#f2d9d3]':'text-[#786565]'}`}>{detail}</span></span>
