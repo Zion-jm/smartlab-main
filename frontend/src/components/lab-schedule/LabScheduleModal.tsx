@@ -13,6 +13,8 @@ import { toast } from '../../stores/toastStore';
 import { YEAR_LEVELS } from '../../constants/yearLevels';
 import { requestStartTimeOptions, requestTimeHasElapsed, timeOptions } from '../../features/requests/requestModels';
 import { useRequestClock } from '../../features/requests/useRequestClock';
+import SidebarDrawer from '../shared/SidebarDrawer';
+import { CalendarPlus, Pencil } from 'lucide-react';
 
 interface LabScheduleModalProps {
   onClose: () => void;
@@ -483,53 +485,16 @@ export default function LabScheduleModal({
     conflictBlocked;
 
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="absolute inset-y-0 right-0 w-full max-w-xl bg-white h-full shadow-2xl flex flex-col">
-        <div className="px-5 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#111827]">{isEditMode ? 'Edit lab schedule' : 'Add lab schedule'}</p>
-            <p className="text-xs text-[#6b7280]">
-              {isEditMode ? 'Update schedule details and resolve conflicts.' : 'Reserve a lab slot for a faculty member.'}
-            </p>
-          </div>
-          <button className="text-[#6b7280] hover:text-[#111827]" type="button" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-        <form noValidate id={formId} className="flex-1 overflow-y-auto px-5 py-4 space-y-4" onSubmit={handleSubmit}>
+    <>
+      <SidebarDrawer title={isEditMode?'Edit lab schedule':'Add lab schedule'} subtitle={isEditMode?'Update schedule details and resolve conflicts.':'Reserve a lab slot for a faculty member.'} icon={isEditMode?<Pencil size={22} strokeWidth={1.75}/>:<CalendarPlus size={23} strokeWidth={1.75}/>} onClose={onClose} closeDisabled={isSubmitting} labelledBy="lab-schedule-drawer-title" footer={<>{conflictBlocked&&<p className="text-xs font-semibold text-[#b91c1c]">Resolve schedule conflicts to enable saving.</p>}<div className="ml-auto flex gap-2"><button type="button" onClick={onClose} className="min-h-11 rounded-full border border-[#e5e7eb] px-5 text-sm font-semibold text-[#374151] disabled:opacity-50" disabled={isSubmitting}>Cancel</button><button type="submit" form={formId} disabled={submitDisabled} className={`min-h-11 rounded-full px-5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(128,0,0,0.25)] ${submitDisabled?'cursor-not-allowed bg-[#b56565]':'bg-[#800000] hover:bg-[#680000]'}`}>{isSubmitting?'Saving…':isEditMode?'Update schedule':'Save schedule'}</button></div></>}>
+        <form noValidate id={formId} className="space-y-4" onSubmit={handleSubmit}>
           {renderFormFields()}
         </form>
-        <div className="px-5 py-4 border-t border-[#f3f4f6] flex flex-col gap-2 sm:flex-row sm:justify-end sm:items-center">
-          {conflictBlocked && (
-            <p className="text-xs font-semibold text-[#b91c1c]">Resolve schedule conflicts to enable saving.</p>
-          )}
-          <div className="flex gap-2 self-end sm:self-auto">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-[#374151] rounded-full border border-[#e5e7eb]"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              form={formId}
-              disabled={submitDisabled}
-              className={`px-4 py-2 text-xs font-semibold text-white rounded-full shadow-[0_4px_12px_rgba(128,0,0,0.25)] ${
-                submitDisabled ? 'bg-[#b56565] cursor-not-allowed' : 'bg-[#800000]'
-              }`}
-            >
-              {isSubmitting ? 'Saving…' : isEditMode ? 'Update schedule' : 'Save schedule'}
-            </button>
-          </div>
-        </div>
-      </div>
+      </SidebarDrawer>
       {isConflictModalOpen && conflictCheck.conflicts.length > 0 && (
         <ConflictDetailModal conflicts={conflictCheck.conflicts} onClose={() => setConflictModalOpen(false)} />
       )}
-    </div>
+    </>
   );
 }
 
