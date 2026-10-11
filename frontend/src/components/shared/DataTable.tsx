@@ -23,17 +23,18 @@ export type DataTableProps<T> = {
   minWidth?: number;
   pagination?: TablePaginationProps;
   rowTestId?: (row: T) => string;
+  embedded?: boolean;
 };
 
-export function TablePanel({ children, label }: { children: ReactNode; label: string }) {
-  return <section aria-label={label} className="data-table-panel rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">{children}</section>;
+export function TablePanel({ children, label, embedded = false }: { children: ReactNode; label: string; embedded?: boolean }) {
+  return <section aria-label={label} className={`data-table-panel bg-white ${embedded ? '' : 'rounded-2xl border border-[#e5e7eb] shadow-sm'}`}>{children}</section>;
 }
 
 /** Controlled screen table. The caller owns fetching, filtering and mutations. */
 export default function DataTable<T>({
   rows, columns, rowKey, label, loading = false, error, onRetry,
   emptyMessage = 'No records match the selected filters.',
-  density = 'comfortable', minWidth = 760, pagination, rowTestId,
+  density = 'comfortable', minWidth = 760, pagination, rowTestId, embedded = false,
 }: DataTableProps<T>) {
   const { root, inset } = useContext(TableScrollContext);
   const table = useRef<HTMLTableElement>(null);
@@ -92,7 +93,7 @@ export default function DataTable<T>({
   );
 
   return (
-    <TablePanel label={label}>
+    <TablePanel label={label} embedded={embedded}>
       <TablePanelContext.Provider value={hasRows && layout.active}>
         <div aria-live="polite" aria-busy={loading}>
           {loading ? <p className="data-table-state" role="status">Loading {label.toLowerCase()}…</p>

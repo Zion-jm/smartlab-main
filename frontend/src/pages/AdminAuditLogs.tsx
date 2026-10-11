@@ -291,7 +291,7 @@ export default function AdminAuditLogs() {
           </div>
           <span className="text-xs text-[#6b7280]" data-testid="text-audit-log-range">{rangeLabel}</span>
         </div>
-        <div className="px-4 py-5 lg:px-6">
+        <div className="p-4 md:p-0">
           <div className="md:hidden">
             {loading ? <p role="status" className="py-6 text-center text-sm">Loading audit logs…</p> : error ? null : !logs.length ? <p className="py-6 text-center text-sm text-[#786565]">No audit log entries match the selected filters.</p> : <>
               <div className="space-y-3">{logs.map(log => <article key={log.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white">
@@ -302,7 +302,7 @@ export default function AdminAuditLogs() {
               <TablePagination currentPage={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} onPageSizeChange={handlePageSizeChange} />
             </>}
           </div>
-          <div className="hidden md:block"><DataTable label="Administrator activity" rows={logs} rowKey={log=>log.id} rowTestId={log=>'row-audit-log-'+log.id}
+          <div className="hidden md:block"><DataTable embedded label="Administrator activity" rows={logs} rowKey={log=>log.id} rowTestId={log=>'row-audit-log-'+log.id}
             loading={loading} error={error} onRetry={()=>void loadLogs()} emptyMessage="No audit log entries match the selected filters."
             columns={[{id:'0',header:'Actor',cell:log=><>
                         <div className="font-semibold text-[#1f2937]" data-testid={`value-audit-log-actor-${log.id}`}>{log.actor?.name || 'Unknown actor'}</div>
