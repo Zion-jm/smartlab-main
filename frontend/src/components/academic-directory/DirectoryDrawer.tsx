@@ -8,6 +8,7 @@ import type {
   DirectorySubject,
 } from '../../types/academicDirectory';
 import { toast } from '../../stores/toastStore';
+import DropdownField from '../shared/DropdownField';
 import SidebarDrawer from '../shared/SidebarDrawer';
 import { BookOpen, Building2, DoorOpen, GraduationCap, Pencil, UsersRound } from 'lucide-react';
 
@@ -230,20 +231,16 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
                   placeholder="e.g., Computer Laboratory 1"
                 />
               </DrawerSection>
-              <DrawerSection label="Building (optional)" error={fieldError("building")}>
-                <select
-                  value={String(formValues.buildingId ?? '')}
-                  onChange={(event) => handleInput('buildingId', event.target.value)}
-                  className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
-                >
-                  <option value="">Unassigned</option>
-                  {buildingOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </DrawerSection>
+              <DropdownField
+                label="Building (optional)"
+                error={fieldError('building') ?? undefined}
+                value={String(formValues.buildingId ?? '')}
+                onChange={(value) => handleInput('buildingId', value)}
+                options={[{ label: 'Unassigned', value: '' }, ...buildingOptions]}
+                placeholder="Unassigned"
+                disabled={submitState.loading}
+                portal
+              />
               <label className="flex items-center gap-2 text-sm text-[#374151]">
                 <input
                   type="checkbox"
