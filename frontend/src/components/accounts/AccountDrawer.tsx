@@ -6,6 +6,8 @@ import { ROLE_VALUE_TO_ID, STATUS_VALUE_TO_ID } from '../../constants/roles';
 import { userApi } from '../../services/api';
 import { toast } from '../../stores/toastStore';
 import { YEAR_LEVELS } from '../../constants/yearLevels';
+import SidebarDrawer from '../shared/SidebarDrawer';
+import { Pencil, UserPlus } from 'lucide-react';
 
 interface RoleOption {
   label: string;
@@ -185,21 +187,10 @@ export default function AccountDrawer({
 
   const headingLabel = isCreate ? 'Add account' : isEdit ? 'Update access' : 'Account details';
   const subLabel = isCreate ? 'Invite a new user to SmartLab.' : account?.email ?? '';
+  const formId = 'account-sidebar-form';
 
   return (
-    <div className="admin-mobile-drawer fixed inset-0 z-50 h-dvh">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="absolute inset-y-0 right-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
-        <div className="px-5 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#111827]">{headingLabel}</p>
-            <p className="text-xs text-[#6b7280]">{subLabel}</p>
-          </div>
-          <button className="text-[#6b7280] hover:text-[#111827]" type="button" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+    <SidebarDrawer title={headingLabel} subtitle={subLabel} icon={isCreate?<UserPlus size={23} strokeWidth={1.75}/>:<Pencil size={22} strokeWidth={1.75}/>} badge={account?<span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${statusStyles[account.status]}`}>{account.status==='ACTIVE'?'Active':'Deactivated'}</span>:undefined} onClose={onClose} closeDisabled={isSubmitting} labelledBy="account-drawer-title" footer={isView?<button type="button" onClick={onClose} className="min-h-11 rounded-full border border-[#e5e7eb] px-5 text-sm font-semibold text-[#374151]">Close</button>:<><button type="button" disabled={isSubmitting} onClick={onClose} className="min-h-11 rounded-full border border-[#e5e7eb] px-5 text-sm font-semibold text-[#374151] disabled:opacity-50">Cancel</button><button type="submit" form={formId} disabled={isSubmitting} className={`min-h-11 rounded-full px-5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(128,0,0,0.25)] ${isSubmitting?'cursor-not-allowed bg-[#b56565]':'bg-[#800000] hover:bg-[#680000]'}`}>{isSubmitting?'Saving…':isCreate?'Create account':'Save changes'}</button></>}>
           {isView ? (
             <div className="space-y-4 text-sm text-[#374151]">
               <div>
@@ -230,7 +221,7 @@ export default function AccountDrawer({
               </div>
             </div>
           ) : (
-            <form className="space-y-3" onSubmit={handleSubmit}>
+            <form id={formId} className="space-y-4" onSubmit={handleSubmit}>
               {isCreate && (
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280] mb-2">Role</p>
@@ -364,28 +355,8 @@ export default function AccountDrawer({
                 </div>
               )}
               {submitError && <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{submitError}</p>}
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-xs font-semibold text-[#374151] rounded-full border border-[#e5e7eb]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`px-4 py-2 text-xs font-semibold text-white rounded-full shadow-[0_4px_12px_rgba(128,0,0,0.25)] ${
-                    isSubmitting ? 'bg-[#b56565] cursor-not-allowed' : 'bg-[#800000]'
-                  }`}
-                >
-                  {isSubmitting ? 'Saving…' : isCreate ? 'Create account' : 'Save changes'}
-                </button>
-              </div>
             </form>
           )}
-        </div>
-      </div>
-    </div>
+    </SidebarDrawer>
   );
 }
