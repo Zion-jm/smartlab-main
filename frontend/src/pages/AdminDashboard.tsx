@@ -43,8 +43,8 @@ const StatsCard = ({ icon: Icon, iconGradient, title, value, isRed }: StatsCardP
   </div>
 );
 
-const Card = ({ title, actions, children }: { title: string; actions?: React.ReactNode; children: React.ReactNode }) => (
-  <section className="dashboard-section rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+const Card = ({ title, actions, children, className = '' }: { title: string; actions?: React.ReactNode; children: React.ReactNode; className?: string }) => (
+  <section className={`dashboard-section rounded-2xl border border-[#e5e7eb] bg-white shadow-sm ${className}`}>
     <div className="flex items-center justify-between gap-3 border-b border-[#f1e3df] px-5 py-4">
       <h2 className="text-sm font-semibold text-[#1f2937]">{title}</h2>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
@@ -356,7 +356,9 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        <div className="grid gap-4 xl:grid-cols-4 xl:items-start">
         <Card
+          className="xl:order-1 xl:col-span-3"
           title="System overview"
           actions={
             <div className="flex items-center gap-3">
@@ -387,7 +389,7 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        {stats.academicRecords && <Card title="Student records requiring attention" actions={<button type="button" onClick={()=>navigate(`/admin/student-records?yearId=${stats.academicRecords!.yearId}`)} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline lg:text-sm">Review student records <ArrowRightIcon /></button>}>
+        {stats.academicRecords && <Card className="xl:order-4 xl:col-span-1" title="Student records requiring attention" actions={<button type="button" onClick={()=>navigate(`/admin/student-records?yearId=${stats.academicRecords!.yearId}`)} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline lg:text-sm">Review <ArrowRightIcon /></button>}>
           <div className={`flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 ${stats.academicRecords.missing||stats.academicRecords.graduationReview?'border-amber-200 bg-amber-50':'border-green-200 bg-green-50'}`}>
             <div><p className="text-sm font-semibold text-[#321d1d]">{stats.academicRecords.year}</p><p className="mt-1 text-xs text-[#786565]">{stats.academicRecords.missing ? `${stats.academicRecords.missing} active ${stats.academicRecords.missing===1?'student has':'students have'} no record for the current year.` : 'Every active student has a current-year record.'}</p></div>
             <div className="flex gap-6"><div><p className="text-2xl font-bold text-[#321d1d]">{stats.academicRecords.configured}</p><p className="text-[11px] text-[#786565]">Configured</p></div><div><p className={`text-2xl font-bold ${stats.academicRecords.missing?'text-amber-800':'text-green-700'}`}>{stats.academicRecords.missing}</p><p className="text-[11px] text-[#786565]">Missing</p></div><div><p className="text-2xl font-bold text-[#321d1d]">{stats.academicRecords.graduationReview}</p><p className="text-[11px] text-[#786565]">Year 4 review</p></div></div>
@@ -396,7 +398,7 @@ export default function AdminDashboard() {
 
         
 
-        <Card title="Equipment status">
+        <Card className="xl:order-3 xl:col-span-3" title="Equipment status">
           <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
             <div className="flex flex-col items-center justify-center rounded-2xl bg-[#fffaf7] p-5">
               <div className="relative flex h-36 w-36 items-center justify-center rounded-full" style={{background:`conic-gradient(#800000 0 ${utilization}%, #eadfd9 ${utilization}% 100%)`}}>
@@ -414,7 +416,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         </Card>
-        <Card title="Operations at a glance">
+        <Card className="xl:order-5 xl:col-span-3" title="Operations at a glance">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             {[
               { label: 'Today’s reservations', value: stats.requests.todayReserved, detail: 'Approved or borrowed', href: '/admin/requests', icon: ClockIcon },
@@ -441,8 +443,8 @@ export default function AdminDashboard() {
 
         
 
-        <Card title="Quick actions">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="xl:order-2 xl:col-span-1" title="Quick actions">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
             {quickActions.map(({ label, detail, icon: Icon, primary, href }) => (
               <button
                 key={label}
@@ -461,6 +463,7 @@ export default function AdminDashboard() {
         
 
         <Card
+          className="xl:order-6 xl:col-span-1"
           title="Needs attention"
           actions={
             <button type="button" onClick={() => navigate('/admin/requests')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline lg:text-sm">
@@ -498,6 +501,7 @@ export default function AdminDashboard() {
             )}
           </div>
         </Card>
+        </div>
       </div>
     </AdminLayout>
   );
