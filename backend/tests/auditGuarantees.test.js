@@ -10,7 +10,7 @@ beforeAll(async()=>{const u=new URL(process.env.DATABASE_URL);if(!['localhost','
  borrower=await db.user.create({data:{email:tag+'-borrower@test.local',firstName:'Audit',lastName:'Student',role:'STUDENT',passwordHash:'unused'}});
  year=await db.academicYear.create({data:{year:tag}});term=await db.term.create({data:{name:tag}});
  equipment=await db.equipment.create({data:{name:tag,totalQuantity:3,availableQuantity:3}});
- loan=await db.borrowRequest.create({data:{requestType:'EQUIPMENT',usageLocation:'Test venue',requestedBy:borrower.id,academicYearId:year.id,termId:term.id,dateNeeded:new Date('2039-06-12T00:00:00+08:00'),timeStart:new Date('2039-06-12T08:00:00+08:00'),timeEnd:new Date('2039-06-12T09:00:00+08:00'),items:{create:{equipmentId:equipment.id,quantity:1}}}});
+ loan=await db.borrowRequest.create({data:{requestType:'EQUIPMENT',usageLocation:'Test venue',requestedBy:borrower.id,academicYearId:year.id,termId:term.id,dateNeeded:new Date('2039-06-13T00:00:00+08:00'),timeStart:new Date('2039-06-13T08:00:00+08:00'),timeEnd:new Date('2039-06-13T09:00:00+08:00'),items:{create:{equipmentId:equipment.id,quantity:1}}}});
  const app=express();app.use(errorResponseContract);app.use(express.json());for(const n of ['equipment','users','borrowRequests','auth'])app.use('/'+n,require('../dist/routes/'+n).default);app.use(errorHandler);server=await new Promise(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s))});base='http://127.0.0.1:'+server.address().port;
 });
 afterEach(()=>jest.restoreAllMocks());
@@ -43,7 +43,7 @@ test('request audit keeps readable context after requester and location change',
  const before=await db.auditLog.findFirst({where:{entityId:loan.id,action:'SNAPSHOT_TEST'}});
  expect(before.details.referenceCode).toBe('REQ-'+loan.id.toUpperCase().slice(-6));
  expect(before.details.context).toContain('Test venue');
- expect(before.details.context).toContain('Jun 12, 2039');
+ expect(before.details.context).toContain('Jun 13, 2039');
  expect(before.details.context).toContain('Audit Student');
  await db.borrowRequest.update({where:{id:loan.id},data:{usageLocation:'New venue'}});
  await db.user.update({where:{id:borrower.id},data:{firstName:'Renamed'}});
