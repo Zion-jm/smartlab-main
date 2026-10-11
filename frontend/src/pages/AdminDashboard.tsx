@@ -600,8 +600,8 @@ export default function AdminDashboard() {
 
         
 
-        <Card className={`${stats.academicRecords ? 'xl:col-span-2 xl:row-span-2' : 'xl:col-span-3'} xl:order-7`} title="Equipment status">
-          <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+        <Card className={`${stats.academicRecords ? 'xl:col-span-2 xl:row-span-2 xl:h-full xl:self-stretch' : 'xl:col-span-3'} xl:order-7`} title="Equipment status">
+          <div className="grid h-full gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
             <div className="flex flex-col items-center justify-center rounded-2xl bg-[#fffaf7] p-5">
               <div className="relative flex h-36 w-36 items-center justify-center rounded-full" style={{background:`conic-gradient(#800000 0 ${utilization}%, #eadfd9 ${utilization}% 100%)`}}>
                 <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white shadow-inner"><span className="text-2xl font-bold text-[#321d1d]">{utilization}%</span><span className="text-[10px] uppercase tracking-wide text-[#786565]">Utilized</span></div>
