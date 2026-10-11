@@ -44,6 +44,6 @@ export default function StudentAcademicRecords({years,onRefresh,refreshing=false
   <ConfirmationModal isOpen={confirm} title="Save student academic record?" message={`Record ${selected?.firstName??''} ${selected?.lastName??''} as ${statusLabels[status]?.toLowerCase()}${level?`, Year ${level}`:''}, for ${year?.year??''}? Existing requests and account access will not change.`} confirmLabel="Save academic record" confirmingLabel="Saving…" cancelLabel="Go back" isConfirming={saving} onConfirm={()=>void save()} onClose={()=>{if(!saving)setConfirm(false);}}/>
   </div>
  </section>
- {results&&!loading&&!selected&&<StudentAcademicBatch key={`${yearId}-${search}-${results.page}`} yearId={yearId} years={years} studentIds={results.students.map(student=>student.id)} programs={results.programs} onSaved={()=>{void load(results.page).then(()=>setSuccess('Batch saved.'));}}/>}
+ {results&&!loading&&!selected&&<><div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]"/><StudentAcademicBatch key={`${yearId}-${search}-${results.page}`} yearId={yearId} years={years} studentIds={results.students.map(student=>student.id)} programs={results.programs} onSaved={()=>{void load(results.page).then(()=>setSuccess('Batch saved.'));}}/></>}
  </>;
 }
