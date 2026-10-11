@@ -215,11 +215,11 @@ export default function PortalLayout({
   const roleLabel = user?.role === 'ADMIN' ? 'Admin Portal' : user?.role === 'FACULTY' ? 'Faculty Portal' : 'Student Portal';
 
   return (
-    <div className="min-h-dvh lg:min-h-screen bg-[#f8f9fa] font-['Inter',sans-serif]">
+    <div className="fixed inset-0 overflow-hidden bg-[#f8f9fa] font-['Inter',sans-serif]">
       {mobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />}
 
       <aside
-        className={`fixed left-0 top-0 h-dvh max-h-dvh bg-white shadow-[2px_0_10px_rgba(0,0,0,0.1)] z-50 transition-all duration-300 flex flex-col ${
+        className={`fixed left-0 top-0 h-full max-h-full bg-white shadow-[2px_0_10px_rgba(0,0,0,0.1)] z-50 transition-all duration-300 flex flex-col ${
           mobileMenuOpen ? 'translate-x-0 w-[250px]' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-[70px]' : 'lg:w-[250px]'}`}
       >
@@ -350,7 +350,7 @@ export default function PortalLayout({
       </aside>
 
       <main
-        className={`h-dvh min-h-0 lg:min-h-screen min-w-0 max-h-dvh lg:max-h-screen transition-all duration-300 overflow-hidden flex flex-col ${
+        className={`h-full min-h-0 min-w-0 max-h-full transition-all duration-300 overflow-hidden flex flex-col ${
           isCollapsed ? 'lg:ml-[70px] lg:w-[calc(100%-70px)]' : 'lg:ml-[250px] lg:w-[calc(100%-250px)]'
         }`}
       >
