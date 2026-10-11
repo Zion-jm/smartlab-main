@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
-import { equipmentApi, borrowRequestApi, userApi, labScheduleApi, academicPeriodApi, studentAcademicApi } from '../services/api';
+import { equipmentApi, borrowRequestApi, userApi, labScheduleApi, academicPeriodApi, studentAcademicApi, directoryApi } from '../services/api';
 import type { BorrowRequest } from '../types/requests';
 import type { ApiLabSchedule } from '../types/labSchedule';
+import type { EquipmentItem } from '../types/equipment';
 import { dateToDateKey, dateToTimeString, dateToWeekdayIndex } from '../utils/dateTime';
 import {
   UsersIcon,
@@ -100,6 +101,20 @@ interface DashboardStats {
   } | null;
 }
 
+type DailyActivity = { dateKey: string; label: string; day: string; requests: number; schedules: number; isToday: boolean };
+type RequestWorkflow = { status: BorrowRequest['status']; label: string; value: number; color: string };
+type EquipmentDemand = { id: string; name: string; requested: number; available: number };
+type RoomUtilization = { id: string; name: string; hours: number; sessions: number };
+
+interface DashboardInsights {
+  dailyActivity: DailyActivity[];
+  requestWorkflow: RequestWorkflow[];
+  equipmentDemand: EquipmentDemand[];
+  roomUtilization: RoomUtilization[];
+  unusedRooms: number;
+  incompleteSchedules: number;
+}
+
 const activeRequestStatuses = new Set(['APPROVED', 'BORROWED']);
 
 const getManilaWeekKeys = (todayKey: string) => {
@@ -141,6 +156,19 @@ const scheduleIsActiveNow = (schedule: ApiLabSchedule, todayKey: string, now: Da
   return adjustedCurrent >= startMinutes && adjustedCurrent <= endMinutes;
 };
 
+const timeDurationHours = (start: string, end: string) => {
+  const toMinutes = (value: string) => {
+    const [hours = 0, minutes = 0] = value.slice(11, 16).includes(':')
+      ? value.slice(11, 16).split(':').map(Number)
+      : value.slice(0, 5).split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+  const startMinutes = toMinutes(start);
+  let endMinutes = toMinutes(end);
+  if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+  return Math.max(0, (endMinutes - startMinutes) / 60);
+};
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -148,13 +176,16 @@ export default function AdminDashboard() {
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [insights, setInsights] = useState<DashboardInsights>({ dailyActivity: [], requestWorkflow: [], equipmentDemand: [], roomUtilization: [], unusedRooms: 0, incompleteSchedules: 0 });
 
   const fetchStats = useCallback(async () => {
     setIsRefreshing(true);
     setDashboardError(null);
 
-    const [equipmentResult, usersResult, requestsResult, schedulesResult, academicRecordsResult] = await Promise.allSettled([
+    const [equipmentResult, equipmentItemsResult, directoryResult, usersResult, requestsResult, schedulesResult, academicRecordsResult] = await Promise.allSettled([
       equipmentApi.getStats(),
+      equipmentApi.getAll(),
+      directoryApi.getOverview(),
       userApi.getAll(),
       borrowRequestApi.getAll({ status: 'ALL', sort: 'date-desc' }),
       labScheduleApi.getAll(),
@@ -168,6 +199,8 @@ export default function AdminDashboard() {
 
     const failedSources = [
       equipmentResult.status === 'rejected' ? 'equipment' : null,
+      equipmentItemsResult.status === 'rejected' ? 'equipment catalog' : null,
+      directoryResult.status === 'rejected' ? 'academic directory' : null,
       usersResult.status === 'rejected' ? 'users' : null,
       requestsResult.status === 'rejected' ? 'requests' : null,
       schedulesResult.status === 'rejected' ? 'schedules' : null,
@@ -175,11 +208,13 @@ export default function AdminDashboard() {
     ].filter(Boolean);
 
     if (failedSources.length > 0) {
-      const limit = [equipmentResult, usersResult, requestsResult, schedulesResult, academicRecordsResult].find(result => result.status === 'rejected' && result.reason instanceof Error && /exceeds 1000|Data changed while loading/.test(result.reason.message));
+      const limit = [equipmentResult, equipmentItemsResult, directoryResult, usersResult, requestsResult, schedulesResult, academicRecordsResult].find(result => result.status === 'rejected' && result.reason instanceof Error && /exceeds 1000|Data changed while loading/.test(result.reason.message));
       setDashboardError(limit?.status === 'rejected' ? limit.reason.message : `Some dashboard data could not be loaded (${failedSources.join(', ')}). Showing the available data.`);
     }
 
     const equipmentData = equipmentResult.status === 'fulfilled' ? equipmentResult.value.data : null;
+    const equipmentItems = equipmentItemsResult.status === 'fulfilled' ? equipmentItemsResult.value.data as EquipmentItem[] : [];
+    const directoryRooms = directoryResult.status === 'fulfilled' ? directoryResult.value.data?.rooms ?? [] : [];
     const users = usersResult.status === 'fulfilled' && Array.isArray(usersResult.value.data) ? usersResult.value.data : [];
     const requestPayload =
       requestsResult.status === 'fulfilled'
@@ -243,6 +278,52 @@ export default function AdminDashboard() {
       academicRecords: academicRecordsResult.status === 'fulfilled' ? academicRecordsResult.value : null,
     };
 
+    const nextSevenDays = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(`${todayKey}T12:00:00+08:00`);
+      date.setUTCDate(date.getUTCDate() + index);
+      const dateKey = dateToDateKey(date, 'Asia/Manila');
+      return {
+        dateKey,
+        label: date.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' }),
+        day: date.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', weekday: 'short' }),
+        requests: requests.filter((request) => dateToDateKey(request.dateNeeded, 'Asia/Manila') === dateKey).length,
+        schedules: schedules.filter((schedule) => scheduleOccursOn(schedule, dateKey)).length,
+        isToday: index === 0,
+      };
+    });
+    const workflowConfig: Array<Omit<RequestWorkflow, 'value'>> = [
+      { status: 'PENDING', label: 'Pending', color: 'bg-[#d97706]' },
+      { status: 'APPROVED', label: 'Approved', color: 'bg-[#2563eb]' },
+      { status: 'BORROWED', label: 'Borrowed', color: 'bg-[#800000]' },
+      { status: 'RETURNED', label: 'Returned', color: 'bg-[#15803d]' },
+      { status: 'REJECTED', label: 'Declined', color: 'bg-[#b91c1c]' },
+      { status: 'CANCELLED', label: 'Cancelled', color: 'bg-[#6b7280]' },
+    ];
+    const demandByEquipment = new Map<string, { id: string; name: string; requested: number }>();
+    requests.forEach((request) => request.items?.forEach((item) => {
+      const current = demandByEquipment.get(item.equipmentId) ?? { id: item.equipmentId, name: item.equipmentName, requested: 0 };
+      current.requested += item.quantity;
+      demandByEquipment.set(item.equipmentId, current);
+    }));
+    const equipmentById = new Map(equipmentItems.map((item) => [item.id, item]));
+    const roomUsage = new Map<string, RoomUtilization>();
+    schedules.forEach((schedule) => {
+      if (!schedule.room || !weekKeys.some((dateKey) => scheduleOccursOn(schedule, dateKey))) return;
+      const name = [schedule.room.roomNumber, schedule.room.name].filter(Boolean).join(' – ') || 'Unnamed room';
+      const current = roomUsage.get(schedule.room.id) ?? { id: schedule.room.id, name, hours: 0, sessions: 0 };
+      current.hours += timeDurationHours(schedule.timeStart, schedule.timeEnd);
+      current.sessions += 1;
+      roomUsage.set(schedule.room.id, current);
+    });
+    setInsights({
+      dailyActivity: nextSevenDays,
+      requestWorkflow: workflowConfig.map((item) => ({ ...item, value: requests.filter((request) => request.status === item.status).length })),
+      equipmentDemand: Array.from(demandByEquipment.values()).sort((a, b) => b.requested - a.requested).slice(0, 5).map((item) => ({ ...item, available: equipmentById.get(item.id)?.availableQuantity ?? 0 })),
+      roomUtilization: Array.from(roomUsage.values()).sort((a, b) => b.hours - a.hours).slice(0, 5),
+      unusedRooms: Math.max(0, directoryRooms.length - roomUsage.size),
+      incompleteSchedules: schedules.filter((schedule) => !schedule.room || !schedule.faculty).length,
+    });
+
     const currentActivities: ActivityEntry[] = [
       ...(dashboardStats.requests.pending > 0
         ? [{
@@ -281,6 +362,26 @@ export default function AdminDashboard() {
             title: `${dashboardStats.schedules.activeNow} active lab ${dashboardStats.schedules.activeNow === 1 ? 'session' : 'sessions'}`,
             meta: 'Currently in progress',
             iconColor: 'bg-[#f0fdf4] text-[#15803d]',
+            href: '/admin/schedule',
+          }]
+        : []),
+      ...(dashboardStats.academicRecords?.missing
+        ? [{
+            id: 5,
+            type: 'alert' as const,
+            title: `${dashboardStats.academicRecords.missing} missing student ${dashboardStats.academicRecords.missing === 1 ? 'record' : 'records'}`,
+            meta: `Complete records for ${dashboardStats.academicRecords.year}`,
+            iconColor: 'bg-[#fff7ed] text-[#c2410c]',
+            href: `/admin/student-records?yearId=${dashboardStats.academicRecords.yearId}`,
+          }]
+        : []),
+      ...(schedules.some((schedule) => !schedule.room || !schedule.faculty)
+        ? [{
+            id: 6,
+            type: 'schedule' as const,
+            title: `${schedules.filter((schedule) => !schedule.room || !schedule.faculty).length} incomplete ${schedules.filter((schedule) => !schedule.room || !schedule.faculty).length === 1 ? 'schedule' : 'schedules'}`,
+            meta: 'Missing a room or faculty assignment',
+            iconColor: 'bg-[#eff6ff] text-[#1d4ed8]',
             href: '/admin/schedule',
           }]
         : []),
@@ -330,6 +431,10 @@ export default function AdminDashboard() {
     { label: 'Schedules this week', value: stats.schedules.thisWeek, detail: 'One-time and weekly entries', color: 'bg-[#967348]' },
   ];
   const workloadMax = Math.max(...workloadItems.map((item) => item.value), 1);
+  const activityMax = Math.max(...insights.dailyActivity.flatMap((item) => [item.requests, item.schedules]), 1);
+  const workflowMax = Math.max(...insights.requestWorkflow.map((item) => item.value), 1);
+  const demandMax = Math.max(...insights.equipmentDemand.map((item) => item.requested), 1);
+  const roomMax = Math.max(...insights.roomUtilization.map((item) => item.hours), 1);
 
   return (
     <AdminLayout>
@@ -434,7 +539,59 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        {stats.academicRecords && <Card className="xl:order-4 xl:col-span-1" title="Student records requiring attention" actions={<button type="button" onClick={()=>navigate(`/admin/student-records?yearId=${stats.academicRecords!.yearId}`)} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline lg:text-sm">Review <ArrowRightIcon /></button>}>
+        <Card className="xl:order-3 xl:col-span-3" title="Activity for the next 7 days" actions={<button type="button" onClick={() => navigate('/admin/reports')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline lg:text-sm">Open reports <ArrowRightIcon /></button>}>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-[#786565]">Reservations and laboratory sessions scheduled from today.</p>
+            <div className="flex items-center gap-4 text-[11px] text-[#6b7280]"><span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[#800000]"/>Requests</span><span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[#d9a441]"/>Lab sessions</span></div>
+          </div>
+          <div className="grid min-h-[230px] grid-cols-7 items-end gap-2 rounded-xl bg-[#fcfaf9] px-3 pb-3 pt-5 sm:gap-4">
+            {insights.dailyActivity.map((item) => (
+              <button key={item.dateKey} type="button" onClick={() => navigate(`/admin/schedule?date=${item.dateKey}`)} className={`group flex h-full min-w-0 flex-col justify-end rounded-lg px-1 pt-2 transition hover:bg-white hover:shadow-sm ${item.isToday ? 'bg-[#fff4f1]' : ''}`} title={`${item.requests} requests and ${item.schedules} lab sessions on ${item.label}`}>
+                <div className="flex h-[150px] items-end justify-center gap-1 sm:gap-2">
+                  <div className="w-3 rounded-t bg-[#800000] transition group-hover:bg-[#a00000] sm:w-5" style={{ height: `${Math.max(item.requests ? 8 : 0, (item.requests / activityMax) * 100)}%` }}><span className="sr-only">{item.requests} requests</span></div>
+                  <div className="w-3 rounded-t bg-[#d9a441] transition group-hover:bg-[#c68d20] sm:w-5" style={{ height: `${Math.max(item.schedules ? 8 : 0, (item.schedules / activityMax) * 100)}%` }}><span className="sr-only">{item.schedules} schedules</span></div>
+                </div>
+                <span className={`mt-2 text-[10px] font-semibold sm:text-xs ${item.isToday ? 'text-[#800000]' : 'text-[#4b5563]'}`}>{item.day}</span>
+                <span className="truncate text-[9px] text-[#8b7771] sm:text-[10px]">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="xl:order-4 xl:col-span-1" title="Request workflow" actions={<button type="button" onClick={() => navigate('/admin/requests')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline">View all <ArrowRightIcon /></button>}>
+          <p className="mb-4 text-xs text-[#786565]">Current distribution of all request records.</p>
+          <div className="space-y-3">
+            {insights.requestWorkflow.map((item) => (
+              <button key={item.status} type="button" onClick={() => navigate(`/admin/requests?status=${item.status}`)} className="block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]">
+                <div className="mb-1 flex items-center justify-between gap-3 text-xs"><span className="font-medium text-[#4b5563]">{item.label}</span><span className="font-bold text-[#321d1d]">{item.value}</span></div>
+                <div className="h-2 overflow-hidden rounded-full bg-[#f1e8e4]"><div className={`h-full rounded-full ${item.color}`} style={{ width: `${Math.max(item.value ? 7 : 0, (item.value / workflowMax) * 100)}%` }}/></div>
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="xl:order-5 xl:col-span-2" title="Equipment demand" actions={<button type="button" onClick={() => navigate('/admin/reports?reportTab=equipment')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline">Analyze <ArrowRightIcon /></button>}>
+          <p className="mb-4 text-xs text-[#786565]">Most requested equipment across recorded borrowing requests.</p>
+          {insights.equipmentDemand.length ? <div className="space-y-3">{insights.equipmentDemand.map((item, index) => (
+            <button key={item.id} type="button" onClick={() => navigate(`/admin/equipment?search=${encodeURIComponent(item.name)}`)} className="grid w-full grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-3 rounded-lg p-1.5 text-left transition hover:bg-[#fcf7f5]">
+              <span className="text-xs font-bold text-[#9a7770]">{index + 1}</span>
+              <span className="min-w-0"><span className="flex justify-between gap-3 text-xs"><span className="truncate font-semibold text-[#321d1d]">{item.name}</span><span className="text-[#6b7280]">{item.requested} requested</span></span><span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-[#f1e8e4]"><span className="block h-full rounded-full bg-gradient-to-r from-[#800000] to-[#c25c45]" style={{ width: `${(item.requested / demandMax) * 100}%` }}/></span></span>
+              <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${item.available <= 1 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>{item.available} available</span>
+            </button>
+          ))}</div> : <p className="py-10 text-center text-xs text-[#9ca3af]">No equipment demand recorded yet.</p>}
+        </Card>
+
+        <Card className="xl:order-6 xl:col-span-2" title="Room utilization this week" actions={<button type="button" onClick={() => navigate('/admin/schedule')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline">View schedule <ArrowRightIcon /></button>}>
+          <div className="mb-4 flex items-center justify-between gap-3"><p className="text-xs text-[#786565]">Busiest rooms based on scheduled hours.</p><span className="rounded-full bg-[#faf4f1] px-2.5 py-1 text-[10px] font-semibold text-[#800000]">{insights.unusedRooms} unused</span></div>
+          {insights.roomUtilization.length ? <div className="space-y-3">{insights.roomUtilization.map((item) => (
+            <button key={item.id} type="button" onClick={() => navigate(`/admin/schedule?roomId=${item.id}`)} className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 rounded-lg p-1.5 text-left transition hover:bg-[#fcf7f5]">
+              <span className="truncate text-xs font-semibold text-[#321d1d]">{item.name}</span><span className="text-xs font-bold text-[#800000]">{item.hours.toFixed(item.hours % 1 ? 1 : 0)}h</span>
+              <span className="h-2 overflow-hidden rounded-full bg-[#f1e8e4]"><span className="block h-full rounded-full bg-[#967348]" style={{ width: `${(item.hours / roomMax) * 100}%` }}/></span><span className="text-[10px] text-[#8b7771]">{item.sessions} {item.sessions === 1 ? 'entry' : 'entries'}</span>
+            </button>
+          ))}</div> : <p className="py-10 text-center text-xs text-[#9ca3af]">No room schedules this week.</p>}
+        </Card>
+
+        {stats.academicRecords && <Card className="xl:order-8 xl:col-span-1" title="Student records requiring attention" actions={<button type="button" onClick={()=>navigate(`/admin/student-records?yearId=${stats.academicRecords!.yearId}`)} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline lg:text-sm">Review <ArrowRightIcon /></button>}>
           <div className={`flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 ${stats.academicRecords.missing||stats.academicRecords.graduationReview?'border-amber-200 bg-amber-50':'border-green-200 bg-green-50'}`}>
             <div><p className="text-sm font-semibold text-[#321d1d]">{stats.academicRecords.year}</p><p className="mt-1 text-xs text-[#786565]">{stats.academicRecords.missing ? `${stats.academicRecords.missing} active ${stats.academicRecords.missing===1?'student has':'students have'} no record for the current year.` : 'Every active student has a current-year record.'}</p></div>
             <div className="flex gap-6"><div><p className="text-2xl font-bold text-[#321d1d]">{stats.academicRecords.configured}</p><p className="text-[11px] text-[#786565]">Configured</p></div><div><p className={`text-2xl font-bold ${stats.academicRecords.missing?'text-amber-800':'text-green-700'}`}>{stats.academicRecords.missing}</p><p className="text-[11px] text-[#786565]">Missing</p></div><div><p className="text-2xl font-bold text-[#321d1d]">{stats.academicRecords.graduationReview}</p><p className="text-[11px] text-[#786565]">Year 4 review</p></div></div>
@@ -443,7 +600,7 @@ export default function AdminDashboard() {
 
         
 
-        <Card className={`${stats.academicRecords ? 'xl:col-span-2' : 'xl:col-span-3'} xl:order-3`} title="Equipment status">
+        <Card className={`${stats.academicRecords ? 'xl:col-span-2' : 'xl:col-span-3'} xl:order-7`} title="Equipment status">
           <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
             <div className="flex flex-col items-center justify-center rounded-2xl bg-[#fffaf7] p-5">
               <div className="relative flex h-36 w-36 items-center justify-center rounded-full" style={{background:`conic-gradient(#800000 0 ${utilization}%, #eadfd9 ${utilization}% 100%)`}}>
@@ -461,7 +618,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         </Card>
-        <Card className="xl:order-6 xl:col-span-4" title="Operations at a glance">
+        <Card className="xl:order-10 xl:col-span-4" title="Operations at a glance">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             {[
               { label: 'Today’s reservations', value: stats.requests.todayReserved, detail: 'Approved or borrowed', href: '/admin/requests', icon: ClockIcon },
@@ -508,7 +665,7 @@ export default function AdminDashboard() {
         
 
         <Card
-          className="xl:order-5 xl:col-span-1"
+          className="xl:order-9 xl:col-span-1"
           title="Needs attention"
           actions={
             <button type="button" onClick={() => navigate('/admin/requests')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline lg:text-sm">
