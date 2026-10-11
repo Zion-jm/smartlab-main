@@ -443,7 +443,7 @@ export default function AdminDashboard() {
 
         
 
-        <Card className="xl:order-3 xl:col-span-3" title="Equipment status">
+        <Card className={`${stats.academicRecords ? 'xl:col-span-2' : 'xl:col-span-3'} xl:order-3`} title="Equipment status">
           <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
             <div className="flex flex-col items-center justify-center rounded-2xl bg-[#fffaf7] p-5">
               <div className="relative flex h-36 w-36 items-center justify-center rounded-full" style={{background:`conic-gradient(#800000 0 ${utilization}%, #eadfd9 ${utilization}% 100%)`}}>
@@ -451,7 +451,7 @@ export default function AdminDashboard() {
               </div>
               <p className="mt-3 text-xs text-[#786565]">{inventoryTotal} total units across {stats.equipment.uniqueItems} catalog items</p>
             </div>
-            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3">
               {[
                 {label:'Available',value:stats.equipment.availableQuantity,detail:'Ready for use',tone:'border-green-200 bg-green-50 text-green-800'},
                 {label:'Borrowed',value:stats.equipment.borrowedQuantity,detail:'Currently in use',tone:'border-amber-200 bg-amber-50 text-amber-900'},
@@ -461,7 +461,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         </Card>
-        <Card className="xl:order-5 xl:col-span-3" title="Operations at a glance">
+        <Card className="xl:order-6 xl:col-span-4" title="Operations at a glance">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             {[
               { label: 'Today’s reservations', value: stats.requests.todayReserved, detail: 'Approved or borrowed', href: '/admin/requests', icon: ClockIcon },
@@ -508,7 +508,7 @@ export default function AdminDashboard() {
         
 
         <Card
-          className="xl:order-6 xl:col-span-1"
+          className="xl:order-5 xl:col-span-1"
           title="Needs attention"
           actions={
             <button type="button" onClick={() => navigate('/admin/requests')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline lg:text-sm">
