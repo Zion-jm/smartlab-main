@@ -1,9 +1,9 @@
 import DropdownField from '../shared/DropdownField';
 import ScheduleDetailModal from './ScheduleDetailModal';
 import { useMemo, useState } from 'react';
-import { Maximize2 } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import type { LabSchedule } from '../../types/labSchedule';
-import { manilaTodayForPicker } from '../../utils/dateTime';
+import { addCalendarDays, dateKeyToPickerDate, dateToDateKey, manilaTodayForPicker } from '../../utils/dateTime';
 import { calendarColors, chartDayOrder, chartHourMarks, chartMinuteEnd, chartMinuteStart, chartRowHeight, chartSlotMinutes, chartSlotPercents, chartTotalMinutes, clampMinutes, dayNames, formatClockLabel, getMonthLabel, minutesFromIso, occursOnDate, sameDay, scheduleTypeLabel } from './scheduleViewUtils';
 
 export type ChartViewProps = {
@@ -15,11 +15,31 @@ export type ChartViewProps = {
   selectedLab?: string;
   onSelectedLabChange?: (lab: string) => void;
   onExpand?: () => void;
+  selectedWeekStart?: string;
+  onSelectedWeekStartChange?: (weekStart: string) => void;
 };
 
-export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand }: ChartViewProps) {
+const mondayForDate = (value: Date | string) => {
+  const key = typeof value === 'string' ? value : dateToDateKey(value);
+  const weekday = new Date(`${key}T00:00:00Z`).getUTCDay();
+  return addCalendarDays(key, weekday === 0 ? -6 : 1 - weekday);
+};
+
+const weekRangeLabel = (monday: string) => {
+  const saturday = addCalendarDays(monday, 5);
+  const start = new Date(`${monday}T00:00:00Z`);
+  const end = new Date(`${saturday}T00:00:00Z`);
+  const sameMonth = monday.slice(0, 7) === saturday.slice(0, 7);
+  const startText = start.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'long', day: 'numeric', ...(sameMonth ? {} : { year: 'numeric' }) });
+  const endText = end.toLocaleDateString('en-US', { timeZone: 'UTC', ...(sameMonth ? {} : { month: 'long' }), day: 'numeric', year: 'numeric' });
+  return `${startText}–${endText}`;
+};
+
+export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand, selectedWeekStart: controlledWeekStart, onSelectedWeekStartChange }: ChartViewProps) {
   const [labOverride, setLabOverride] = useState<string | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<LabSchedule | null>(null);
+  const [weekOverride, setWeekOverride] = useState(() => mondayForDate(manilaTodayForPicker()));
+  const selectedWeekStart = controlledWeekStart || weekOverride;
 
   const labs = useMemo(() => {
     // Base the dropdown on the actual list of computer-lab rooms so labs with
@@ -51,6 +71,11 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
     onSelectedLabChange?.(value);
   };
 
+  const selectWeek = (value: string) => {
+    setWeekOverride(value);
+    onSelectedWeekStartChange?.(value);
+  };
+
   const dataset = useMemo(() => {
     if (!selectedLab) return [];
     return schedules.filter((schedule) => schedule.isComputerLab === true && schedule.roomLabel === selectedLab);
@@ -68,11 +93,17 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
 
   const chartHeightPx = ((chartMinuteEnd - chartMinuteStart) / chartSlotMinutes) * chartRowHeight;
 
-  const columnData = chartDayOrder.map((dayIndex) => ({
-    dayIndex,
-    label: dayLabels[dayIndex],
-    schedules: dataset.filter((schedule) => schedule.dayOfWeekIndex === dayIndex),
-  }));
+  const columnData = chartDayOrder.map((dayIndex) => {
+    const dateKey = addCalendarDays(selectedWeekStart, dayIndex - 1);
+    const date = dateKeyToPickerDate(dateKey)!;
+    return {
+      dayIndex,
+      dateKey,
+      label: `${dayLabels[dayIndex].slice(0, 3)} ${Number(dateKey.slice(8))}`,
+      schedules: dataset.filter((schedule) => occursOnDate(schedule, date)),
+    };
+  });
+  const visibleScheduleCount = columnData.reduce((count, column) => count + column.schedules.length, 0);
 
   const blockStyle = (schedule: LabSchedule) => {
     const startRaw = minutesFromIso(schedule.startTime);
@@ -113,24 +144,31 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
             <h3 className="text-sm font-semibold text-[#111827]">Weekly Lab Utilization</h3>
             <p className="text-xs text-[#6b7280]">Select a schedule to view full details. Short blocks show a brief summary.</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="flex min-h-10 items-center overflow-hidden rounded-lg border border-[#e5d5d1] bg-white">
+              <button type="button" onClick={() => selectWeek(addCalendarDays(selectedWeekStart, -7))} aria-label="Previous week" className="inline-flex h-10 w-10 items-center justify-center text-[#786565] hover:bg-[#fff8f6] hover:text-[#800000]"><ChevronLeft size={16} /></button>
+              <button type="button" onClick={() => selectWeek(mondayForDate(manilaTodayForPicker()))} className="inline-flex h-10 items-center gap-1.5 border-x border-[#e5d5d1] px-3 text-xs font-semibold text-[#800000]"><CalendarDays size={14} />This week</button>
+              <button type="button" onClick={() => selectWeek(addCalendarDays(selectedWeekStart, 7))} aria-label="Next week" className="inline-flex h-10 w-10 items-center justify-center text-[#786565] hover:bg-[#fff8f6] hover:text-[#800000]"><ChevronRight size={16} /></button>
+            </div>
             <label className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</label>
             <DropdownField value={selectedLab} onChange={selectLab} options={labs.map(lab => ({value:lab,label:lab}))} placeholder="No labs available" disabled={!labs.length} className="min-w-[140px]" />
             {onExpand && <button type="button" onClick={onExpand} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Expand weekly lab utilization chart"><Maximize2 size={15} aria-hidden="true" />Expand</button>}
           </div>
         </div>
 
+        <div className="border-b border-[#f3f4f6] bg-[#fffdfc] px-4 py-2 text-center text-xs font-semibold text-[#6b4f4a]" aria-live="polite">{weekRangeLabel(selectedWeekStart)}</div>
+
         {labs.length === 0 ? (
           <div className="p-6 text-center text-xs lg:text-sm text-[#6b7280]">No lab rooms available yet.</div>
-        ) : dataset.length === 0 && !showEmptyGrid ? (
-          <div className="p-6 text-center text-xs lg:text-sm text-[#6b7280]">No schedules for {selectedLab} yet.</div>
+        ) : visibleScheduleCount === 0 && !showEmptyGrid ? (
+          <div className="p-6 text-center text-xs lg:text-sm text-[#6b7280]">No schedules for {selectedLab} during {weekRangeLabel(selectedWeekStart)}.</div>
         ) : (
           <div className="p-4 overflow-x-auto">
             <div className="min-w-[700px]">
-              {showEmptyGrid && dataset.length === 0 && <p className="pb-3 text-center text-xs lg:text-sm text-[#6b7280]">No schedules for {selectedLab} yet.</p>}
+              {showEmptyGrid && visibleScheduleCount === 0 && <p className="pb-3 text-center text-xs lg:text-sm text-[#6b7280]">No schedules for {selectedLab} during {weekRangeLabel(selectedWeekStart)}.</p>}
               <div className="pl-20 grid grid-cols-6 gap-0 pb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">
-                {chartDayOrder.map((dayIndex) => (
-                  <div key={dayIndex}>{dayLabels[dayIndex]}</div>
+                {columnData.map(({ dayIndex, label }) => (
+                  <div key={dayIndex}>{label}</div>
                 ))}
               </div>
               <div className="flex">

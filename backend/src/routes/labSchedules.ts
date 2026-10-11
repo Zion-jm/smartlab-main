@@ -4,7 +4,7 @@ import { prisma } from '../db/prisma';
 import { pagination, pageHeaders } from '../utils/pagination';
 import { scheduleView } from '../services/requestVisibility';
 import { sendError } from '../middleware/errors';
-import { manilaDayBounds, parseManilaDate } from '../utils/manilaTime';
+import { assertFutureManilaRequestWindow, manilaDayBounds, parseManilaDate } from '../utils/manilaTime';
 import { approveRequest, assertRoomAvailable, assertEquipmentCapacity } from '../services/approvalService';
 import { inventoryTransaction } from '../services/inventoryTransaction';
 import { Router } from 'express';
@@ -310,6 +310,7 @@ router.post(
           res.status(400).json({ error: 'scheduleDate is required for one-time schedules.' });
           return;
         }
+        assertFutureManilaRequestWindow(scheduleDateValue, timeStartValue);
         normalizedDayOfWeek = calendarWeekday(scheduleDateValue);
       } else {
         try {
@@ -579,6 +580,7 @@ router.put(
           res.status(400).json({ error: 'scheduleDate is required for one-time schedules.' });
           return;
         }
+        assertFutureManilaRequestWindow(scheduleDateValue, timeStartValue);
         normalizedDayOfWeek = calendarWeekday(scheduleDateValue);
       } else {
         const daySource = dayOfWeekInput ?? existing.dayOfWeek;

@@ -19,7 +19,7 @@ export default function MobileScheduleExplorer({ schedules, loading, error, relo
   const openSchedule = (item: LabSchedule) => { if (onSelectSchedule) onSelectSchedule(item.id); else setSelected(item); };
   const [view, setView] = useState('agenda');
   const [date, setDate] = useState(todayKey);
-  const [range, setRange] = useState(() => ({from:todayKey(),to:shift(todayKey(),6)}));
+  const [range, setRange] = useState(() => ({from:'',to:''}));
   const [search, setSearch] = useState('');
   const [room, setRoom] = useState('');
   const [selected, setSelected] = useState<LabSchedule | null>(null);
@@ -45,10 +45,10 @@ export default function MobileScheduleExplorer({ schedules, loading, error, relo
           <DateRangeFilter styledDates value={range} onChange={value => {setRange(value);setDate(value.from || value.to || todayKey());}} className="w-full min-w-0" />
           <DropdownField label={allRooms ? "Room" : "Computer lab"} value={room} onChange={setRoom} options={[{value:'',label:allRooms ? 'All rooms' : 'All computer labs'}, ...rooms.map(name => ({value:name,label:name}))]} />
         </div>
-        {(search || room || date !== todayKey()) && <div className="flex justify-end border-t border-[#ead7d3] pt-2"><button type="button" onClick={() => {setSearch('');setRoom('');setDate(todayKey());setRange({from:todayKey(),to:shift(todayKey(),6)});}} className="min-h-11 rounded-lg border border-[#ead7d3] bg-white px-3 text-xs font-semibold text-[#800000]">Reset filters</button></div>}
+        {(search || room || range.from || range.to) && <div className="flex justify-end border-t border-[#ead7d3] pt-2"><button type="button" onClick={() => {setSearch('');setRoom('');setDate(todayKey());setRange({from:'',to:''});}} className="min-h-11 rounded-lg border border-[#ead7d3] bg-white px-3 text-xs font-semibold text-[#800000]">Reset filters</button></div>}
       </div>}
     </ControlRibbon>
-    <PageTabGroup tabs={[{id:'agenda',label:'Agenda'},{id:'calendar',label:'Calendar'},{id:'timetable',label:'Timetable'}]} value={view} onChange={setView} ariaLabel="Schedule views" panelId="mobile-schedule-panel" />
+    <PageTabGroup tabs={[{id:'agenda',label:'Agenda'},{id:'timetable',label:'Timetable'},{id:'calendar',label:'Calendar'}]} value={view} onChange={setView} ariaLabel="Schedule views" panelId="mobile-schedule-panel" />
     <div id="mobile-schedule-panel" role="tabpanel">
     {loading ? <p role="status">Loading schedules…</p> : error ? <p role="alert" className="p-3 text-sm text-red-700">{error}</p> : <>
       {view === 'calendar' && <div className="rounded-xl border bg-white p-3">
@@ -60,7 +60,7 @@ export default function MobileScheduleExplorer({ schedules, loading, error, relo
         <p aria-live="polite" className="mb-2 text-center text-[11px] font-medium text-[#74615e]">{view === 'agenda' ? (days.length ? label(days[0]) + ' – ' + label(days[days.length - 1]) : 'No dates in this range') : label(date)}</p>
         <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
           <button type="button" aria-label={view === 'agenda' ? 'Previous 7 days' : 'Previous day'} disabled={!!range.from && date <= range.from} onClick={()=>setDate(shift(date,view==='agenda'?-7:-1))} className="flex min-h-11 items-center justify-center gap-1 rounded-xl border border-[#ead7d3] bg-white px-2 text-xs font-semibold text-[#57322d] transition hover:bg-[#fff5f2] focus-visible:outline-2 focus-visible:outline-[#800000] disabled:cursor-not-allowed disabled:bg-[#f8f7f6] disabled:text-[#a8a09e] disabled:opacity-60"><ChevronLeft size={16} aria-hidden="true" />Previous</button>
-          <button type="button" onClick={()=>{setDate(todayKey());setRange({from:todayKey(),to:shift(todayKey(),6)});}} className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-[#800000] px-4 text-xs font-semibold text-white transition hover:bg-[#650000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]"><CalendarDays size={16} aria-hidden="true" />Today</button>
+          <button type="button" onClick={()=>setDate(todayKey())} className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-[#800000] px-4 text-xs font-semibold text-white transition hover:bg-[#650000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]"><CalendarDays size={16} aria-hidden="true" />Today</button>
           <button type="button" aria-label={view === 'agenda' ? 'Next 7 days' : 'Next day'} disabled={!!range.to && (view === 'agenda' ? shift(date,6) : date) >= range.to} onClick={()=>setDate(shift(date,view==='agenda'?7:1))} className="flex min-h-11 items-center justify-center gap-1 rounded-xl border border-[#ead7d3] bg-white px-2 text-xs font-semibold text-[#57322d] transition hover:bg-[#fff5f2] focus-visible:outline-2 focus-visible:outline-[#800000] disabled:cursor-not-allowed disabled:bg-[#f8f7f6] disabled:text-[#a8a09e] disabled:opacity-60">Next<ChevronRight size={16} aria-hidden="true" /></button>
         </div>
       </nav>}

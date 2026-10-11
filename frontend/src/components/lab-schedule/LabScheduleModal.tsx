@@ -1,5 +1,5 @@
 import { combineManilaDateTime as combineDateTime, dateToDateKey, dateToTimeString, dateKeyToPickerDate, pickerDateToDateKey } from '../../utils/dateTime';
-import { useState, useMemo, } from 'react';
+import { useState, useMemo } from 'react';
 import DropdownField from '../shared/DropdownField';
 import { StyledDatePicker } from '../shared/StyledDatePicker';
 import { labScheduleApi } from '../../services/api';
@@ -11,6 +11,8 @@ import {
 } from '../../hooks/useScheduleConflictCheck';
 import { toast } from '../../stores/toastStore';
 import { YEAR_LEVELS } from '../../constants/yearLevels';
+import { requestStartTimeOptions, requestTimeHasElapsed, timeOptions } from '../../features/requests/requestModels';
+import { useRequestClock } from '../../features/requests/useRequestClock';
 
 interface LabScheduleModalProps {
   onClose: () => void;
@@ -23,21 +25,6 @@ interface LabScheduleModalProps {
   mode?: 'create' | 'edit';
   schedule?: ApiLabSchedule | null;
 }
-
-const timeOptions: { value: string; label: string }[] = (() => {
-  const options: { value: string; label: string }[] = [];
-  for (let hour = 7; hour <= 21; hour++) {
-    const startMinute = hour === 7 ? 30 : 0;
-    for (let minute = startMinute; minute < 60; minute += 30) {
-      const h = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-      const ampm = hour < 12 ? 'AM' : 'PM';
-      const label = `${h.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`;
-      const value = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      options.push({ value, label });
-    }
-  }
-  return options;
-})();
 
 const weekdayOptions = [
   { value: '1', label: 'Monday' },
@@ -114,6 +101,7 @@ export default function LabScheduleModal({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConflictModalOpen, setConflictModalOpen] = useState(false);
+  const requestClock = useRequestClock();
 
   const FormInputs = [isEditMode, schedule];
   const [FormPrevious, setFormPrevious] = useState<unknown[] | null>(null);
@@ -141,6 +129,9 @@ export default function LabScheduleModal({
     () => roomOptions.find((room) => room.value === formValues.roomId) ?? null,
     [roomOptions, formValues.roomId]
   );
+  const startTimeOptions = formValues.scheduleType === 'ONE_TIME'
+    ? requestStartTimeOptions(formValues.scheduleDate, requestClock)
+    : timeOptions;
 
   const conflictParams = useMemo(() => {
     if (!academicContext) return null;
@@ -163,7 +154,12 @@ export default function LabScheduleModal({
   const conflictBlocked = conflictCheck.status === 'danger';
 
   const handleSelectChange = (name: keyof typeof formValues, value: string) => {
-    setFormValues((prev) => ({ ...prev, [name]: value }));
+    setSubmitError(null);
+    setFormValues((prev) => {
+      const clearEnd = name === 'timeStart' && prev.timeEnd && prev.timeEnd <= value;
+      const clearElapsedRange = name === 'scheduleDate' && prev.scheduleType === 'ONE_TIME' && requestTimeHasElapsed(value, prev.timeStart, requestClock);
+      return { ...prev, [name]: value, ...(clearEnd ? { timeEnd: '' } : {}), ...(clearElapsedRange ? { timeStart: '', timeEnd: '' } : {}) };
+    });
   };
 
   const handleScheduleTypeChange = (value: ScheduleType) => {
@@ -197,6 +193,7 @@ export default function LabScheduleModal({
       if (!formValues[field]) errors[field] = `${label} is required.`;
     }
     if (formValues.timeStart && formValues.timeEnd && formValues.timeEnd <= formValues.timeStart) errors.timeEnd = 'End time must be after start time.';
+    if (formValues.scheduleType === 'ONE_TIME' && requestTimeHasElapsed(formValues.scheduleDate, formValues.timeStart, requestClock)) errors.timeStart = 'Choose a start time that has not already passed in Philippine time.';
     return errors;
   };
   const fieldErrors = attemptedSubmit ? getFieldErrors() : {};
@@ -369,6 +366,7 @@ export default function LabScheduleModal({
             <div>
               <label className="block text-xs font-semibold text-[#374151] mb-1" htmlFor="schedule-scheduleDate">Schedule date <span aria-hidden="true" className="text-red-700">*</span></label>
               <StyledDatePicker
+                minimumLeadDays={0}
                 id="schedule-scheduleDate"
                 required
                 error={fieldErrors.scheduleDate}
@@ -397,7 +395,7 @@ export default function LabScheduleModal({
           id="schedule-timeStart"
           error={fieldErrors.timeStart}
               value={formValues.timeStart}
-              options={timeOptions}
+              options={startTimeOptions}
               placeholder="Select start time"
               onChange={(value) => handleSelectChange('timeStart', value)}
               className="text-xs font-normal"
@@ -408,7 +406,7 @@ export default function LabScheduleModal({
           id="schedule-timeEnd"
           error={fieldErrors.timeEnd}
               value={formValues.timeEnd}
-              options={timeOptions}
+              options={timeOptions.filter(option => !formValues.timeStart || option.value > formValues.timeStart)}
               placeholder="Select end time"
               onChange={(value) => handleSelectChange('timeEnd', value)}
               className="text-xs font-normal"
