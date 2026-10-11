@@ -29,24 +29,27 @@ interface StatsCardProps {
 }
 
 const StatsCard = ({ icon: Icon, iconGradient, title, value, isRed }: StatsCardProps) => (
-  <div className="dashboard-stat flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-3 transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(128,0,0,0.12)] lg:gap-4 lg:p-4">
-    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white lg:h-12 lg:w-12 ${iconGradient}`}>
-      <Icon />
-    </div>
-    <div className="min-w-0 flex-1">
-      <h4 className="mb-0.5 text-xs font-medium text-[#6b7280] lg:text-sm">{title}</h4>
-      <p className={`text-xl font-bold lg:text-2xl ${isRed ? 'text-red-600' : 'text-[#1f2937]'}`}>{value}</p>
+  <div className="dashboard-stat group relative min-w-0 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-[#d8c7c3] hover:shadow-[0_8px_20px_rgba(76,37,24,0.08)]">
+    <div className={`absolute inset-x-0 top-0 h-1 ${iconGradient}`} />
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h4 className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">{title}</h4>
+        <p className={`mt-2 text-2xl font-bold tracking-tight ${isRed ? 'text-[#b91c1c]' : 'text-[#1f2937]'}`}>{value}</p>
+      </div>
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#faf4f1] text-[#800000] transition group-hover:bg-[#800000] group-hover:text-white">
+        <Icon size={18} />
+      </div>
     </div>
   </div>
 );
 
 const Card = ({ title, actions, children }: { title: string; actions?: React.ReactNode; children: React.ReactNode }) => (
-  <section className="dashboard-section mb-5 rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
-    <div className="flex items-center justify-between gap-3 border-b border-[#e5e7eb] px-3 pb-2 pt-3 lg:px-4 lg:pb-3 lg:pt-4">
+  <section className="dashboard-section rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+    <div className="flex items-center justify-between gap-3 border-b border-[#f1e3df] px-5 py-4">
       <h2 className="text-sm font-semibold text-[#1f2937]">{title}</h2>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
-    <div className="p-2 lg:p-3">{children}</div>
+    <div className="p-4 lg:p-5">{children}</div>
   </section>
 );
 
@@ -313,20 +316,36 @@ export default function AdminDashboard() {
   }
 
   const quickActions = [
-    { label: 'Add new user', icon: UserPlusIcon, gradient: 'from-[#800000] to-[#5c0000]', href: '/admin/users?new=1' },
-    { label: 'Review requests', icon: ClockIcon, gradient: 'from-blue-500 to-blue-600', href: '/admin/requests?status=PENDING' },
-    { label: 'Lab schedule', icon: CalendarPlusIcon, gradient: 'from-gray-500 to-gray-600', href: '/admin/schedule' },
-    { label: 'Manage equipment', icon: WrenchIcon, gradient: 'from-yellow-500 to-orange-500', href: '/admin/equipment' },
+    { label: 'Review requests', detail: `${stats.requests.pending} pending`, icon: ClockIcon, primary: true, href: '/admin/requests?status=PENDING' },
+    { label: 'Add new user', detail: 'Create an account', icon: UserPlusIcon, primary: false, href: '/admin/users?new=1' },
+    { label: 'Lab schedule', detail: `${stats.schedules.thisWeek} this week`, icon: CalendarPlusIcon, primary: false, href: '/admin/schedule' },
+    { label: 'Manage equipment', detail: `${stats.equipment.availableQuantity} units available`, icon: WrenchIcon, primary: false, href: '/admin/equipment' },
   ];
+  const inventoryTotal = Math.max(stats.equipment.totalQuantity, 0);
+  const utilization = Math.min(100, Math.max(0, stats.equipment.utilizationRate));
+  const attentionTotal = stats.requests.pending + stats.requests.overdue + stats.equipment.lowStockCount + (stats.academicRecords?.missing ?? 0);
 
   return (
     <AdminLayout>
-      <div className="dashboard-workspace mx-auto responsive-workspace p-2 lg:p-3">
-        <header className="mb-5 overflow-hidden rounded-2xl bg-gradient-to-br from-[#800000] to-[#4b1111] p-5 text-white shadow-sm sm:p-7">
-          <p className="text-xs font-semibold uppercase tracking-[.18em] text-[#efd0bc]">SmartLab overview</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Your campus, at a glance</h1>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#f1dddd]">Monitor requests, equipment availability, and the work that needs your attention.</p>
-          <div className="mt-5 flex flex-wrap items-center gap-3"><button type="button" onClick={() => navigate('/admin/requests?status=PENDING')} className="min-h-11 rounded-xl bg-white px-4 text-xs font-semibold text-[#800000]">Review {stats.requests.pending} pending requests</button><span className="text-xs text-[#f1dddd]">{new Date().toLocaleDateString('en-US', {timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric'})}</span></div>
+      <div className="dashboard-workspace mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
+        <header className="mb-4 overflow-hidden rounded-2xl border border-[#6d1010] bg-gradient-to-br from-[#800000] via-[#6d1010] to-[#3d1111] text-white shadow-[0_12px_30px_rgba(76,17,17,0.18)]">
+          <div className="grid gap-5 p-5 sm:p-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+            <div>
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[.18em] text-[#efd0bc]">SmartLab command center</p>
+                <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-[#f8e9e2]">{attentionTotal} items need attention</span>
+              </div>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Good day, Administrator</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#f1dddd]">Monitor today’s laboratory activity, resolve pending work, and keep academic records ready.</p>
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button type="button" onClick={() => navigate('/admin/requests?status=PENDING')} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-xs font-semibold text-[#800000] shadow-sm transition hover:bg-[#fff7f4]"><ClockIcon size={16}/>Review {stats.requests.pending} pending requests</button>
+                <span className="text-xs text-[#f1dddd]">{new Date().toLocaleDateString('en-US', {timeZone:'Asia/Manila',weekday:'long',month:'long',day:'numeric',year:'numeric'})}</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 xl:min-w-[390px]">
+              {[{label:'Overdue',value:stats.requests.overdue},{label:'Active labs',value:stats.schedules.activeNow},{label:'Low stock',value:stats.equipment.lowStockCount}].map(item=><div key={item.label} className="rounded-xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm"><p className="text-[10px] uppercase tracking-wide text-[#e8cfc8]">{item.label}</p><p className="mt-1 text-2xl font-bold">{item.value}</p></div>)}
+            </div>
+          </div>
         </header>
         {dashboardError && (
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#f6e8b1] bg-[#fffdf5] px-4 py-3 text-sm text-[#92400e]">
@@ -359,12 +378,12 @@ export default function AdminDashboard() {
           }
         >
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-6">
-            <StatsCard icon={UsersIcon} iconGradient="bg-gradient-to-br from-[#800000] to-[#5c0000]" title="Total users" value={stats.users.total} />
-            <StatsCard icon={GraduationCapIcon} iconGradient="bg-gradient-to-br from-pink-400 to-rose-500" title="Students" value={stats.users.students} />
-            <StatsCard icon={TeacherIcon} iconGradient="bg-gradient-to-br from-blue-400 to-cyan-400" title="Faculty" value={stats.users.faculty} />
-            <StatsCard icon={ClockIcon} iconGradient="bg-gradient-to-br from-amber-400 to-orange-500" title="Pending requests" value={stats.requests.pending} isRed={stats.requests.pending > 0} />
-            <StatsCard icon={AlertTriangleIcon} iconGradient="bg-gradient-to-br from-red-400 to-rose-600" title="Overdue returns" value={stats.requests.overdue} isRed={stats.requests.overdue > 0} />
-            <StatsCard icon={PackageIcon} iconGradient="bg-gradient-to-br from-emerald-400 to-teal-500" title="Equipment utilization" value={`${stats.equipment.utilizationRate}%`} />
+            <StatsCard icon={UsersIcon} iconGradient="bg-[#800000]" title="Total users" value={stats.users.total} />
+            <StatsCard icon={GraduationCapIcon} iconGradient="bg-[#a15c45]" title="Students" value={stats.users.students} />
+            <StatsCard icon={TeacherIcon} iconGradient="bg-[#967348]" title="Faculty" value={stats.users.faculty} />
+            <StatsCard icon={ClockIcon} iconGradient="bg-[#d97706]" title="Pending requests" value={stats.requests.pending} isRed={stats.requests.pending > 0} />
+            <StatsCard icon={AlertTriangleIcon} iconGradient="bg-[#b91c1c]" title="Overdue returns" value={stats.requests.overdue} isRed={stats.requests.overdue > 0} />
+            <StatsCard icon={PackageIcon} iconGradient="bg-[#15803d]" title="Equipment utilization" value={`${stats.equipment.utilizationRate}%`} />
           </div>
         </Card>
 
@@ -378,38 +397,25 @@ export default function AdminDashboard() {
         
 
         <Card title="Equipment status">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className="rounded-lg border border-[#e2e8f0] bg-[#f8fafc] p-3">
-              <div className="mb-2 flex items-center gap-2 text-[#374151]"><PackageIcon size={16} /><h3 className="text-sm font-medium">Catalog items</h3></div>
-              <p className="text-2xl font-bold text-[#1f2937]">{stats.equipment.uniqueItems}</p>
-              <p className="mt-1 text-xs text-[#6b7280]">{stats.equipment.totalQuantity} total units</p>
+          <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-[#fffaf7] p-5">
+              <div className="relative flex h-36 w-36 items-center justify-center rounded-full" style={{background:`conic-gradient(#800000 0 ${utilization}%, #eadfd9 ${utilization}% 100%)`}}>
+                <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white shadow-inner"><span className="text-2xl font-bold text-[#321d1d]">{utilization}%</span><span className="text-[10px] uppercase tracking-wide text-[#786565]">Utilized</span></div>
+              </div>
+              <p className="mt-3 text-xs text-[#786565]">{inventoryTotal} total units across {stats.equipment.uniqueItems} catalog items</p>
             </div>
-            <div className="rounded-lg border border-[#dcfce7] bg-[#f0fdf4] p-3">
-              <div className="mb-2 flex items-center gap-2 text-[#166534]"><PackageIcon size={16} /><h3 className="text-sm font-medium">Available</h3></div>
-              <p className="text-2xl font-bold text-[#166534]">{stats.equipment.availableQuantity}</p>
-              <p className="mt-1 text-xs text-[#16a34a]">Ready for use</p>
-            </div>
-            <div className="rounded-lg border border-[#fde68a] bg-[#fef3c7] p-3">
-              <div className="mb-2 flex items-center gap-2 text-[#92400e]"><ClockIcon size={16} /><h3 className="text-sm font-medium">Borrowed</h3></div>
-              <p className="text-2xl font-bold text-[#92400e]">{stats.equipment.borrowedQuantity}</p>
-              <p className="mt-1 text-xs text-[#a16207]">Currently in use</p>
-            </div>
-            <div className="rounded-lg border border-[#fecaca] bg-[#fef2f2] p-3">
-              <div className="mb-2 flex items-center gap-2 text-[#991b1b]"><AlertTriangleIcon size={16} /><h3 className="text-sm font-medium">Damaged</h3></div>
-              <p className="text-2xl font-bold text-[#991b1b]">{stats.equipment.damagedQuantity}</p>
-              <p className="mt-1 text-xs text-[#7f1d1d]">{stats.equipment.damagedQuantity} damaged · {stats.equipment.lowStockCount} low stock</p>
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              {[
+                {label:'Available',value:stats.equipment.availableQuantity,detail:'Ready for use',tone:'border-green-200 bg-green-50 text-green-800'},
+                {label:'Borrowed',value:stats.equipment.borrowedQuantity,detail:'Currently in use',tone:'border-amber-200 bg-amber-50 text-amber-900'},
+                {label:'Damaged',value:stats.equipment.damagedQuantity,detail:'Needs inspection',tone:'border-red-200 bg-red-50 text-red-800'},
+                {label:'Archived',value:stats.equipment.archivedQuantity,detail:`${stats.equipment.lowStockCount} low-stock items`,tone:'border-[#ead7d3] bg-[#faf7f5] text-[#57322d]'},
+              ].map(item=><div key={item.label} className={`rounded-xl border p-4 ${item.tone}`}><p className="text-xs font-semibold">{item.label}</p><p className="mt-2 text-2xl font-bold">{item.value}</p><p className="mt-1 text-[11px] opacity-80">{item.detail}</p></div>)}
             </div>
           </div>
         </Card>
-
-        
-
-        <div className="mb-5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 text-sm text-[#475569]">
-          <span className="font-semibold">Archived: {stats.equipment.archivedQuantity} units</span>
-          <span className="ml-2">Included in total inventory; unavailable for new loans. Borrowed and damaged units are counted separately.</span>
-        </div>
         <Card title="Operations at a glance">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             {[
               { label: 'Today’s reservations', value: stats.requests.todayReserved, detail: 'Approved or borrowed', href: '/admin/requests', icon: ClockIcon },
               { label: 'Next 7 days', value: stats.requests.upcoming, detail: 'Upcoming reservations', href: '/admin/requests', icon: CalendarPlusIcon },
@@ -422,12 +428,12 @@ export default function AdminDashboard() {
                 key={label}
                 type="button"
                 onClick={() => navigate(href)}
-                className="rounded-lg border border-[#e5e7eb] bg-[#fcfcfd] p-3 text-left transition hover:-translate-y-0.5 hover:border-[#d9b1b1] hover:bg-[#fff8f8]"
+                className="group rounded-xl border border-[#e5e7eb] bg-[#fcfcfd] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#d9b1b1] hover:bg-[#fff8f8] hover:shadow-sm"
               >
-                <Icon size={18} />
-                <p className="mt-2 text-xs font-semibold text-[#6b7280]">{label}</p>
+                <div className="flex items-start justify-between gap-2"><span className="text-[#800000]"><Icon size={18}/></span><span className="text-[#c8aaa2] transition group-hover:translate-x-0.5 group-hover:text-[#800000]"><ArrowRightIcon/></span></div>
+                <p className="mt-3 text-xs font-semibold text-[#6b7280]">{label}</p>
                 <p className="mt-1 text-2xl font-bold text-[#1f2937]">{value}</p>
-                <p className="mt-1 text-[11px] text-[#9ca3af]">{detail}</p>
+                <p className="mt-1 text-[11px] text-[#786565]">{detail}</p>
               </button>
             ))}
           </div>
@@ -436,16 +442,17 @@ export default function AdminDashboard() {
         
 
         <Card title="Quick actions">
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
-            {quickActions.map(({ label, icon: Icon, gradient, href }) => (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {quickActions.map(({ label, detail, icon: Icon, primary, href }) => (
               <button
                 key={label}
                 type="button"
                 onClick={() => navigate(href)}
-                className={`flex min-h-[72px] items-center justify-center gap-2 rounded-xl bg-gradient-to-br ${gradient} px-2.5 py-2.5 font-medium text-white transition-all hover:-translate-y-1 hover:shadow-lg lg:p-4`}
+                className={`group flex min-h-[76px] items-center gap-3 rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${primary?'border-[#800000] bg-[#800000] text-white':'border-[#e5e7eb] bg-white text-[#321d1d] hover:border-[#d8b4ad] hover:bg-[#fffaf8]'}`}
               >
-                <Icon size={18} />
-                <span className="text-center text-xs leading-tight lg:text-base">{label}</span>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${primary?'bg-white/15':'bg-[#f7eeea] text-[#800000]'}`}><Icon size={18}/></span>
+                <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{label}</span><span className={`mt-1 block text-xs ${primary?'text-[#f2d9d3]':'text-[#786565]'}`}>{detail}</span></span>
+                <span className={primary?'text-white/70':'text-[#c8aaa2]'}><ArrowRightIcon/></span>
               </button>
             ))}
           </div>
