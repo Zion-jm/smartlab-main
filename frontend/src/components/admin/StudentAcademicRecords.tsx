@@ -1,4 +1,4 @@
-import { Pencil, X } from 'lucide-react';
+import { Pencil, RefreshCw, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { studentAcademicApi } from '../../services/api';
 import ConfirmationModal from '../shared/ConfirmationModal';
@@ -15,7 +15,7 @@ const statusStyles:Record<string,string>={ENROLLED:'bg-green-100 text-green-700'
 const inputClass='mt-1.5 min-h-11 w-full rounded-xl border border-[#dcc8c2] bg-white px-3 text-sm text-[#321d1d] outline-none transition focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/10';
 const errorText=(error:unknown)=>(error as {response?:{data?:{error?:string}}})?.response?.data?.error??'Unable to save or load academic records. Please try again.';
 
-export default function StudentAcademicRecords({years}:{years:{id:string;year:string;isActive:boolean}[]}) {
+export default function StudentAcademicRecords({years,onRefresh,refreshing=false}:{years:{id:string;year:string;isActive:boolean}[];onRefresh?:()=>void|Promise<void>;refreshing?:boolean}) {
  const [yearId,setYearId]=useState(''),[search,setSearch]=useState(''),[results,setResults]=useState<Results|null>(null),[selected,setSelected]=useState<Student|null>(null);
  const [programId,setProgramId]=useState(''),[level,setLevel]=useState(''),[status,setStatus]=useState('ENROLLED'),[reason,setReason]=useState('');
  const [loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[confirm,setConfirm]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState(''),[pageSize,setPageSize]=useState(15);
@@ -25,7 +25,7 @@ export default function StudentAcademicRecords({years}:{years:{id:string;year:st
  const edit=(student:Student)=>{const record=student.studentAcademicRecords[0];setSelected(student);setProgramId(record?.programId??'');setLevel(record?.yearLevel!=null?String(record.yearLevel):'');setStatus(record?.status??'ENROLLED');setReason('');setError('');setSuccess('');};
  const save=async()=>{if(!selected)return;setSaving(true);setError('');try{const response=await studentAcademicApi.save({studentId:selected.id,academicYearId:yearId,programId,yearLevel:level?Number(level):null,status,reason,expectedUpdatedAt:previous?.updatedAt??null});setResults(current=>current?{...current,students:current.students.map(student=>student.id===selected.id?{...student,studentAcademicRecords:[response.data.record]}:student)}:current);setSelected(null);setConfirm(false);setSuccess('Academic record saved. Existing requests and account access were not changed.');}catch(e){setConfirm(false);setError(errorText(e));}finally{setSaving(false);}};
  return <section className="rounded-2xl border border-[#ead7d3] bg-white p-4 shadow-sm lg:p-5">
-  <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-base font-semibold text-[#321d1d]">Find student records</h2><p className="mt-1 text-xs text-[#786565]">Choose a year, then search by name or email.</p></div><p className="text-xs text-[#8a6f68]">Selecting a year never changes student standing.</p></div>
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-base font-semibold text-[#321d1d]">Find student records</h2><p className="mt-1 text-xs text-[#786565]">Choose a year, then search by name or email.</p></div><div className="flex flex-col items-start gap-2 sm:items-end"><p className="text-xs text-[#8a6f68]">Selecting a year never changes student standing.</p>{onRefresh&&<button type="button" onClick={()=>void onRefresh()} disabled={refreshing} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[#ead7d3] bg-white px-4 text-xs font-semibold text-[#514343] transition hover:bg-[#faf7f5] disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${refreshing?'animate-spin':''}`}/>Refresh</button>}</div></div>
   <div className="mt-4 grid gap-3 rounded-xl border border-[#ead7d3] bg-[#faf7f5] p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
    <label className="text-xs font-medium">Academic year<select className={inputClass} value={yearId} disabled={saving||confirm} onChange={e=>{setYearId(e.target.value);resetResults();}}><option value="">Select academic year</option>{years.map(item=><option key={item.id} value={item.id}>{item.year}{item.isActive?' · Active':''}</option>)}</select></label>
    <label className="text-xs font-medium">Student name or email<input className={inputClass} placeholder="Search all students" value={search} disabled={saving||confirm} onChange={e=>{setSearch(e.target.value);resetResults();}}/></label>
