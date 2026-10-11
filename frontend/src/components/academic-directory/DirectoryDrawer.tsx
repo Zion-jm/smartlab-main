@@ -8,6 +8,8 @@ import type {
   DirectorySubject,
 } from '../../types/academicDirectory';
 import { toast } from '../../stores/toastStore';
+import SidebarDrawer from '../shared/SidebarDrawer';
+import { BookOpen, Building2, DoorOpen, GraduationCap, Pencil, UsersRound } from 'lucide-react';
 
 export type DirectoryEntity = 'buildings' | 'rooms' | 'programs' | 'subjects' | 'departments';
 
@@ -179,22 +181,19 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
     label: building.name,
     value: building.id,
   }));
+  const formId = 'academic-directory-sidebar-form';
+  const entityIcon = mode === 'edit' ? <Pencil size={22} strokeWidth={1.75}/> : {
+    buildings: <Building2 size={23} strokeWidth={1.75}/>,
+    rooms: <DoorOpen size={23} strokeWidth={1.75}/>,
+    programs: <GraduationCap size={23} strokeWidth={1.75}/>,
+    subjects: <BookOpen size={23} strokeWidth={1.75}/>,
+    departments: <UsersRound size={23} strokeWidth={1.75}/>,
+  }[entity];
 
   return (
-    <div className="admin-mobile-drawer fixed inset-0 z-50 h-dvh">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="absolute inset-y-0 right-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
-        <div className="px-5 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#111827]">{title}</p>
-            <p className="text-xs text-[#6b7280]">{entityMeta[entity].title}</p>
-          </div>
-          <button className="text-[#6b7280] hover:text-[#111827]" type="button" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-        {mode === 'edit' && <p className="mx-5 mt-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">Renaming this record may change the label shown on linked requests, schedules, and historical reports.</p>}
-        <form className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4" onSubmit={handleSubmit}>
+    <SidebarDrawer title={title} subtitle={entityMeta[entity].title} icon={entityIcon} onClose={onClose} closeDisabled={submitState.loading} labelledBy="academic-directory-drawer-title" footer={<><button type="button" disabled={submitState.loading} onClick={onClose} className="min-h-11 rounded-full border border-[#e5e7eb] px-5 text-sm font-semibold text-[#374151] disabled:opacity-50">Cancel</button><button type="submit" form={formId} disabled={submitState.loading} className={`min-h-11 rounded-full px-5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(128,0,0,0.25)] ${submitState.loading?'cursor-not-allowed bg-[#b56565]':'bg-[#800000] hover:bg-[#680000]'}`}>{submitState.loading?'Saving…':mode==='create'?`Add ${entityMeta[entity].singular.toLowerCase()}`:'Save changes'}</button></>}>
+        {mode === 'edit' && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">Renaming this record may change the label shown on linked requests, schedules, and historical reports.</p>}
+        <form id={formId} className="space-y-4" onSubmit={handleSubmit}>
           {entity === 'buildings' && (
             <DrawerSection label="Building name" error={fieldError("name")}>
               <input
@@ -302,26 +301,7 @@ export default function DirectoryDrawer({ entity, mode, record = null, buildings
             <p role="alert" className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{submitState.error}</p>
           )}
 
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-[#374151] rounded-full border border-[#e5e7eb]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitState.loading}
-              className={`px-4 py-2 text-xs font-semibold text-white rounded-full shadow-[0_4px_12px_rgba(128,0,0,0.25)] ${
-                submitState.loading ? 'bg-[#b56565] cursor-not-allowed' : 'bg-[#800000]'
-              }`}
-            >
-              {submitState.loading ? 'Saving…' : 'Save changes'}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+    </SidebarDrawer>
   );
 }
