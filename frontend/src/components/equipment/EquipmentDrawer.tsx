@@ -3,6 +3,8 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { equipmentApi } from '../../services/api';
 import type { EquipmentItem, EquipmentStatus } from '../../types/equipment';
 import { toast } from '../../stores/toastStore';
+import SidebarDrawer from '../shared/SidebarDrawer';
+import { PackagePlus, Pencil } from 'lucide-react';
 
 export type EquipmentDrawerMode = 'create' | 'edit';
 
@@ -139,22 +141,12 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
   if (!open) {
     return null;
   }
+  const formId = 'equipment-sidebar-form';
 
   return (
-    <div className="admin-mobile-drawer fixed inset-0 z-50 h-dvh">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
-        <div className="px-5 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#111827]">{mode === 'create' ? 'Add equipment' : 'Edit equipment'}</p>
-            <p className="text-xs text-[#6b7280]">Maintain inventory accuracy and availability.</p>
-          </div>
-          <button className="text-[#6b7280] hover:text-[#111827]" type="button" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-        {record?.retiredAt && <p className="px-5 py-3 text-sm text-amber-800 bg-amber-50">Archived. Stock edits will not restore this item; use Restore in the equipment list.</p>}
-        <form className="min-h-0 flex-1 overflow-y-auto px-5 py-4 space-y-4" onSubmit={handleSubmit}>
+    <SidebarDrawer title={mode==='create'?'Add equipment':'Edit equipment'} subtitle="Maintain inventory accuracy and availability." icon={mode==='create'?<PackagePlus size={23} strokeWidth={1.75}/>:<Pencil size={22} strokeWidth={1.75}/>} badge={record?.retiredAt?<span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-800">Archived</span>:undefined} onClose={onClose} closeDisabled={submitting} labelledBy="equipment-drawer-title" footer={<><button type="button" onClick={onClose} disabled={submitting} className="min-h-11 rounded-full border border-[#e5e7eb] px-5 text-sm font-semibold text-[#374151] disabled:opacity-50">Cancel</button><button type="submit" form={formId} disabled={submitting} className={`min-h-11 rounded-full px-5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(128,0,0,0.25)] ${submitting?'cursor-not-allowed bg-[#b56565]':'bg-[#800000] hover:bg-[#680000]'}`}>{submitting?'Saving…':mode==='create'?'Add equipment':'Save changes'}</button></>}>
+        {record?.retiredAt && <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">Archived. Stock edits will not restore this item; use Restore in the equipment list.</p>}
+        <form id={formId} className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-xs font-semibold text-[#374151] mb-1">Equipment name</label>
             <input
@@ -247,27 +239,6 @@ export default function EquipmentDrawer({ open, mode, record = null, onClose, on
           </div>}
           {error && <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
         </form>
-        <div className="px-5 py-4 border-t border-[#f3f4f6] flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-[#374151] rounded-full border border-[#e5e7eb]"
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className={`px-4 py-2 text-xs font-semibold text-white rounded-full shadow-[0_4px_12px_rgba(128,0,0,0.25)] ${
-              submitting ? 'bg-[#b56565]' : 'bg-[#800000]'
-            }`}
-          >
-            {submitting ? 'Saving…' : 'Save changes'}
-          </button>
-        </div>
-      </div>
-    </div>
+    </SidebarDrawer>
   );
 }
