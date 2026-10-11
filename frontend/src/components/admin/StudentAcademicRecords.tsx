@@ -2,6 +2,7 @@ import { Pencil, RefreshCw, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { studentAcademicApi } from '../../services/api';
 import ConfirmationModal from '../shared/ConfirmationModal';
+import DropdownField from '../shared/DropdownField';
 import TablePagination from '../shared/TablePagination';
 import { IconActionButton } from '../shared/TableActionButtons';
 import { Table, TableActionsCell, TableBody, TableCell, TableContainer, TableHead, TableHeaderCell, TableRow, TableTitleCell } from '../shared/Table';
@@ -28,7 +29,7 @@ export default function StudentAcademicRecords({years,onRefresh,refreshing=false
   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f3f4f6] px-5 py-4"><h2 className="text-sm font-semibold text-[#1f2937]">Find student records</h2><div className="flex items-center gap-3">{lastUpdated&&<span className="hidden text-xs text-[#6b7280] sm:inline">Updated {lastUpdated.toLocaleTimeString([],{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit'})}</span>}{onRefresh&&<button type="button" onClick={()=>void onRefresh()} disabled={refreshing} className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-1.5 text-xs font-medium text-[#4b5563] transition hover:bg-[#f8f9fa] disabled:cursor-wait disabled:opacity-50 lg:px-4 lg:py-2 lg:text-sm"><RefreshCw className={`h-4 w-4 ${refreshing?'animate-spin':''}`}/>Refresh</button>}</div></div>
   <div className="p-4 lg:p-5">
   <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-   <label className="text-xs font-semibold text-[#4b5563]">Academic year<select className={inputClass} value={yearId} disabled={saving||confirm} onChange={e=>{setYearId(e.target.value);resetResults();}}><option value="">Select academic year</option>{years.map(item=><option key={item.id} value={item.id}>{item.year}{item.isActive?' · Active':''}</option>)}</select></label>
+   <DropdownField label="Academic year" value={yearId} disabled={saving||confirm} onChange={value=>{setYearId(value);resetResults();}} options={years.map(item=>({value:item.id,label:`${item.year}${item.isActive?' · Active':''}`}))} placeholder="Select academic year" portal/>
    <label className="text-xs font-semibold text-[#4b5563]">Student name or email<input className={inputClass} placeholder="Search all students" value={search} disabled={saving||confirm} onChange={e=>{setSearch(e.target.value);resetResults();}}/></label>
    <button type="button" disabled={loading||saving||confirm} onClick={()=>void load()} className="min-h-11 self-end rounded-xl bg-[#800000] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#680000] disabled:opacity-50">{loading?'Loading…':'Load records'}</button>
   </div>

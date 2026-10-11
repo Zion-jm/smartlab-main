@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Archive, CalendarRange, CheckCircle2, Clock3, History, RefreshCw, ShieldCheck } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmationModal from '../components/shared/ConfirmationModal';
+import DropdownField from '../components/shared/DropdownField';
 import { academicPeriodApi } from '../services/api';
 import { toast } from '../stores/toastStore';
 
@@ -316,28 +317,20 @@ export default function AdminAcademicPeriod() {
             </div>
             <form onSubmit={submit} className="space-y-4 p-5">
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1.5 block text-xs font-semibold text-[#4b5563]">Academic year</span>
-                  <select
-                    data-testid="select-academic-year"
-                    aria-label="Academic year"
+                <div className="block">
+                  <DropdownField
+                    label="Academic year"
+                    testId="select-academic-year"
                     value={isAddingAcademicYear ? NEW_ACADEMIC_YEAR_VALUE : year}
-                    onChange={(event) => handleAcademicYearSelection(event.target.value)}
+                    onChange={handleAcademicYearSelection}
                     disabled={saving}
                     required
-                    className="h-11 w-full rounded-xl border border-[#d8c7c3] bg-white px-3 text-sm text-[#1f2937] outline-none transition focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/10"
-                  >
-                    {data?.academicYears.length ? (
-                      data.academicYears.map((academicYear) => (
-                        <option key={academicYear.id} value={academicYear.year}>
-                          {academicYear.year}{academicYear.isActive ? ' · Active' : ''}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="" disabled>No academic years yet</option>
-                    )}
-                    <option value={NEW_ACADEMIC_YEAR_VALUE}>+ Add new academic year</option>
-                  </select>
+                    placeholder="No academic years yet"
+                    options={[
+                      ...(data?.academicYears.map((academicYear) => ({ value: academicYear.year, label: `${academicYear.year}${academicYear.isActive ? ' · Active' : ''}` })) ?? []),
+                      { value: NEW_ACADEMIC_YEAR_VALUE, label: '+ Add new academic year' },
+                    ]}
+                  />
                   {isAddingAcademicYear ? (
                     <>
                       <input
@@ -371,19 +364,8 @@ export default function AdminAcademicPeriod() {
                   ) : (
                     <span className="mt-1.5 block text-[11px] text-[#9ca3af]">Choose an existing academic year or add a new one.</span>
                   )}
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-xs font-semibold text-[#4b5563]">Semester / term</span>
-                  <select
-                    data-testid="select-academic-term"
-                    value={termName}
-                    onChange={(event) => setTermName(event.target.value)}
-                    required
-                    className="h-11 w-full rounded-xl border border-[#d8c7c3] bg-white px-3 text-sm text-[#1f2937] outline-none transition focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/10"
-                  >
-                    {termOptions.map((term) => <option key={term} value={term}>{term}</option>)}
-                  </select>
-                </label>
+                </div>
+                <DropdownField label="Semester / term" testId="select-academic-term" value={termName} onChange={setTermName} required options={termOptions.map(term=>({value:term,label:term}))}/>
               </div>
               <label className="block">
                 <span className="mb-1.5 block text-xs font-semibold text-[#4b5563]">Reason for change <span className="font-normal text-[#9ca3af]">(optional)</span></span>
