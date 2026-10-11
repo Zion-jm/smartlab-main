@@ -78,57 +78,49 @@ function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1000px] px-2 py-4 sm:px-4 sm:py-7 lg:px-6">
-      <div className="mb-7 border-b border-[#e8ddd8] pb-7">
-        <div className="mb-3 flex items-center gap-2 text-xs font-medium text-[#9a8985]">
-          <span>SmartLab</span>
-          <span aria-hidden="true">/</span>
-          <span className="text-[#7a1d20]">Settings</span>
-        </div>
-        <h1 className="text-[clamp(1.8rem,4vw,2.65rem)] font-semibold tracking-[-0.04em] text-[#321d1d]">Workspace settings</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#756969]">
-          Choose how SmartLab should open and organize your workspace. These preferences are saved for your account on this device.
-        </p>
-      </div>
-
-      <section className="rounded-2xl border border-[#eadfd9] bg-[#fffdfb] p-5 shadow-[0_8px_26px_rgba(76,37,24,0.045)] sm:p-7">
-        <div className="mb-2 flex items-start gap-4 border-b border-[#eadfd9] pb-5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f6efe8] text-[#7a1d20]">
+    <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
+      <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <div className="flex items-start gap-3 border-b border-[#f3f4f6] px-5 py-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f6efe8] text-[#800000]">
             <SettingsNavIcon size={19} />
           </div>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9d6a4e]">Interface preferences</p>
-            <h2 className="mt-1 text-xl font-semibold tracking-[-0.02em] text-[#321d1d]">Workspace defaults</h2>
-            <p className="mt-1.5 text-sm leading-6 text-[#756969]">
-              These defaults apply the next time you open a workspace page. You can still change controls or the sidebar at any time.
+            <h1 className="text-sm font-semibold text-[#1f2937]">Workspace settings</h1>
+            <p className="mt-1 text-xs leading-5 text-[#6b7280]">
+              Choose how SmartLab opens and organizes admin workspace pages. Preferences are saved for this account on this device.
             </p>
           </div>
         </div>
-
-        <PreferenceRow
-          title="Hide ribbon controls by default"
-          description="Hide search and filters when you first open a page. Select Show controls to use them."
-          checked={preferences.ribbonControlsHiddenByDefault}
-          onChange={(checked) => updatePreference('ribbonControlsHiddenByDefault', checked)}
-          label="Hide ribbon controls by default"
-        />
-        <PreferenceRow
-          title="Collapse the sidebar by default"
-          description="Start with the sidebar closed to give the page more space."
-          checked={preferences.sidebarCollapsedByDefault}
-          onChange={(checked) => updatePreference('sidebarCollapsedByDefault', checked)}
-          label="Collapse the sidebar by default"
-        />
-
-        <div className="mt-6 flex flex-col gap-3 border-t border-[#eee4df] pt-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs leading-5 text-[#907f7b]">Reset only affects this account on this device.</p>
-          <button
-            type="button"
-            onClick={() => resetPreferences(userId)}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#d8c7c3] px-4 text-xs font-semibold text-[#6b6262] transition hover:border-[#a9867d] hover:bg-[#fffaf8] hover:text-[#800000]"
-          >
-            Reset workspace defaults
-          </button>
+        <div className="p-5">
+          <div className="border-b border-[#f1e3df] pb-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#9a7b4f]">Interface preferences</p>
+            <h2 className="mt-1 text-base font-semibold text-[#1f2937]">Workspace defaults</h2>
+            <p className="mt-1 text-xs leading-5 text-[#6b7280]">These defaults apply the next time you open a workspace page. You can still change its controls at any time.</p>
+          </div>
+          <PreferenceRow
+            title="Hide ribbon controls by default"
+            description="Hide search and filters when you first open a page. Select Show controls to use them."
+            checked={preferences.ribbonControlsHiddenByDefault}
+            onChange={(checked) => updatePreference('ribbonControlsHiddenByDefault', checked)}
+            label="Hide ribbon controls by default"
+          />
+          <PreferenceRow
+            title="Collapse the sidebar by default"
+            description="Start with the sidebar closed to give the page more space."
+            checked={preferences.sidebarCollapsedByDefault}
+            onChange={(checked) => updatePreference('sidebarCollapsedByDefault', checked)}
+            label="Collapse the sidebar by default"
+          />
+          <div className="mt-5 flex flex-col gap-3 border-t border-[#f1e3df] pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs leading-5 text-[#6b7280]">Reset only affects this account on this device.</p>
+            <button
+              type="button"
+              onClick={() => resetPreferences(userId)}
+              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#d8c7c3] px-4 text-xs font-semibold text-[#4b5563] transition hover:border-[#a9867d] hover:bg-[#fffaf8] hover:text-[#800000]"
+            >
+              Reset workspace defaults
+            </button>
+          </div>
         </div>
       </section>
     </div>
