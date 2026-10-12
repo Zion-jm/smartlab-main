@@ -469,7 +469,7 @@ export default function AdminDashboard() {
 
         <div className="grid items-start gap-4 xl:grid-cols-4">
         <Card
-          className="xl:order-1 xl:col-span-3"
+          className="xl:order-1 xl:col-span-3 xl:h-full xl:self-stretch"
           title="System overview"
           actions={
             <div className="flex items-center gap-3">
@@ -645,7 +645,7 @@ export default function AdminDashboard() {
 
         
 
-        <Card className="xl:order-2 xl:col-span-1" title="Quick actions">
+        <Card className="xl:order-2 xl:col-span-1 xl:h-full xl:self-stretch" title="Quick actions">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
             {quickActions.map(({ label, detail, icon: Icon, primary, href }) => (
               <button
