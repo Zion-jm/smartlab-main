@@ -105,6 +105,7 @@ type DailyActivity = { dateKey: string; label: string; day: string; requests: nu
 type RequestWorkflow = { status: BorrowRequest['status']; label: string; value: number; color: string };
 type EquipmentDemand = { id: string; name: string; requested: number; available: number };
 type RoomUtilization = { id: string; name: string; hours: number; sessions: number };
+type DirectoryRoom = { id: string; roomNumber?: string | null; roomName?: string | null; isComputerLab?: boolean | null };
 
 interface DashboardInsights {
   dailyActivity: DailyActivity[];
@@ -214,7 +215,7 @@ export default function AdminDashboard() {
 
     const equipmentData = equipmentResult.status === 'fulfilled' ? equipmentResult.value.data : null;
     const equipmentItems = equipmentItemsResult.status === 'fulfilled' ? equipmentItemsResult.value.data as EquipmentItem[] : [];
-    const directoryRooms = directoryResult.status === 'fulfilled' ? directoryResult.value.data?.rooms ?? [] : [];
+    const directoryRooms: DirectoryRoom[] = directoryResult.status === 'fulfilled' ? directoryResult.value.data?.rooms ?? [] : [];
     const users = usersResult.status === 'fulfilled' && Array.isArray(usersResult.value.data) ? usersResult.value.data : [];
     const requestPayload =
       requestsResult.status === 'fulfilled'
@@ -315,12 +316,21 @@ export default function AdminDashboard() {
       current.sessions += 1;
       roomUsage.set(schedule.room.id, current);
     });
+    const computerLabUtilization = directoryRooms
+      .filter((room) => room.isComputerLab)
+      .map((room) => roomUsage.get(room.id) ?? {
+        id: room.id,
+        name: [room.roomNumber, room.roomName].filter(Boolean).join(' – ') || 'Unnamed computer lab',
+        hours: 0,
+        sessions: 0,
+      })
+      .sort((a, b) => b.hours - a.hours || a.name.localeCompare(b.name));
     setInsights({
       dailyActivity: nextSevenDays,
       requestWorkflow: workflowConfig.map((item) => ({ ...item, value: requests.filter((request) => request.status === item.status).length })),
-      equipmentDemand: Array.from(demandByEquipment.values()).sort((a, b) => b.requested - a.requested).slice(0, 5).map((item) => ({ ...item, available: equipmentById.get(item.id)?.availableQuantity ?? 0 })),
-      roomUtilization: Array.from(roomUsage.values()).sort((a, b) => b.hours - a.hours).slice(0, 5),
-      unusedRooms: Math.max(0, directoryRooms.length - roomUsage.size),
+      equipmentDemand: Array.from(demandByEquipment.values()).sort((a, b) => b.requested - a.requested).map((item) => ({ ...item, available: equipmentById.get(item.id)?.availableQuantity ?? 0 })),
+      roomUtilization: computerLabUtilization,
+      unusedRooms: computerLabUtilization.filter((room) => room.hours === 0).length,
       incompleteSchedules: schedules.filter((schedule) => !schedule.room || !schedule.faculty).length,
     });
 
@@ -435,6 +445,16 @@ export default function AdminDashboard() {
   const workflowMax = Math.max(...insights.requestWorkflow.map((item) => item.value), 1);
   const demandMax = Math.max(...insights.equipmentDemand.map((item) => item.requested), 1);
   const roomMax = Math.max(...insights.roomUtilization.map((item) => item.hours), 1);
+  const equipmentDemandRows = [
+    ...insights.equipmentDemand.map((item) => ({ ...item, placeholder: false })),
+    ...Array.from({ length: Math.max(0, 3 - insights.equipmentDemand.length) }, (_, index) => ({
+      id: `unranked-${index}`,
+      name: 'Not ranked yet',
+      requested: 0,
+      available: 0,
+      placeholder: true,
+    })),
+  ];
 
   return (
     <AdminLayout>
@@ -570,23 +590,29 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        <Card className="xl:order-5 xl:col-span-2" title="Equipment demand" actions={<button type="button" onClick={() => navigate('/admin/reports?reportTab=equipment')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline">Analyze <ArrowRightIcon /></button>}>
+        <Card className="xl:order-5 xl:col-span-2 xl:h-full xl:self-stretch" title="Equipment demand" actions={<button type="button" onClick={() => navigate('/admin/reports?reportTab=equipment')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline">Analyze <ArrowRightIcon /></button>}>
           <p className="mb-4 text-xs text-[#786565]">Most requested equipment across recorded borrowing requests.</p>
-          {insights.equipmentDemand.length ? <div className="space-y-3">{insights.equipmentDemand.map((item, index) => (
-            <button key={item.id} type="button" onClick={() => navigate(`/admin/equipment?search=${encodeURIComponent(item.name)}`)} className="grid w-full grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-3 rounded-lg p-1.5 text-left transition hover:bg-[#fcf7f5]">
+          <div className="max-h-[174px] space-y-2 overflow-y-auto pr-1">{equipmentDemandRows.map((item, index) => item.placeholder ? (
+            <div key={item.id} className="grid min-h-[50px] grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-dashed border-[#e5d9d5] bg-[#fcfaf9] p-2">
+              <span className="text-xs font-bold text-[#b49c96]">{index + 1}</span>
+              <span className="min-w-0"><span className="block text-xs font-semibold text-[#8b7771]">Not ranked yet</span><span className="mt-1 block text-[10px] text-[#a59490]">Waiting for another equipment request</span></span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm font-bold text-[#b49c96]">?</span>
+            </div>
+          ) : (
+            <button key={item.id} type="button" onClick={() => navigate(`/admin/equipment?search=${encodeURIComponent(item.name)}`)} className="grid min-h-[50px] w-full grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-3 rounded-lg p-2 text-left transition hover:bg-[#fcf7f5]">
               <span className="text-xs font-bold text-[#9a7770]">{index + 1}</span>
               <span className="min-w-0"><span className="flex justify-between gap-3 text-xs"><span className="truncate font-semibold text-[#321d1d]">{item.name}</span><span className="text-[#6b7280]">{item.requested} requested</span></span><span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-[#f1e8e4]"><span className="block h-full rounded-full bg-gradient-to-r from-[#800000] to-[#c25c45]" style={{ width: `${(item.requested / demandMax) * 100}%` }}/></span></span>
               <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${item.available <= 1 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>{item.available} available</span>
             </button>
-          ))}</div> : <p className="py-10 text-center text-xs text-[#9ca3af]">No equipment demand recorded yet.</p>}
+          ))}</div>
         </Card>
 
-        <Card className="xl:order-6 xl:col-span-2" title="Room utilization this week" actions={<button type="button" onClick={() => navigate('/admin/schedule')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline">View schedule <ArrowRightIcon /></button>}>
+        <Card className="xl:order-6 xl:col-span-2 xl:h-full xl:self-stretch" title="Room utilization this week" actions={<button type="button" onClick={() => navigate('/admin/schedule')} className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:underline">View schedule <ArrowRightIcon /></button>}>
           <div className="mb-4 flex items-center justify-between gap-3"><p className="text-xs text-[#786565]">Busiest rooms based on scheduled hours.</p><span className="rounded-full bg-[#faf4f1] px-2.5 py-1 text-[10px] font-semibold text-[#800000]">{insights.unusedRooms} unused</span></div>
-          {insights.roomUtilization.length ? <div className="space-y-3">{insights.roomUtilization.map((item) => (
-            <button key={item.id} type="button" onClick={() => navigate(`/admin/schedule?roomId=${item.id}`)} className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 rounded-lg p-1.5 text-left transition hover:bg-[#fcf7f5]">
+          {insights.roomUtilization.length ? <div className="max-h-[174px] space-y-2 overflow-y-auto pr-1">{insights.roomUtilization.map((item) => (
+            <button key={item.id} type="button" onClick={() => navigate(`/admin/schedule?roomId=${item.id}`)} className="grid min-h-[50px] w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 rounded-lg p-2 text-left transition hover:bg-[#fcf7f5]">
               <span className="truncate text-xs font-semibold text-[#321d1d]">{item.name}</span><span className="text-xs font-bold text-[#800000]">{item.hours.toFixed(item.hours % 1 ? 1 : 0)}h</span>
-              <span className="h-2 overflow-hidden rounded-full bg-[#f1e8e4]"><span className="block h-full rounded-full bg-[#967348]" style={{ width: `${(item.hours / roomMax) * 100}%` }}/></span><span className="text-[10px] text-[#8b7771]">{item.sessions} {item.sessions === 1 ? 'entry' : 'entries'}</span>
+              <span className="h-2 overflow-hidden rounded-full bg-[#f1e8e4]"><span className="block h-full rounded-full bg-[#967348]" style={{ width: `${(item.hours / roomMax) * 100}%` }}/></span><span className="text-[10px] text-[#8b7771]">{item.sessions ? `${item.sessions} ${item.sessions === 1 ? 'entry' : 'entries'}` : 'No schedules'}</span>
             </button>
           ))}</div> : <p className="py-10 text-center text-xs text-[#9ca3af]">No room schedules this week.</p>}
         </Card>
