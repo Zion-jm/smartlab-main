@@ -1,7 +1,7 @@
 import DropdownField from '../shared/DropdownField';
 import ScheduleDetailModal from './ScheduleDetailModal';
 import { useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Maximize2, Printer } from 'lucide-react';
 import type { LabSchedule } from '../../types/labSchedule';
 import { addCalendarDays, dateKeyToPickerDate, dateToDateKey, manilaTodayForPicker } from '../../utils/dateTime';
 import { calendarColors, chartDayOrder, chartHourMarks, chartMinuteEnd, chartMinuteStart, chartRowHeight, chartSlotMinutes, chartSlotPercents, chartTotalMinutes, clampMinutes, dayNames, formatClockLabel, getMonthLabel, minutesFromIso, occursOnDate, sameDay, scheduleTypeLabel } from './scheduleViewUtils';
@@ -15,6 +15,7 @@ export type ChartViewProps = {
   selectedLab?: string;
   onSelectedLabChange?: (lab: string) => void;
   onExpand?: () => void;
+  onPrint?: () => void;
   selectedWeekStart?: string;
   onSelectedWeekStartChange?: (weekStart: string) => void;
 };
@@ -46,7 +47,7 @@ const weekRangeLabel = (monday: string) => {
   return `${startMonth} ${startDay}, ${startYear}–${endMonth} ${endDay}, ${endYear}`;
 };
 
-export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand, selectedWeekStart: controlledWeekStart, onSelectedWeekStartChange }: ChartViewProps) {
+export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand, onPrint, selectedWeekStart: controlledWeekStart, onSelectedWeekStartChange }: ChartViewProps) {
   const [labOverride, setLabOverride] = useState<string | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<LabSchedule | null>(null);
   const [weekOverride, setWeekOverride] = useState(() => mondayForDate(manilaTodayForPicker()));
@@ -123,9 +124,14 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
   };
 
   return (
-    <div className="p-4 lg:p-5">
+    <div className="schedule-chart-print-area p-4 lg:p-5">
+      <header className="schedule-chart-print-header hidden">
+        <p className="text-[10pt] font-bold uppercase tracking-[0.12em] text-[#800000]">SmartLab</p>
+        <h1 className="mt-1 text-[18pt] font-bold text-[#321d1d]">Weekly Laboratory Schedule</h1>
+        <p className="mt-1 text-[10pt] text-[#514343]">{selectedLab || 'Laboratory'} · {weekRangeLabel(selectedWeekStart)}</p>
+      </header>
       <div className="rounded-2xl border border-[#e5e7eb]">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#f3f4f6] px-4 py-4">
+        <div className="schedule-chart-controls flex flex-wrap items-center justify-between gap-4 border-b border-[#f3f4f6] px-4 py-4">
           <div>
             <h3 className="text-sm font-semibold text-[#111827]">Weekly Lab Utilization</h3>
             <p className="text-xs text-[#6b7280]">Select a schedule to view full details. Short blocks show a brief summary.</p>
@@ -138,6 +144,7 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
             </div>
             <label className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</label>
             <DropdownField value={selectedLab} onChange={selectLab} options={labs.map(lab => ({value:lab,label:lab}))} placeholder="No labs available" disabled={!labs.length} className="min-w-[140px]" />
+            {onPrint && <button type="button" onClick={onPrint} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Print weekly lab utilization chart or save it as PDF"><Printer size={15} aria-hidden="true" />Print / PDF</button>}
             {onExpand && <button type="button" onClick={onExpand} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Expand weekly lab utilization chart"><Maximize2 size={15} aria-hidden="true" />Expand</button>}
           </div>
         </div>
@@ -158,14 +165,14 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
                 ))}
               </div>
               <div className="flex">
-                <div className="w-20 pr-2 text-[10px] font-medium text-[#9ca3af]" style={{ height: chartHeightPx }}>
+                <div className="schedule-chart-time-axis w-20 pr-2 text-[10px] font-medium text-[#9ca3af]" style={{ height: chartHeightPx }}>
                   <div className="flex h-full flex-col justify-between">
                     {chartHourMarks.map((minute) => (
                       <span key={minute}>{formatClockLabel(minute)}</span>
                     ))}
                   </div>
                 </div>
-                <div className="grid flex-1 grid-cols-6 gap-2" style={{ height: chartHeightPx }}>
+                <div className="schedule-chart-grid grid flex-1 grid-cols-6 gap-2" style={{ height: chartHeightPx }}>
                   {columnData.map(({ dayIndex, schedules: daySchedules }) => (
                     <div key={dayIndex} className="relative rounded-xl border border-[#f1f5f9] bg-white">
                       {chartSlotPercents.map((pct, idx) => (

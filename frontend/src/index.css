@@ -922,3 +922,54 @@
 
 /* Keep the schedule action intact when the mobile ribbon wraps its controls. */
 .page-control-ribbon__actions button.schedule-add-button { white-space: nowrap; overflow-wrap: normal; flex-shrink: 0; }
+
+@page schedule-chart {
+  size: A4 portrait;
+  margin: 10mm;
+}
+
+@media print {
+  body.printing-schedule-chart * {
+    visibility: hidden !important;
+  }
+  body.printing-schedule-chart .schedule-chart-print-area,
+  body.printing-schedule-chart .schedule-chart-print-area * {
+    visibility: visible !important;
+  }
+  body.printing-schedule-chart .schedule-chart-print-area {
+    page: schedule-chart;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 190mm;
+    padding: 0 !important;
+    color: #321d1d;
+    background: #fff;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  body.printing-schedule-chart .schedule-chart-print-header {
+    display: block !important;
+    margin-bottom: 6mm;
+    padding-bottom: 4mm;
+    border-bottom: 1px solid #c8aaa2;
+  }
+  body.printing-schedule-chart .schedule-chart-controls {
+    display: none !important;
+  }
+  body.printing-schedule-chart .schedule-chart-print-area > div {
+    border-radius: 0;
+    border-color: #d8c7c3;
+  }
+  body.printing-schedule-chart .schedule-chart-print-area .overflow-x-auto {
+    overflow: visible !important;
+    padding: 3mm !important;
+  }
+  body.printing-schedule-chart .schedule-chart-print-area .min-w-\[700px\] {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  body.printing-schedule-chart .schedule-chart-time-axis,
+  body.printing-schedule-chart .schedule-chart-grid {
+    height: 205mm !important;
+  }
+}

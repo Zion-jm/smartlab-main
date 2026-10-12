@@ -524,6 +524,13 @@ export default function AdminLabSchedule() {
     setDetailsModalConfig({ schedule: target });
   };
 
+  const printScheduleChart = () => {
+    const cleanup = () => document.body.classList.remove('printing-schedule-chart');
+    document.body.classList.add('printing-schedule-chart');
+    window.addEventListener('afterprint', cleanup, { once: true });
+    requestAnimationFrame(() => window.print());
+  };
+
   return (
     <AdminLayout>
       {mobile && <MobileScheduleExplorer schedules={schedules} loading={loading} error={error} reload={fetchSchedules} computerLabNames={computerLabNames} allRooms onSelectSchedule={handleViewSchedule}
@@ -633,7 +640,7 @@ export default function AdminLabSchedule() {
                 </>
               )
             ) : viewMode === 'chart' ? (
-              <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm"><div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Weekly utilization chart</h2><p className="mt-1 text-xs text-[#786565]">Compare laboratory occupancy across the week and open any block for its full schedule details.</p></div><ChartView dayLabels={dayNames} showEmptyGrid schedules={filteredSchedules} computerLabNames={computerLabNames} onSelectSchedule={handleViewSchedule} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onExpand={() => setChartExpanded(true)} /></section>
+              <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm"><div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Weekly utilization chart</h2><p className="mt-1 text-xs text-[#786565]">Compare laboratory occupancy across the week and open any block for its full schedule details.</p></div><ChartView dayLabels={dayNames} showEmptyGrid schedules={filteredSchedules} computerLabNames={computerLabNames} onSelectSchedule={handleViewSchedule} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onPrint={printScheduleChart} onExpand={() => setChartExpanded(true)} /></section>
             ) : (
               <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm"><div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Monthly schedule calendar</h2><p className="mt-1 text-xs text-[#786565]">Review schedule density by date and select a day to inspect its sessions.</p></div><CalendarView dayLabels={dayNames} schedules={filteredSchedules} /></section>
             )}
