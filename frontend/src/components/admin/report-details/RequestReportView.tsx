@@ -707,7 +707,7 @@ export function RequestReportView({
         </section>
 
         <div className="grid items-stretch gap-4 xl:grid-cols-4">
-          <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm xl:col-span-1">
+          <section className="rounded-2xl border border-[#e5d9d5] bg-white shadow-sm xl:col-span-1">
             <div className="border-b border-[#f1e6e3] px-4 py-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9a7770]">Demand controls</p>
               <h3 className="mt-1 text-sm font-semibold text-[#321d1d]">Analyze demand sources</h3>
@@ -730,7 +730,7 @@ export function RequestReportView({
               </FilterItem>
             }
             advanced={
-              <div className="grid gap-2.5 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2.5">
                 <FilterItem label="Submitted through" className="min-w-0">
                   <DropdownField
                     value={demandSource}
