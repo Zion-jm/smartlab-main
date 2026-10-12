@@ -970,6 +970,6 @@
   }
   body.printing-schedule-chart .schedule-chart-time-axis,
   body.printing-schedule-chart .schedule-chart-grid {
-    height: 260mm !important;
+    height: 235mm !important;
   }
 }

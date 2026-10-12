@@ -554,7 +554,7 @@ export default function AdminLabSchedule() {
       @page { size: 8.5in 13in !important; margin: 10mm !important; }
       html, body { width: 195.9mm !important; min-width: 195.9mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
       .schedule-chart-print-area { page: auto !important; width: 195.9mm !important; }
-      .schedule-chart-time-axis, .schedule-chart-grid { height: 260mm !important; }
+      .schedule-chart-time-axis, .schedule-chart-grid { height: 235mm !important; }
     </style></head><body class="printing-schedule-chart">${chart.outerHTML}</body></html>`);
     printDocument.close();
 
