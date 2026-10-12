@@ -550,7 +550,12 @@ export default function AdminLabSchedule() {
         : `<style>${node.textContent ?? ''}</style>`)
       .join('');
     printDocument.open();
-    printDocument.write(`<!doctype html><html><head><meta charset="utf-8"><title>Weekly Laboratory Schedule</title>${styles}</head><body class="printing-schedule-chart">${chart.outerHTML}</body></html>`);
+    printDocument.write(`<!doctype html><html><head><meta charset="utf-8"><title>Weekly Laboratory Schedule</title>${styles}<style>
+      @page { size: A4 portrait !important; margin: 10mm !important; }
+      html, body { width: 190mm !important; min-width: 190mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
+      .schedule-chart-print-area { page: auto !important; width: 190mm !important; }
+      .schedule-chart-time-axis, .schedule-chart-grid { height: 205mm !important; }
+    </style></head><body class="printing-schedule-chart">${chart.outerHTML}</body></html>`);
     printDocument.close();
 
     const finish = () => window.setTimeout(() => frame.remove(), 500);
