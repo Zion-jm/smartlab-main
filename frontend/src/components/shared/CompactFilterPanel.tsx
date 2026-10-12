@@ -8,6 +8,7 @@ type CompactFilterPanelProps = {
   advanced?: ReactNode;
   advancedCount?: number;
   defaultAdvancedOpen?: boolean;
+  alwaysShowAdvanced?: boolean;
   activeFilters?: ReactNode;
   hasActiveFilters?: boolean;
   onReset?: () => void;
@@ -45,6 +46,7 @@ export default function CompactFilterPanel({
   advanced,
   advancedCount = 0,
   defaultAdvancedOpen = false,
+  alwaysShowAdvanced = false,
   activeFilters,
   hasActiveFilters = false,
   onReset,
@@ -103,7 +105,7 @@ export default function CompactFilterPanel({
           id={advancedPanelId}
           role="group"
           aria-label="Additional filters"
-          hidden={!advancedOpen}
+          hidden={!alwaysShowAdvanced && !advancedOpen}
           className="border-t border-[#f1e4e1] pt-3"
         >
           {advanced}
@@ -136,7 +138,7 @@ export default function CompactFilterPanel({
     >
       <div className="grid grid-cols-1 items-end gap-2.5 md:grid-cols-[minmax(0,1fr)_auto]">
         <div role="group" aria-label="Primary filters" className="min-w-0">{primary}</div>
-        {hasAdvancedFilters && !ribbonToggle && (
+        {hasAdvancedFilters && !ribbonToggle && !alwaysShowAdvanced && (
           <button
             type="button"
             onClick={() => setAdvancedOpen((current) => !current)}
