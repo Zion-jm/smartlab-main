@@ -29,10 +29,21 @@ const weekRangeLabel = (monday: string) => {
   const saturday = addCalendarDays(monday, 5);
   const start = new Date(`${monday}T00:00:00Z`);
   const end = new Date(`${saturday}T00:00:00Z`);
-  const sameMonth = monday.slice(0, 7) === saturday.slice(0, 7);
-  const startText = start.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'long', day: 'numeric', ...(sameMonth ? {} : { year: 'numeric' }) });
-  const endText = end.toLocaleDateString('en-US', { timeZone: 'UTC', ...(sameMonth ? {} : { month: 'long' }), day: 'numeric', year: 'numeric' });
-  return `${startText}–${endText}`;
+  const monthName = (date: Date) => date.toLocaleString('en-US', { timeZone: 'UTC', month: 'long' });
+  const startMonth = monthName(start);
+  const endMonth = monthName(end);
+  const startDay = start.getUTCDate();
+  const endDay = end.getUTCDate();
+  const startYear = start.getUTCFullYear();
+  const endYear = end.getUTCFullYear();
+
+  if (startYear === endYear && start.getUTCMonth() === end.getUTCMonth()) {
+    return `${startMonth} ${startDay}–${endDay}, ${endYear}`;
+  }
+  if (startYear === endYear) {
+    return `${startMonth} ${startDay}–${endMonth} ${endDay}, ${endYear}`;
+  }
+  return `${startMonth} ${startDay}, ${startYear}–${endMonth} ${endDay}, ${endYear}`;
 };
 
 export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand, selectedWeekStart: controlledWeekStart, onSelectedWeekStartChange }: ChartViewProps) {
