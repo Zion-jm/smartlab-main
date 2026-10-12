@@ -171,16 +171,23 @@ function Panel({
   title,
   description,
   children,
+  className = '',
+  actions,
 }: {
   title: string;
   description?: string;
   children: React.ReactNode;
+  className?: string;
+  actions?: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-      <div className="border-b border-[#f3f4f6] px-4 py-4 lg:px-5">
-        <h2 className="text-sm font-semibold text-[#111827]">{title}</h2>
-        {description && <p className="mt-1 text-xs text-[#6b7280]">{description}</p>}
+    <section className={`overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm ${className}`}>
+      <div className="flex items-start justify-between gap-4 border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold text-[#321d1d]">{title}</h2>
+          {description && <p className="mt-1 text-xs leading-5 text-[#786565]">{description}</p>}
+        </div>
+        {actions && <div className="shrink-0">{actions}</div>}
       </div>
       <div className="p-4 lg:p-5">{children}</div>
     </section>
@@ -569,167 +576,121 @@ export default function AdminReports() {
           >
             {activeTab === 'overview' ? (
               <>
-                <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-
-                <section aria-labelledby="demand-highlights-title" className="space-y-3">
-                  <div>
-                    <h2 id="demand-highlights-title" className="text-sm font-semibold text-[#800000]">Demand highlights</h2>
-                    <p className="mt-1 text-xs leading-5 text-[#6b7280]">Selected academic period · {reportRangeLabel}. Counts include all request statuses, including declined and cancelled; they show demand, not confirmed usage.</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
-                    {demandHighlights.map((highlight, index) => (
-                      <article key={highlight.title} className="flex min-w-0 flex-col rounded-2xl border border-[#eadfd9] bg-[#fffdfb] p-4">
-                        <h3 className="text-xs font-medium text-[#756969]">{highlight.title}</h3>
-                        <p className="mt-3 break-words text-base font-semibold text-[#321d1d]">{highlight.leaders.length ? highlight.leaders.slice(0, 2).join(' / ') : 'No matching requests'}</p>
-                        {highlight.leaders.length > 2 && <details className="mt-2 text-xs text-[#800000]"><summary className="cursor-pointer">{highlight.leaders.length - 2} more tied</summary><p className="mt-1 break-words">{highlight.leaders.slice(2).join(', ')}</p></details>}
-                        {highlight.count > 0 && <p className="mt-2 text-sm font-semibold text-[#800000]">{highlight.count} {highlight.count === 1 ? 'request' : 'requests'}{highlight.leaders.length > 1 ? ' each · tied' : ''}</p>}
-                        <div className="mt-auto pt-4">
-                          <button type="button" onClick={() => openDemandBreakdown(index)} aria-label={'View breakdown: ' + highlight.title}
-                            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#d8b5b0] px-3 text-xs font-semibold text-[#800000] transition hover:bg-[#fff0ed] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]">
-                            View breakdown <span aria-hidden="true" className="ml-2">→</span>
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                  <p className="text-xs text-[#756969]">Equipment is counted once per request, regardless of quantity. Faculty refers to the supervising faculty; records without a section or faculty assignment are excluded from those rankings.</p>
-                </section>
-
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
-                  <MetricCard label="Borrow requests" value={summary.totalRequests} detail="Within this period" tone="maroon" />
-                  <MetricCard label="Units requested" value={summary.totalUnits} detail="Approved, borrowed, or returned" tone="blue" />
-                  <MetricCard label="Returned requests" value={summary.returnedRequests} detail="Completed equipment returns" tone="green" />
-                  <MetricCard label="Equipment used" value={summary.uniqueEquipment} detail="Unique catalog items" tone="amber" />
-                  <MetricCard label="Lab schedules" value={summary.scheduleCount} detail="One-time and recurring" />
-                  <MetricCard label="Completion rate" value={`${summary.completionRate}%`} detail="Borrowed or returned" />
-                </div>
-
-                <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_auto_minmax(0,0.9fr)]">
+                <div className="grid auto-rows-min gap-4 xl:grid-cols-4">
                   <Panel
-                    title="Needs attention"
-                    description="Items that need your attention."
+                    className="xl:col-span-3"
+                    title="Report overview"
+                    description={`Operational results for ${reportRangeLabel}.`}
                   >
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('requests')}
-                        className="rounded-xl border border-[#f6e8b1] bg-[#fffdf5] p-3 text-left hover:border-[#d97706]"
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#92400e]">Pending requests</p>
-                        <p className="mt-1 text-2xl font-bold text-[#111827]">{attentionSummary.pendingRequests}</p>
-                        <p className="mt-1 text-xs text-[#6b7280]">Open request records</p>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('equipment')}
-                        className="rounded-xl border border-[#f1d4d4] bg-[#fff8f8] p-3 text-left hover:border-[#b91c1c]"
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#991b1b]">Unreturned units</p>
-                        <p className="mt-1 text-2xl font-bold text-[#111827]">{attentionSummary.unreturnedUnits}</p>
-                        <p className="mt-1 text-xs text-[#6b7280]">Currently marked borrowed</p>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('equipment')}
-                        className="rounded-xl border border-[#f1d4d4] bg-[#fff8f8] p-3 text-left hover:border-[#b91c1c]"
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#991b1b]">At-risk equipment</p>
-                        <p className="mt-1 text-2xl font-bold text-[#111827]">{attentionSummary.atRiskEquipment}</p>
-                        <p className="mt-1 text-xs text-[#6b7280]">Damaged, unavailable, or low stock</p>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('schedule')}
-                        className="rounded-xl border border-[#dce9fb] bg-[#f7faff] p-3 text-left hover:border-[#2563eb]"
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#1d4ed8]">Schedules to review</p>
-                        <p className="mt-1 text-2xl font-bold text-[#111827]">{attentionSummary.schedulesNeedingReview}</p>
-                        <p className="mt-1 text-xs text-[#6b7280]">Missing a room or faculty assignment</p>
-                      </button>
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                      <MetricCard label="Borrow requests" value={summary.totalRequests} detail="Within this period" tone="maroon" />
+                      <MetricCard label="Units requested" value={summary.totalUnits} detail="Across recorded requests" tone="blue" />
+                      <MetricCard label="Returned requests" value={summary.returnedRequests} detail="Completed equipment returns" tone="green" />
+                      <MetricCard label="Equipment used" value={summary.uniqueEquipment} detail="Unique catalog items" tone="amber" />
+                      <MetricCard label="Lab schedules" value={summary.scheduleCount} detail="One-time and recurring" />
+                      <MetricCard label="Completion rate" value={`${summary.completionRate}%`} detail="Borrowed or returned" tone="green" />
                     </div>
                   </Panel>
 
-                  <div aria-hidden="true" className="hidden w-0.5 self-stretch rounded-full bg-[#c8aaa2] xl:-my-4 xl:block" />
+                  <Panel className="xl:col-span-1 xl:h-full" title="Detailed reports" description="Open a focused report or export its records.">
+                    <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                      {[
+                        { tab: 'requests' as const, label: 'Requests', detail: `${filteredRequests.length} records` },
+                        { tab: 'schedule' as const, label: 'Schedules', detail: `${summary.scheduleCount} entries` },
+                        { tab: 'equipment' as const, label: 'Equipment', detail: `${equipment.length} catalog items` },
+                      ].map((item, index) => (
+                        <button key={item.tab} type="button" onClick={() => setActiveTab(item.tab)}
+                          className={`group flex min-h-[64px] items-center gap-3 rounded-xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${index === 0 ? 'border-[#800000] bg-[#800000] text-white' : 'border-[#eadfd9] bg-white text-[#321d1d] hover:border-[#d8b4ad] hover:bg-[#fffaf8]'}`}>
+                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${index === 0 ? 'bg-white/15' : 'bg-[#f7eeea] text-[#800000]'}`}>{index + 1}</span>
+                          <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{item.label}</span><span className={`mt-1 block text-xs ${index === 0 ? 'text-[#f2d9d3]' : 'text-[#786565]'}`}>{item.detail}</span></span>
+                          <span aria-hidden="true" className={index === 0 ? 'text-white/75' : 'text-[#c8aaa2]'}>→</span>
+                        </button>
+                      ))}
+                    </div>
+                  </Panel>
 
-                  <Panel title="Request status" description="Every request in the selected reporting period.">
-                    <div className="space-y-3">
+                  <Panel
+                    className="xl:col-span-4"
+                    title="Demand highlights"
+                    description="Demand signals include every request status, so declined and cancelled submissions still show what users asked for."
+                    actions={<span className="rounded-full bg-[#faf4f1] px-2.5 py-1 text-[10px] font-semibold text-[#800000]">Selected period</span>}
+                  >
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                      {demandHighlights.map((highlight, index) => (
+                        <button key={highlight.title} type="button" onClick={() => openDemandBreakdown(index)}
+                          className="group flex min-h-[150px] min-w-0 flex-col rounded-xl border border-[#eadfd9] bg-[#fffdfb] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#d8b4ad] hover:bg-[#fff8f6] hover:shadow-sm">
+                          <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#9a7770]">{highlight.title}</span>
+                          <span className="mt-3 break-words text-base font-semibold text-[#321d1d]">{highlight.leaders.length ? highlight.leaders.slice(0, 2).join(' / ') : 'No matching requests'}</span>
+                          <span className="mt-auto flex items-end justify-between gap-3 pt-4">
+                            <span className="text-sm font-bold text-[#800000]">{highlight.count || 0} {highlight.count === 1 ? 'request' : 'requests'}</span>
+                            <span className="text-[#c8aaa2] transition group-hover:translate-x-0.5 group-hover:text-[#800000]">→</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-4 text-xs leading-5 text-[#756969]">Equipment is counted once per request regardless of quantity. Unassigned faculty or sections are excluded from those rankings.</p>
+                  </Panel>
+
+                  <Panel className="xl:col-span-3" title="Borrowing activity over time" description="Monthly requests and requested equipment quantities across all statuses.">
+                    {monthlyUsage.length === 0 ? (
+                      <p className="py-12 text-center text-xs text-[#9ca3af]">No borrowing activity in this period.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <div className="mb-4 flex items-center justify-end gap-4 text-[10px] font-semibold text-[#6b7280]">
+                          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[#800000]" />Units</span>
+                          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[#d9a441]" />Requests</span>
+                        </div>
+                        <div className="flex min-w-[560px] items-end gap-3 rounded-xl bg-[#fcfaf9] px-4 pb-4 pt-5" style={{ minHeight: 230 }}>
+                          {monthlyUsage.map((item) => (
+                            <div key={item.month} className="flex min-w-[68px] flex-1 flex-col items-center justify-end gap-2">
+                              <div className="flex h-[150px] w-full items-end justify-center gap-1.5">
+                                <div className="w-5 rounded-t bg-[#800000]" style={{ height: `${Math.max((item.units / maxMonthlyUnits) * 100, item.units > 0 ? 5 : 0)}%` }} title={`${item.units} units`} />
+                                <div className="w-5 rounded-t bg-[#d9a441]" style={{ height: `${Math.max((item.requests / Math.max(...monthlyUsage.map((entry) => entry.requests), 1)) * 100, item.requests > 0 ? 5 : 0)}%` }} title={`${item.requests} requests`} />
+                              </div>
+                              <span className="text-[10px] font-semibold text-[#4b5563]">{formatMonth(item.month)}</span>
+                              <span className="whitespace-nowrap text-[9px] text-[#8b7771]">{item.units} units · {item.requests} requests</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </Panel>
+
+                  <Panel className="xl:col-span-1 xl:h-full" title="Needs attention" description="Records that may need an administrator.">
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                      {[
+                        { label: 'Pending requests', value: attentionSummary.pendingRequests, detail: 'Open request records', tab: 'requests' as const, tone: 'border-amber-200 bg-amber-50 text-amber-900' },
+                        { label: 'Unreturned units', value: attentionSummary.unreturnedUnits, detail: 'Currently marked borrowed', tab: 'equipment' as const, tone: 'border-red-200 bg-red-50 text-red-800' },
+                        { label: 'At-risk equipment', value: attentionSummary.atRiskEquipment, detail: 'Damaged, unavailable, or low stock', tab: 'equipment' as const, tone: 'border-red-200 bg-red-50 text-red-800' },
+                        { label: 'Schedules to review', value: attentionSummary.schedulesNeedingReview, detail: 'Missing room or faculty', tab: 'schedule' as const, tone: 'border-blue-200 bg-blue-50 text-blue-800' },
+                      ].map((item) => (
+                        <button key={item.label} type="button" onClick={() => setActiveTab(item.tab)}
+                          className={`group flex items-center gap-3 rounded-xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${item.tone}`}>
+                          <span className="text-2xl font-bold">{item.value}</span>
+                          <span className="min-w-0 flex-1"><span className="block text-xs font-semibold">{item.label}</span><span className="mt-1 block text-[10px] opacity-80">{item.detail}</span></span>
+                          <span aria-hidden="true" className="opacity-50 transition group-hover:translate-x-0.5">→</span>
+                        </button>
+                      ))}
+                    </div>
+                  </Panel>
+
+                  <Panel className="xl:col-span-4" title="Request status" description="Distribution of all requests in the selected reporting period.">
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
                       {statusCounts.map(({ status, count }) => (
-                        <div key={status}>
-                          <div className="mb-1 flex items-center justify-between gap-3 text-xs">
-                            <span className="font-semibold text-[#374151]">{statusConfig[status].label}</span>
-                            <span className="text-[#6b7280]">{count}</span>
+                        <div key={status} className="rounded-xl border border-[#eadfd9] bg-[#fcfcfd] p-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className={`rounded-full px-2 py-1 text-[10px] font-semibold whitespace-nowrap ${statusConfig[status].className}`}>{statusConfig[status].label}</span>
+                            <span className="text-xl font-bold text-[#321d1d]">{count}</span>
                           </div>
-                          <div className="h-2 overflow-hidden rounded-full bg-[#f3f4f6]">
-                            <div
-                              className={`h-full rounded-full ${statusConfig[status].barClassName}`}
-                              style={{ width: `${(count / maxStatusCount) * 100}%` }}
-                            />
+                          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#f1e8e4]">
+                            <div className={`h-full rounded-full ${statusConfig[status].barClassName}`} style={{ width: `${(count / maxStatusCount) * 100}%` }} />
                           </div>
+                          <p className="mt-2 text-[10px] text-[#786565]">{summary.totalRequests ? Math.round((count / summary.totalRequests) * 100) : 0}% of requests</p>
                         </div>
                       ))}
                     </div>
                   </Panel>
                 </div>
-
-                <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-
-                <Panel title="Borrowing activity over time" description="Requests and equipment quantities by month, including all statuses.">
-                  {monthlyUsage.length === 0 ? (
-                    <p className="py-8 text-center text-xs text-[#9ca3af]">No borrowing activity in this period.</p>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <div className="flex min-w-[560px] items-end gap-3" style={{ minHeight: 210 }}>
-                        {monthlyUsage.map((item) => (
-                          <div key={item.month} className="flex min-w-[68px] flex-1 flex-col items-center justify-end gap-2">
-                            <div className="flex h-[150px] w-full items-end justify-center gap-1">
-                              <div
-                                className="w-5 rounded-t-md bg-[#800000]"
-                                style={{ height: `${Math.max((item.units / maxMonthlyUnits) * 100, item.units > 0 ? 5 : 0)}%` }}
-                                title={`${item.units} units`}
-                              />
-                              <div
-                                className="w-5 rounded-t-md bg-[#f6b728]"
-                                style={{ height: `${Math.max((item.requests / Math.max(...monthlyUsage.map((entry) => entry.requests), 1)) * 100, item.requests > 0 ? 5 : 0)}%` }}
-                                title={`${item.requests} requests`}
-                              />
-                            </div>
-                            <span className="text-[10px] font-semibold text-[#6b7280]">{formatMonth(item.month)}</span>
-                            <span className="text-[10px] text-[#9ca3af]">{item.units} units · {item.requests} requests</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-3 flex items-center justify-center gap-4 text-[10px] font-semibold text-[#6b7280]">
-                        <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#800000]" />Units</span>
-                        <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#f6b728]" />Requests</span>
-                      </div>
-                    </div>
-                  )}
-                </Panel>
-
-                <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-
-                <Panel title="Detailed reports" description="Choose a report to view records, filter results, or export a copy.">
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {[
-                      { tab: 'requests' as const, label: 'Requests', detail: 'Review request status and demand sources.' },
-                      { tab: 'schedule' as const, label: 'Schedules', detail: 'Review rooms, recurring entries, and assignments.' },
-                      { tab: 'equipment' as const, label: 'Equipment', detail: 'Review inventory health and item demand.' },
-                    ].map((item) => (
-                      <button
-                        key={item.tab}
-                        type="button"
-                        onClick={() => setActiveTab(item.tab)}
-                        className="rounded-xl border border-[#e5e7eb] p-3 text-left hover:border-[#800000] hover:bg-[#fff8f8]"
-                      >
-                        <p className="text-sm font-semibold text-[#374151]">{item.label}</p>
-                        <p className="mt-1 text-xs leading-5 text-[#6b7280]">{item.detail}</p>
-                        <span className="mt-3 inline-block text-xs font-semibold text-[#800000]">Open report →</span>
-                      </button>
-                    ))}
-                  </div>
-                </Panel>
               </>
             ) : (
               <ReportDetailViews
