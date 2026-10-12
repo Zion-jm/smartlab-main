@@ -525,10 +525,42 @@ export default function AdminLabSchedule() {
   };
 
   const printScheduleChart = () => {
-    const cleanup = () => document.body.classList.remove('printing-schedule-chart');
-    document.body.classList.add('printing-schedule-chart');
-    window.addEventListener('afterprint', cleanup, { once: true });
-    requestAnimationFrame(() => window.print());
+    const chart = document.querySelector<HTMLElement>('.schedule-chart-print-area');
+    if (!chart) return;
+
+    const frame = document.createElement('iframe');
+    frame.setAttribute('title', 'Weekly laboratory schedule print document');
+    frame.style.position = 'fixed';
+    frame.style.right = '0';
+    frame.style.bottom = '0';
+    frame.style.width = '1px';
+    frame.style.height = '1px';
+    frame.style.border = '0';
+    frame.style.opacity = '0';
+    document.body.appendChild(frame);
+
+    const printDocument = frame.contentDocument;
+    if (!printDocument) {
+      frame.remove();
+      return;
+    }
+    const styles = Array.from(document.querySelectorAll<HTMLStyleElement | HTMLLinkElement>('style, link[rel="stylesheet"]'))
+      .map((node) => node instanceof HTMLLinkElement
+        ? `<link rel="stylesheet" href="${node.href}">`
+        : `<style>${node.textContent ?? ''}</style>`)
+      .join('');
+    printDocument.open();
+    printDocument.write(`<!doctype html><html><head><meta charset="utf-8"><title>Weekly Laboratory Schedule</title>${styles}</head><body class="printing-schedule-chart">${chart.outerHTML}</body></html>`);
+    printDocument.close();
+
+    const finish = () => window.setTimeout(() => frame.remove(), 500);
+    const print = async () => {
+      await printDocument.fonts?.ready;
+      frame.contentWindow?.addEventListener('afterprint', finish, { once: true });
+      frame.contentWindow?.focus();
+      frame.contentWindow?.print();
+    };
+    window.setTimeout(() => void print(), 300);
   };
 
   return (
