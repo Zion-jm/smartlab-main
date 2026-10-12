@@ -43,8 +43,8 @@ export function ScheduleDemandPanel({
   const paginatedRows = rows.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   return (
-    <div className="rounded-2xl border border-[#eee5e3] bg-[#fffcfb] p-4 lg:p-5">
-      <div className="flex items-start justify-between gap-4">
+    <section className="h-full overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
+      <div className="flex items-start justify-between gap-4 border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
         <div>
           <h3 className="text-sm font-semibold text-[#241f20]">{title}</h3>
           <p className="mt-1 max-w-[34rem] text-xs leading-5 text-[#756b6b]">
@@ -56,11 +56,11 @@ export function ScheduleDemandPanel({
         </span>
       </div>
 
-      {rows.length === 0 ? (
+      <div className="p-4 lg:p-5">{rows.length === 0 ? (
         <p className="py-8 text-center text-xs text-[#9a9090]">{emptyMessage}</p>
       ) : (
         <>
-          <div className="mt-5 space-y-3">
+          <div className="space-y-3">
             {paginatedRows.map((row, index) => {
               const rankValue = sortBy === 'entries' ? row.entries : row.rooms;
               const share = Math.max((rankValue / maxRankValue) * 100, 8);
@@ -105,8 +105,8 @@ export function ScheduleDemandPanel({
             />
           </div>
         </>
-      )}
-    </div>
+      )}</div>
+    </section>
   );
 }
 
@@ -619,16 +619,16 @@ export function ScheduleReportView({
             />
           ) : null}
 
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
+          <div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Schedule overview</h2><p className="mt-1 text-xs text-[#786565]">A current snapshot based on the reporting period and active schedule filters.</p></div>
+        <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
           {[
             { label: 'Schedules shown', value: scheduleSummary.schedules, detail: 'Matching the period and filters', tone: 'maroon' },
             { label: 'Recurring schedules', value: scheduleSummary.recurring, detail: 'Weekly entries in the result', tone: 'blue' },
             { label: 'Rooms in use', value: scheduleSummary.rooms, detail: 'Distinct rooms in the result', tone: 'amber' },
             { label: 'Sections covered', value: scheduleSummary.sections, detail: 'Program and year combinations', tone: 'green' },
           ].map((metric) => (
-            <div key={metric.label} className={`rounded-2xl border p-4 ${
+            <div key={metric.label} className={`rounded-xl border p-4 ${
               metric.tone === 'maroon'
                 ? 'border-[#f1d4d4] bg-[#fff8f8]'
                 : metric.tone === 'blue'
@@ -643,21 +643,21 @@ export function ScheduleReportView({
             </div>
           ))}
         </div>
+        </section>
 
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-
-        <div>
-          <div className="mb-4 rounded-2xl border border-[#eee5e3] bg-white p-4 lg:p-5">
+        <div className="grid items-stretch gap-4 xl:grid-cols-4">
+          <section className="rounded-2xl border border-[#e5d9d5] bg-white shadow-sm xl:col-span-1">
+          <div className="border-b border-[#f1e6e3] px-4 py-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9a7770]">Schedule overview</p>
-              <h3 className="mt-1 text-base font-semibold text-[#241f20]">Where is schedule demand coming from?</h3>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9a7770]">Demand controls</p>
+              <h3 className="mt-1 text-sm font-semibold text-[#321d1d]">Analyze schedule demand</h3>
               <p className="mt-1 max-w-2xl text-xs leading-5 text-[#8c8080]">
                 Compare schedule concentration across compatible groups using the current schedule filters.
               </p>
             </div>
-          </div>
+          </div><div className="p-4">
           <CompactFilterPanel
-            className="mb-4"
+            className="border-0 bg-transparent p-0 shadow-none"
             primary={
               <FilterItem label="Group by" className="min-w-0">
                 <DropdownField
@@ -672,7 +672,7 @@ export function ScheduleReportView({
               </FilterItem>
              }
             advanced={
-              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-2.5">
                 <FilterItem label="Rank by" className="min-w-0">
                   <DropdownField
                     value={demandSortBy}
@@ -755,7 +755,8 @@ export function ScheduleReportView({
                 </div>
               ) : undefined
             }
-          />
+          /></div></section>
+          <div className="min-w-0 xl:col-span-3">
           <ScheduleDemandPanel
             title={`Demand by ${scheduleDemandGroupLabels[demandGroupBy].toLowerCase()}`}
             description={scheduleDemandGroupDescriptions[demandGroupBy]}
@@ -769,12 +770,11 @@ export function ScheduleReportView({
                   : 'No schedules were recorded in this reporting period.'
             }
           />
+          </div>
         </div>
 
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-
-        <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm lg:p-5">
-          <div className="mb-4 rounded-2xl border border-[#eee5e3] bg-white p-4 lg:p-5">
+        <div className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9a7770]">Detailed log</p>
               <h3 className="mt-1 text-base font-semibold text-[#241f20]">Schedule records</h3>
@@ -783,7 +783,7 @@ export function ScheduleReportView({
               {filteredSchedules.length} {filteredSchedules.length === 1 ? 'record' : 'records'} shown
             </p>
           </div>
-          <TableContainer className="rounded-xl border border-[#e5e7eb]">
+          <div className="p-4 lg:p-5"><TableContainer className="rounded-xl border border-[#e5e7eb]">
             <Table className="schedule-mobile-report report-print-table min-w-[980px]">
               <TableHead>
                 <TableHeaderCell>Day / date</TableHeaderCell>
@@ -862,6 +862,7 @@ export function ScheduleReportView({
               setSchedulePage(1);
             }}
           />
+          </div>
         </div>
       </div>
       </FormalReportFrame>

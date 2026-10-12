@@ -609,9 +609,9 @@ export function EquipmentReportView({
           />
         ) : null}
 
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
+          <div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Equipment overview</h2><p className="mt-1 text-xs text-[#786565]">Inventory and demand totals based on the reporting period and active filters.</p></div>
+        <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
           {[
             { label: 'Equipment shown', value: equipmentSummary.shown, detail: 'Matching the filters', tone: 'maroon' },
             {
@@ -637,7 +637,7 @@ export function EquipmentReportView({
               tone: 'green',
             },
           ].map((metric) => (
-            <div key={metric.label} className={`rounded-2xl border p-4 ${
+            <div key={metric.label} className={`rounded-xl border p-4 ${
               metric.tone === 'maroon'
                 ? 'border-[#f1d4d4] bg-[#fff8f8]'
                 : metric.tone === 'blue'
@@ -652,21 +652,21 @@ export function EquipmentReportView({
             </div>
           ))}
         </div>
+        </section>
 
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-
-        <div>
-          <div className="mb-4 rounded-2xl border border-[#eee5e3] bg-white p-4 lg:p-5">
+        <div className="grid items-stretch gap-4 xl:grid-cols-4">
+          <section className="rounded-2xl border border-[#e5d9d5] bg-white shadow-sm xl:col-span-1">
+          <div className="border-b border-[#f1e6e3] px-4 py-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9a7770]">Demand overview</p>
-              <h3 className="mt-1 text-base font-semibold text-[#241f20]">Where is equipment demand coming from?</h3>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9a7770]">Demand controls</p>
+              <h3 className="mt-1 text-sm font-semibold text-[#321d1d]">Analyze equipment demand</h3>
               <p className="mt-1 max-w-2xl text-xs leading-5 text-[#8c8080]">
                 Compare equipment demand by group using the selected equipment and available request history.
               </p>
             </div>
-          </div>
+          </div><div className="p-4">
           <CompactFilterPanel
-            className="mb-4"
+            className="border-0 bg-transparent p-0 shadow-none"
             primary={
               <FilterItem label="Group by" className="min-w-0">
                 <DropdownField
@@ -681,7 +681,7 @@ export function EquipmentReportView({
               </FilterItem>
             }
             advanced={
-              <div className="grid gap-2.5 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2.5">
                 <FilterItem label="Submitted through" className="min-w-0">
                   <DropdownField
                     value={demandSource}
@@ -752,7 +752,8 @@ export function EquipmentReportView({
                 </div>
               ) : undefined
             }
-          />
+          /></div></section>
+          <div className="min-w-0 xl:col-span-3">
           <RequestDemandPanel
             title={`Demand by ${demandGroupLabels[demandGroupBy].toLowerCase()}`}
             description={demandGroupDescriptions[demandGroupBy]}
@@ -767,12 +768,11 @@ export function EquipmentReportView({
                   : 'No equipment records are available.'
             }
           />
+          </div>
         </div>
 
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-
-        <div id="equipment-request-ranking" className="scroll-mt-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm lg:p-5">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div id="equipment-request-ranking" className="scroll-mt-6 overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9a7770]">Detailed log</p>
               <h3 className="mt-1 text-base font-semibold text-[#241f20]">
@@ -783,7 +783,7 @@ export function EquipmentReportView({
               {rows.length} {rows.length === 1 ? 'record' : 'records'} shown
             </p>
           </div>
-          <TableContainer className="rounded-xl border border-[#e5e7eb]">
+          <div className="p-4 lg:p-5"><TableContainer className="rounded-xl border border-[#e5e7eb]">
             <Table className={`equipment-mobile-report ${hasRange ? 'equipment-range-report' : 'equipment-stock-report'} report-print-table ${hasRange ? 'min-w-[1100px]' : 'min-w-[900px]'}`}>
               <TableHead>
                 <TableHeaderCell>Equipment</TableHeaderCell>
@@ -870,6 +870,7 @@ export function EquipmentReportView({
               setEquipmentPage(1);
             }}
           />
+          </div>
         </div>
       </div>
     </FormalReportFrame>
