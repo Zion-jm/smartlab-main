@@ -17,18 +17,27 @@ const ACTION_LABELS: Record<string, string> = {
   STATUS_CHANGED: 'Status changed',
   DELETE: 'Deleted',
   APPROVE: 'Approved',
-  REJECT: 'Rejected',
+  REJECT: 'Declined',
   BORROW: 'Marked borrowed',
   RETURN: 'Marked returned',
   CANCEL: 'Cancelled',
   ACTIVATE: 'Activated',
+  RESTORE: 'Restored',
+  RETIRE: 'Retired',
+  SESSIONS_REVOKED: 'Sessions revoked',
+  REACTIVATION_REQUESTED: 'Reactivation requested',
+  PASSWORD_CHANGED: 'Password changed',
+  PASSWORD_RESET_REQUESTED: 'Password reset requested',
+  PASSWORD_RESET_COMPLETED: 'Password reset completed',
+  ADJUST: 'Adjusted',
+  ADJUSTMENT_RESPONSE: 'Adjustment response recorded',
 };
 
 const ENTITY_LABELS: Record<string, string> = {
   User: 'User',
   Equipment: 'Equipment',
   LabSchedule: 'Lab schedule',
-  BorrowRequest: 'Borrow request',
+  BorrowRequest: 'Request / reservation',
   AcademicDirectory: 'Academic directory',
   AcademicPeriod: 'Academic period',
   StudentAcademicRecord: 'Student academic record',
@@ -46,19 +55,6 @@ const parseDateFilter = (value: unknown, endOfDay = false): Date | undefined => 
   if (Number.isNaN(date.getTime())) throw new ValidationError('Invalid date filter.');
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return endOfDay ? manilaDayBounds(date).end : manilaDayBounds(date).start;
   return date;
-};
-
-const readableSummary = (action: string, entityType: string, details: unknown, entityId: string): string => {
-  if (details && typeof details === 'object' && !Array.isArray(details)) {
-    const record = details as Record<string, unknown>;
-    const requestCode = entityType === 'BorrowRequest' ? 'REQ-' + entityId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6).padStart(6, '0') : undefined;
-    const label = [record.referenceCode ?? requestCode, record.context ?? record.label ?? record.name ?? record.reference].filter(value => typeof value === 'string' && value.trim()).join(' · ');
-    if (typeof label === 'string' && label.trim()) {
-      return `${ACTION_LABELS[action] ?? action} ${ENTITY_LABELS[entityType] ?? entityType}: ${label}`;
-    }
-  }
-  const reference = entityType === 'BorrowRequest' ? 'REQ-' + entityId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6).padStart(6, '0') : entityId;
-  return `${ACTION_LABELS[action] ?? action} ${ENTITY_LABELS[entityType] ?? entityType}: ${reference}`;
 };
 
 router.get(
@@ -121,9 +117,47 @@ router.get(
         }),
       ]);
 
+      const userIds = logs.filter(log => log.entityType === 'User').map(log => log.entityId);
+      const requestIds = logs.filter(log => log.entityType === 'BorrowRequest').map(log => log.entityId);
+      const scheduleIds = logs.filter(log => log.entityType === 'LabSchedule').map(log => log.entityId);
+      const [referencedUsers, requests, schedules] = await Promise.all([
+        userIds.length ? prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, firstName: true, lastName: true, email: true } }) : [],
+        requestIds.length ? prisma.borrowRequest.findMany({ where: { id: { in: requestIds } }, select: { id: true, requestType: true } }) : [],
+        scheduleIds.length ? prisma.labSchedule.findMany({ where: { id: { in: scheduleIds } }, select: {
+          id: true, scheduleDate: true, dayOfWeek: true, timeStart: true, timeEnd: true,
+          room: { select: { roomNumber: true, name: true } },
+        } }) : [],
+      ]);
+      const usersById = new Map(referencedUsers.map(user => [user.id, user]));
+      const requestsById = new Map(requests.map(request => [request.id, request]));
+      const schedulesById = new Map(schedules.map(schedule => [schedule.id, schedule]));
+      const formatDate = (date: Date) => date.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric' });
+      const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' });
+
       res.json({
         logs: logs.map((log) => {
-          const details = safeAuditDetails(log.details);
+          const storedDetails = safeAuditDetails(log.details);
+          const details = storedDetails && typeof storedDetails === 'object' && !Array.isArray(storedDetails)
+            ? storedDetails as Record<string, unknown>
+            : {};
+          const referencedUser = usersById.get(log.entityId);
+          const request = requestsById.get(log.entityId);
+          const schedule = schedulesById.get(log.entityId);
+          const userReference = referencedUser
+            ? [referencedUser.firstName, referencedUser.lastName].filter(Boolean).join(' ') || referencedUser.email
+            : undefined;
+          const scheduleReference = schedule ? [
+            [schedule.room?.roomNumber, schedule.room?.name].filter(Boolean).join(' – '),
+            schedule.scheduleDate ? formatDate(schedule.scheduleDate) : ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][schedule.dayOfWeek],
+            `${formatTime(schedule.timeStart)}–${formatTime(schedule.timeEnd)}`,
+          ].filter(Boolean).join(' · ') : undefined;
+          const entityLabel = log.entityType === 'BorrowRequest'
+            ? request?.requestType === 'LABORATORY' || details.requestType === 'LABORATORY' ? 'Lab reservation' : 'Equipment request'
+            : ENTITY_LABELS[log.entityType] ?? log.entityType;
+          const recordReference = log.entityType === 'BorrowRequest'
+            ? 'REQ-' + log.entityId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6).padStart(6, '0')
+            : userReference || scheduleReference || (typeof details.label === 'string' ? details.label : log.entityId);
+          const enrichedDetails = scheduleReference && !details.context ? { ...details, context: scheduleReference } : details;
           return {
             id: log.id,
             actorUserId: log.actorUserId,
@@ -135,11 +169,11 @@ router.get(
             action: log.action,
             actionLabel: ACTION_LABELS[log.action] ?? log.action,
             entityType: log.entityType,
-            entityLabel: ENTITY_LABELS[log.entityType] ?? log.entityType,
+            entityLabel,
             entityId: log.entityId,
-            recordReference: log.entityType === 'BorrowRequest' ? 'REQ-' + log.entityId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6).padStart(6, '0') : (details && typeof details === 'object' && 'label' in details && typeof details.label === 'string' ? details.label : log.entityId),
-            details,
-            summary: readableSummary(log.action, log.entityType, details, log.entityId),
+            recordReference,
+            details: enrichedDetails,
+            summary: `${ACTION_LABELS[log.action] ?? log.action} ${entityLabel}: ${recordReference}${scheduleReference && recordReference !== scheduleReference ? ` · ${scheduleReference}` : ''}`,
             createdAt: log.createdAt,
           };
         }),

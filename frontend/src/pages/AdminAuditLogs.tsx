@@ -26,7 +26,7 @@ const ACTION_OPTIONS = [
   ['RETIRE', 'Retired'],
   ['RESTORE', 'Restored'],
   ['APPROVE', 'Approved'],
-  ['REJECT', 'Rejected'],
+  ['REJECT', 'Declined'],
   ['BORROW', 'Marked borrowed'],
   ['RETURN', 'Marked returned'],
   ['CANCEL', 'Cancelled'],
@@ -38,7 +38,7 @@ const ENTITY_OPTIONS = [
   ['User', 'User'],
   ['Equipment', 'Equipment'],
   ['LabSchedule', 'Lab schedule'],
-  ['BorrowRequest', 'Borrow request'],
+  ['BorrowRequest', 'Request / reservation'],
   ['AcademicDirectory', 'Academic directory'],
   ['AcademicPeriod', 'Academic period'],
   ['StudentAcademicRecord', 'Student academic record'],
@@ -330,7 +330,7 @@ export default function AdminAuditLogs() {
           { key: 'actor', label: 'Actor', section: 'Activity', formatter: () => [selectedLog.actor?.name || 'Unknown', selectedLog.actor?.email || 'No email'].join(' · ') },
           { key: 'createdAt', label: 'Date / time', section: 'Activity', formatter: () => formatDateTime(selectedLog.createdAt) },
           { key: 'action', label: 'Action', section: 'Activity', formatter: () => selectedLog.actionLabel || selectedLog.action },
-          { key: 'entityId', label: 'Entity reference', section: 'Activity', formatter: () => [selectedLog.entityLabel, selectedLog.entityId].join(' · ') },
+          { key: 'entityId', label: 'Entity reference', section: 'Activity', formatter: () => [selectedLog.entityLabel, selectedLog.recordReference || selectedLog.entityId].join(' · ') },
           { key: 'details', label: 'Recorded changes', section: 'Details', fullWidth: true, formatter: () => <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg bg-[#f8f5f5] p-4 text-xs leading-relaxed" data-testid="value-audit-log-details">{readableDetails(selectedLog.details)}</pre> },
         ]}
       />}

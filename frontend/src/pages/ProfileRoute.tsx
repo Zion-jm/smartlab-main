@@ -35,12 +35,12 @@ function RoleShell({ children }: { children: ReactNode }) {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const role = user?.role;
-  const [periodLabel, setPeriodLabel] = useState('Loading academic period…');
+  const [periodLabel, setPeriodLabel] = useState<string | null>(null);
   useEffect(() => {
     let mounted = true;
     academicPeriodApi.get().then(response => {
-      if (mounted) setPeriodLabel(response.data?.current?.label || 'No active academic period');
-    }).catch(() => { if (mounted) setPeriodLabel('Academic period unavailable'); });
+      if (mounted) setPeriodLabel(response.data?.current?.label || null);
+    }).catch(() => { if (mounted) setPeriodLabel(null); });
     return () => { mounted = false; };
   }, []);
 
@@ -70,11 +70,11 @@ function RoleShell({ children }: { children: ReactNode }) {
       navItems={navItems}
       portalLabel={role === 'FACULTY' ? 'Faculty Portal' : 'Student Portal'}
       portalSubLabel="smartlab."
-      sidebarExtras={
+      sidebarExtras={periodLabel ? (
         <div className="mx-4 mt-4 rounded-lg border border-[rgba(255,184,28,0.3)] bg-[#fef3e2] p-3">
           <p className="text-xs font-medium text-[#9a7b4f]">{periodLabel}</p>
         </div>
-      }
+      ) : undefined}
     >
       {children}
     </PortalLayout>

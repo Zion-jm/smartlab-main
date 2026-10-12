@@ -115,8 +115,8 @@ export function MyRequestsPreview({
                     <p className="text-xs text-[#9ca3af]">{request.time}</p>
                   </> },
 { id: '4', header: 'Status', cell: request => <>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusStyles[request.status]}`}>
-                      {request.status}
+                    <span className={`inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusStyles[request.status]}`}>
+                      {statusLabel(request.status)}
                     </span>
                   </> },
 { id: '5', header: 'Actions', action: true, cell: request => <>

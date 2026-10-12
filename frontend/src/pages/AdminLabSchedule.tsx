@@ -636,7 +636,7 @@ export default function AdminLabSchedule() {
         }} />
       )}
 
-      {chartExpanded && <ExpandedChartDialog schedules={filteredSchedules} computerLabNames={computerLabNames} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onSelectSchedule={id => { setChartExpanded(false); handleViewSchedule(id); }} onClose={() => setChartExpanded(false)} />}
+      {chartExpanded && <ExpandedChartDialog schedules={filteredSchedules} computerLabNames={computerLabNames} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onSelectSchedule={handleViewSchedule} onClose={() => setChartExpanded(false)} />}
     </AdminLayout>
   );
 }

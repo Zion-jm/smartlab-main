@@ -63,24 +63,32 @@ const auditDetailsWithContext = async (client: Prisma.TransactionClient, input: 
   const details = input.details && typeof input.details === 'object' && !Array.isArray(input.details) ? input.details as Record<string, unknown> : {};
   if (input.entityType === 'BorrowRequest') {
     const request = await client.borrowRequest.findUnique({ where: { id: input.entityId }, select: {
-      dateNeeded: true, location: true, usageLocation: true,
+      requestType: true, dateNeeded: true, location: true, usageLocation: true,
       requester: { select: { firstName: true, lastName: true } },
       room: { select: { roomNumber: true, name: true } }, usageRoom: { select: { roomNumber: true, name: true } },
     } });
     const room = request?.room ?? request?.usageRoom;
     return { ...details, referenceCode: 'REQ-' + input.entityId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6).padStart(6, '0'),
+      ...(request ? { requestType: request.requestType } : {}),
       ...(request ? { context: [ [room?.roomNumber, room?.name].filter(Boolean).join(' – ') || request.usageLocation || request.location,
         request.dateNeeded.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric' }),
         [request.requester.firstName, request.requester.lastName].filter(Boolean).join(' ') ].filter(Boolean).join(' · ') } : {}) };
   }
   if (input.entityType === 'LabSchedule') {
     const schedule = await client.labSchedule.findUnique({ where: { id: input.entityId }, select: {
-      scheduleDate: true, dayOfWeek: true, room: { select: { roomNumber: true, name: true } },
+      scheduleDate: true, dayOfWeek: true, timeStart: true, timeEnd: true, room: { select: { roomNumber: true, name: true } },
       faculty: { select: { user: { select: { firstName: true, lastName: true } } } },
     } });
     if (schedule) return { ...details, context: [ [schedule.room?.roomNumber, schedule.room?.name].filter(Boolean).join(' – '),
       schedule.scheduleDate ? schedule.scheduleDate.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric' }) : ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][schedule.dayOfWeek],
+      `${schedule.timeStart.toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' })}–${schedule.timeEnd.toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' })}`,
       [schedule.faculty.user.firstName, schedule.faculty.user.lastName].filter(Boolean).join(' ') ].filter(Boolean).join(' · ') };
+  }
+  if (input.entityType === 'User') {
+    const user = await client.user.findUnique({ where: { id: input.entityId }, select: {
+      firstName: true, lastName: true, email: true,
+    } });
+    if (user) return { ...details, label: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email };
   }
   return input.details;
 };

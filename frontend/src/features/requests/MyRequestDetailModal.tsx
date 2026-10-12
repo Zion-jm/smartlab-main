@@ -14,7 +14,7 @@ export default function MyRequestDetailModal({ request, onClose, onReview, reque
     <div className="space-y-5 text-sm text-[#514343]">
       {requester && <section className="rounded-xl bg-[#fff8f3] p-4"><p className="text-xs text-[#786565]">Requested by</p><p className="mt-1 font-semibold text-[#321d1d]">{requester}</p></section>}
       <section aria-label="Request summary"><p className="mb-2 text-xs font-semibold text-[#800000]">{source.requestType === 'EQUIPMENT' ? 'Equipment borrowing · intended usage location (not a room reservation)' : source.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Request type unavailable'}</p>
-        <span className="inline-flex rounded-full bg-[#f5eae5] px-3 py-1 text-xs font-semibold text-[#800000]">{status}</span>
+        <span className="inline-flex whitespace-nowrap rounded-full bg-[#f5eae5] px-3 py-1 text-xs font-semibold text-[#800000]">{status}</span>
         <h3 className="mt-4 flex items-start gap-2 text-lg font-semibold text-[#321d1d]"><MapPin size={20} className="mt-1 shrink-0 text-[#800000]" aria-hidden="true" />{request.room}</h3>
         <p className="mt-3 flex items-start gap-2"><CalendarDays size={17} className="shrink-0 text-[#9d6a4e]" aria-hidden="true" />{request.dateOfUse}</p>
         <p className="mt-2 flex items-start gap-2"><Clock size={17} className="shrink-0 text-[#9d6a4e]" aria-hidden="true" />{request.time}</p>

@@ -365,7 +365,7 @@ const renderDocument = (
       td { background: #fff; font-size: 7pt; }
       .title-row { height: 8mm; font-family: "Times New Roman", Georgia, serif; font-size: 12pt; line-height: 1; }
       .page-footer { display: grid; grid-template-rows: 24mm 27mm; width: 100%; height: 51mm; min-height: 51mm; max-height: 51mm; overflow: hidden; }
-      .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40mm; margin: 0 5mm 0 15mm; padding-top: 0; font-size: 9pt; }
+      .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 65mm)); justify-content: start; gap: 25mm; margin: 0 5mm 0 15mm; padding-top: 0; font-size: 9pt; }
       .signatures div { display: flex; flex-direction: column; }
       .signatures em { margin-top: 9mm; font-size: 8pt; font-style: italic; font-weight: 700; }
       .institution-footer { display: flex; align-items: flex-start; justify-content: space-between; gap: 5mm; position: relative; width: 100%; font-size: 7pt; line-height: 1.2; }
@@ -702,7 +702,7 @@ const renderScheduleDocument = (
       td { background: #fff; font-size: 7pt; }
       .title-row { height: 8mm; font-family: "Times New Roman", Georgia, serif; font-size: 12pt; line-height: 1; }
       .page-footer { display: grid; grid-template-rows: 24mm 27mm; width: 100%; height: 51mm; min-height: 51mm; max-height: 51mm; overflow: hidden; }
-      .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40mm; margin: 0 5mm 0 15mm; padding-top: 0; font-size: 9pt; }
+      .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 65mm)); justify-content: start; gap: 25mm; margin: 0 5mm 0 15mm; padding-top: 0; font-size: 9pt; }
       .signatures div { display: flex; flex-direction: column; }
       .signatures em { margin-top: 9mm; font-size: 8pt; font-style: italic; font-weight: 700; }
       .institution-footer { display: flex; align-items: flex-start; justify-content: space-between; gap: 5mm; position: relative; width: 100%; font-size: 7pt; line-height: 1.2; }
@@ -782,7 +782,7 @@ const renderScheduleAnalysisDocument = (
       td { background: #fff; font-size: 7pt; }
       .title-row { height: 8mm; font-family: "Times New Roman", Georgia, serif; font-size: 12pt; line-height: 1; }
       .page-footer { display: grid; grid-template-rows: 24mm 27mm; width: 100%; height: 51mm; min-height: 51mm; max-height: 51mm; overflow: hidden; }
-      .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40mm; margin: 0 5mm 0 15mm; padding-top: 0; font-size: 9pt; }
+      .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 65mm)); justify-content: start; gap: 25mm; margin: 0 5mm 0 15mm; padding-top: 0; font-size: 9pt; }
       .signatures div { display: flex; flex-direction: column; }
       .signatures em { margin-top: 9mm; font-size: 8pt; font-style: italic; font-weight: 700; }
       .institution-footer { display: flex; align-items: flex-start; justify-content: space-between; gap: 5mm; position: relative; width: 100%; font-size: 7pt; line-height: 1.2; }
@@ -1123,7 +1123,7 @@ const renderDemandDocument = (
       td { background: #fff; font-size: 7pt; }
       .title-row { height: 8mm; font-family: "Times New Roman", Georgia, serif; font-size: 12pt; line-height: 1; }
       .page-footer { display: grid; grid-template-rows: 24mm 27mm; width: 100%; height: 51mm; min-height: 51mm; max-height: 51mm; overflow: hidden; }
-      .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40mm; margin: 0 5mm 0 15mm; padding-top: 0; font-size: 9pt; }
+      .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 65mm)); justify-content: start; gap: 25mm; margin: 0 5mm 0 15mm; padding-top: 0; font-size: 9pt; }
       .signatures div { display: flex; flex-direction: column; }
       .signatures em { margin-top: 9mm; font-size: 8pt; font-style: italic; font-weight: 700; }
       .institution-footer { display: flex; align-items: flex-start; justify-content: space-between; gap: 5mm; position: relative; width: 100%; font-size: 7pt; line-height: 1.2; }
@@ -1591,7 +1591,7 @@ const renderEquipmentDocument = (
       td { background: #fff; font-size: 7pt; }
       .title-row { height: 8mm; font-family: "Times New Roman", Georgia, serif; font-size: 12pt; line-height: 1; }
       .page-footer { display: grid; grid-template-rows: 24mm 27mm; width: 100%; height: 51mm; min-height: 51mm; max-height: 51mm; overflow: hidden; }
-      .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40mm; margin: 0 5mm 0 15mm; padding-top: 0; font-size: 9pt; }
+      .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 65mm)); justify-content: start; gap: 25mm; margin: 0 5mm 0 15mm; padding-top: 0; font-size: 9pt; }
       .signatures div { display: flex; flex-direction: column; }
       .signatures em { margin-top: 9mm; font-size: 8pt; font-style: italic; font-weight: 700; }
       .institution-footer { display: flex; align-items: flex-start; justify-content: space-between; gap: 5mm; position: relative; width: 100%; font-size: 7pt; line-height: 1.2; }
