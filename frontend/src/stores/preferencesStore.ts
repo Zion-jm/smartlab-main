@@ -7,7 +7,7 @@ export type UserPreferences = {
 };
 
 const defaultPreferences: UserPreferences = {
-  ribbonControlsHiddenByDefault: false,
+  ribbonControlsHiddenByDefault: true,
   sidebarCollapsedByDefault: false,
 };
 

@@ -537,7 +537,6 @@ export default function AdminLabSchedule() {
           className="mobile-schedule-ribbon mb-1"
           filtersActiveCount={appliedFilters.length}
           defaultFiltersOpen={appliedFilters.length > 0}
-          defaultRibbonExpanded={false}
           compactFilters
           ribbonSummary={scheduleRibbonSummary}
           bottomControl={advancedFilterToggle}

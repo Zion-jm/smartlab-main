@@ -10,7 +10,6 @@ type ControlRibbonProps = {
   actions?: ReactNode;
   bottomControl?: ReactNode;
   reserveBottomClearance?: boolean;
-  defaultExpanded?: boolean;
   label?: string;
   className?: string;
   sticky?: boolean;
@@ -26,7 +25,6 @@ export default function ControlRibbon({
   actions,
   bottomControl,
   reserveBottomClearance = false,
-  defaultExpanded,
   label = 'Page controls',
   className = '',
   sticky = false,
@@ -45,11 +43,9 @@ export default function ControlRibbon({
     return () => { observer.disconnect(); setInset(0); };
   }, [setInset]);
   const userId = useAuthStore((state) => state.user?.id ?? 'anonymous');
-  const role = useAuthStore((state) => state.user?.role);
-  const setPreference = usePreferencesStore((state) => state.setPreference);
   const preferencesByUser = usePreferencesStore((state) => state.preferencesByUser);
   const ribbonExpandedByDefault = !getUserPreferences(preferencesByUser, userId).ribbonControlsHiddenByDefault;
-  const [expanded, setExpanded] = useState(defaultExpanded ?? ribbonExpandedByDefault);
+  const [expanded, setExpanded] = useState(ribbonExpandedByDefault);
   const [trackedLastUpdated, setTrackedLastUpdated] = useState<Date | null>(null);
   const wasRefreshing = useRef(refreshing);
   const id = useId().replace(/:/g, '');
@@ -113,13 +109,7 @@ export default function ControlRibbon({
             type="button"
             aria-expanded={expanded}
             aria-controls={contentId}
-            onClick={() => {
-              const next = !expanded;
-              setExpanded(next);
-              if (role === 'STUDENT' || role === 'FACULTY') {
-                setPreference(userId, 'ribbonControlsHiddenByDefault', !next);
-              }
-                }}
+            onClick={() => setExpanded((current) => !current)}
                 className="page-control-ribbon__toggle"
           >
             <span>{expanded ? 'Hide controls' : 'Show controls'}</span>
