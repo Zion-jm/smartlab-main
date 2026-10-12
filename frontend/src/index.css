@@ -924,7 +924,7 @@
 .page-control-ribbon__actions button.schedule-add-button { white-space: nowrap; overflow-wrap: normal; flex-shrink: 0; }
 
 @page schedule-chart {
-  size: A4 portrait;
+  size: 8.5in 13in;
   margin: 10mm;
 }
 
@@ -940,7 +940,7 @@
     page: schedule-chart;
     position: absolute;
     inset: 0 auto auto 0;
-    width: 190mm;
+    width: 195.9mm;
     padding: 0 !important;
     color: #321d1d;
     background: #fff;
@@ -970,6 +970,6 @@
   }
   body.printing-schedule-chart .schedule-chart-time-axis,
   body.printing-schedule-chart .schedule-chart-grid {
-    height: 205mm !important;
+    height: 260mm !important;
   }
 }
