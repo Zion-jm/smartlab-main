@@ -518,7 +518,7 @@ export default function AdminDashboard() {
             <StatsCard icon={AlertTriangleIcon} iconGradient="bg-[#b91c1c]" title="Overdue returns" value={stats.requests.overdue} isRed={stats.requests.overdue > 0} />
             <StatsCard icon={PackageIcon} iconGradient="bg-[#15803d]" title="Equipment utilization" value={`${stats.equipment.utilizationRate}%`} />
           </div>
-          <div className="mt-5 grid gap-4 border-t border-[#f1e3df] pt-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div className="mt-5 grid gap-4 border-t border-[#f1e3df] pt-5 lg:grid-cols-[minmax(0,1fr)_290px] lg:items-stretch">
             <div>
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
@@ -544,17 +544,23 @@ export default function AdminDashboard() {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 rounded-xl bg-[#faf7f5] p-3 lg:min-w-[270px]">
-              {[
-                { label: 'Today', value: stats.requests.todayReserved },
-                { label: 'Labs today', value: stats.schedules.today },
-                { label: 'Active now', value: stats.schedules.activeNow },
-              ].map((item) => (
-                <div key={item.label} className="text-center">
-                  <p className="text-xl font-bold text-[#321d1d]">{item.value}</p>
-                  <p className="mt-1 text-[10px] leading-tight text-[#786565]">{item.label}</p>
-                </div>
-              ))}
+            <div className="flex h-full flex-col justify-center rounded-xl border border-[#f1e3df] bg-[#faf7f5] p-4">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#800000] shadow-sm"><ClockIcon size={16} /></span>
+                <div><h3 className="text-xs font-semibold text-[#321d1d]">Today’s activity</h3><p className="mt-0.5 text-[10px] text-[#8b7771]">Live operational snapshot</p></div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Reservations', value: stats.requests.todayReserved },
+                  { label: 'Labs today', value: stats.schedules.today },
+                  { label: 'Active now', value: stats.schedules.activeNow },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-lg bg-white px-2 py-3 text-center shadow-sm">
+                    <p className="text-xl font-bold text-[#321d1d]">{item.value}</p>
+                    <p className="mt-1 text-[10px] leading-tight text-[#786565]">{item.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </Card>
