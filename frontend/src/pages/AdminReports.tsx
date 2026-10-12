@@ -452,10 +452,6 @@ export default function AdminReports() {
     setSearchParams(next, { replace: true });
 
   };
-  const returnToOverview = () => {
-    setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete('reportBreakdown'); next.delete('reportTab'); return next; }, { replace: true });
-
-  };
   const reportTabLabel = reportTabs.find((tab) => tab.id === activeTab)?.label ?? 'Overview';
   const reportRibbonSummary = [
     `Date range: ${reportRangeLabel}`,
@@ -539,11 +535,10 @@ export default function AdminReports() {
           />
         </div>
 
-        {activeTab !== 'overview' && (
+        {activeTab !== 'overview' && searchParams.has('reportBreakdown') && (
           <div className="flex flex-wrap items-center gap-3 print:hidden">
-            <button type="button" onClick={returnToOverview} className="min-h-10 rounded-lg border border-[#d8b5b0] bg-white px-3 text-xs font-semibold text-[#800000] hover:bg-[#fff0ed]">← Back to overview</button>
             {searchParams.get('reportBreakdown') === '4' && activeTab === 'equipment' && <button type="button" onClick={() => document.getElementById('equipment-request-ranking')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="min-h-10 rounded-lg border border-[#d8b5b0] bg-white px-3 text-xs font-semibold text-[#800000] hover:bg-[#fff0ed]">Jump to equipment ranking ↓</button>}
-            {searchParams.has('reportBreakdown') && <p className="text-xs text-[#756969]">Overview breakdown · All statuses initially selected. Unassigned groups may appear here but are excluded from the overview winners.</p>}
+            <p className="text-xs text-[#756969]">Overview breakdown · All statuses initially selected. Unassigned groups may appear here but are excluded from the overview winners.</p>
           </div>
         )}
 
