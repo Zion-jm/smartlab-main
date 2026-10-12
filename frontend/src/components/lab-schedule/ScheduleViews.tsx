@@ -92,16 +92,6 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
     return schedules.filter((schedule) => schedule.isComputerLab === true && schedule.roomLabel === selectedLab);
   }, [schedules, selectedLab]);
 
-  const summaryStats = useMemo(() => {
-    const labsSet = new Set(schedules.map((schedule) => schedule.roomLabel).filter(Boolean));
-    const facultySet = new Set(schedules.map((schedule) => schedule.facultyName).filter(Boolean));
-    return {
-      total: schedules.length,
-      labs: labsSet.size,
-      faculty: facultySet.size,
-    };
-  }, [schedules]);
-
   const chartHeightPx = ((chartMinuteEnd - chartMinuteStart) / chartSlotMinutes) * chartRowHeight;
 
   const columnData = chartDayOrder.map((dayIndex) => {
@@ -133,22 +123,7 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
   };
 
   return (
-    <div className="px-4 lg:px-6 py-6 space-y-6">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <div className="row-span-2 flex min-w-0 flex-col justify-center rounded-2xl border border-[#f1f5f9] bg-[#f9fafb] p-4 md:row-span-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#9ca3af]">Total Schedules</p>
-          <p className="text-3xl md:text-2xl font-bold text-[#111827]">{summaryStats.total}</p>
-        </div>
-        <div className="rounded-2xl border border-[#f1f5f9] bg-[#f9fafb] p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#9ca3af]">Active Labs</p>
-          <p className="text-2xl font-bold text-[#111827]">{summaryStats.labs}</p>
-        </div>
-        <div className="rounded-2xl border border-[#f1f5f9] bg-[#f9fafb] p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#9ca3af]">Faculty Assigned</p>
-          <p className="text-2xl font-bold text-[#111827]">{summaryStats.faculty}</p>
-        </div>
-      </div>
-
+    <div className="p-4 lg:p-5">
       <div className="rounded-2xl border border-[#e5e7eb]">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#f3f4f6] px-4 py-4">
           <div>
@@ -326,8 +301,8 @@ export function CalendarView({ schedules, dayLabels = dayNames }: CalendarViewPr
   const closeModal = () => setSelectedDay(null);
 
   return (
-    <div className="px-4 lg:px-6 py-6 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3">
+    <div className="space-y-4 p-4 lg:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#eadfd9] bg-[#fffdfb] px-4 py-3">
         <div>
           <h3 className="text-base font-semibold text-[#111827]">{getMonthLabel(currentMonth)}</h3>
           <p className="text-xs text-[#6b7280]">Tap any day to review schedules.</p>
@@ -352,7 +327,7 @@ export function CalendarView({ schedules, dayLabels = dayNames }: CalendarViewPr
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#e5e7eb] bg-white">
+      <div className="overflow-hidden rounded-xl border border-[#eadfd9] bg-white">
         <div className="grid grid-cols-7 border-b border-[#f3f4f6] text-center text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">
           {dayLabels.map((label) => (
             <div key={label} className="py-2">

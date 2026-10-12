@@ -288,6 +288,13 @@ export default function AdminLabSchedule() {
 
   const paginatedSchedules = filteredSchedules;
 
+  const scheduleOverview = useMemo(() => ({
+    total: viewMode === 'table' ? serverTotal : filteredSchedules.length,
+    recurring: filteredSchedules.filter((schedule) => schedule.scheduleType === 'WEEKLY').length,
+    oneTime: filteredSchedules.filter((schedule) => schedule.scheduleType === 'ONE_TIME').length,
+    rooms: new Set(filteredSchedules.map((schedule) => schedule.roomLabel).filter(Boolean)).size,
+  }), [filteredSchedules, serverTotal, viewMode]);
+
   const pageReset1Inputs = [
     dateFrom,
     dateTo,
@@ -555,13 +562,31 @@ export default function AdminLabSchedule() {
           />
         </div>
 
+        <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
+          <div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
+            <h2 className="text-sm font-semibold text-[#321d1d]">Schedule overview</h2>
+            <p className="mt-1 text-xs text-[#786565]">Current results for the selected academic period and filters.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 p-4 lg:grid-cols-4 lg:p-5">
+            {[
+              { label: 'Schedule records', value: scheduleOverview.total, detail: 'Matching the current filters', tone: 'border-[#f1d4d4] bg-[#fff8f8] text-[#800000]' },
+              { label: 'Recurring', value: scheduleOverview.recurring, detail: viewMode === 'table' ? 'Visible on this page' : 'Weekly schedule entries', tone: 'border-blue-200 bg-blue-50 text-blue-800' },
+              { label: 'One-time', value: scheduleOverview.oneTime, detail: viewMode === 'table' ? 'Visible on this page' : 'Dated schedule entries', tone: 'border-amber-200 bg-amber-50 text-amber-900' },
+              { label: 'Rooms represented', value: scheduleOverview.rooms, detail: viewMode === 'table' ? 'Visible on this page' : 'Distinct rooms in view', tone: 'border-green-200 bg-green-50 text-green-800' },
+            ].map((metric) => <div key={metric.label} className={`rounded-xl border p-4 ${metric.tone}`}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] opacity-80">{metric.label}</p>
+              <p className="mt-2 text-2xl font-bold">{metric.value}</p>
+              <p className="mt-1 text-[11px] opacity-80">{metric.detail}</p>
+            </div>)}
+          </div>
+        </section>
+
         <div
           id="lab-schedule-tabpanel"
           role="tabpanel"
           aria-labelledby={getPageTabId('lab-schedule-tabpanel', viewMode)}
           className="space-y-4"
         >
-          <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
             {loading ? (
               <LoadingState message="Loading schedules…" />
             ) : error ? (
@@ -571,8 +596,9 @@ export default function AdminLabSchedule() {
                 <EmptyState title="No schedules found" description="No schedules match your filters yet." variant="minimal" />
               ) : (
                 <>
-                  <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-                    <div className="px-4 py-5 lg:px-6">
+                  <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
+                    <div className="flex items-center justify-between gap-4 border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><div><h2 className="text-sm font-semibold text-[#321d1d]">Schedule records</h2><p className="mt-1 text-xs text-[#786565]">Review sources, assignments, academic context, and schedule details.</p></div><span className="rounded-full bg-[#faf4f1] px-2.5 py-1 text-[10px] font-semibold text-[#800000]">{serverTotal} records</span></div>
+                    <div className="p-4 lg:p-5">
                     <ScheduleDataTable schedules={paginatedSchedules}
                       source={schedule=><>
                                 {schedule.borrowRequest?.id || schedule._meta?.isRequestDerived ? (
@@ -607,9 +633,9 @@ export default function AdminLabSchedule() {
                 </>
               )
             ) : viewMode === 'chart' ? (
-              <ChartView dayLabels={dayNames} showEmptyGrid schedules={filteredSchedules} computerLabNames={computerLabNames} onSelectSchedule={handleViewSchedule} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onExpand={() => setChartExpanded(true)} />
+              <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm"><div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Weekly utilization chart</h2><p className="mt-1 text-xs text-[#786565]">Compare laboratory occupancy across the week and open any block for its full schedule details.</p></div><ChartView dayLabels={dayNames} showEmptyGrid schedules={filteredSchedules} computerLabNames={computerLabNames} onSelectSchedule={handleViewSchedule} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onExpand={() => setChartExpanded(true)} /></section>
             ) : (
-              <CalendarView dayLabels={dayNames} schedules={filteredSchedules} />
+              <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm"><div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Monthly schedule calendar</h2><p className="mt-1 text-xs text-[#786565]">Review schedule density by date and select a day to inspect its sessions.</p></div><CalendarView dayLabels={dayNames} schedules={filteredSchedules} /></section>
             )}
         </div>
       </div>
