@@ -772,6 +772,7 @@ export function EquipmentReportView({
           </div>
         </div>
 
+        <div className="report-records-scope relative min-w-0">
         <div id="equipment-request-ranking" className="scroll-mt-6 overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
             <div>
@@ -861,6 +862,7 @@ export function EquipmentReportView({
               </TableBody>
             </Table>
           </TableContainer>
+          <div className="hidden md:block">
           <TablePagination
             currentPage={equipmentPage}
             pageSize={equipmentPageSize}
@@ -872,6 +874,20 @@ export function EquipmentReportView({
             }}
           />
           </div>
+          </div>
+        </div>
+          <nav aria-label="Equipment report page navigation" className="request-mobile-navigator sticky bottom-0 z-30 rounded-t-xl border border-[#ead7d3] bg-white/95 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(76,37,24,0.08)] backdrop-blur-sm md:hidden print:hidden">
+          <TablePagination
+            currentPage={equipmentPage}
+            pageSize={equipmentPageSize}
+            totalItems={rows.length}
+            onPageChange={setEquipmentPage}
+            onPageSizeChange={(size) => {
+              setEquipmentPageSize(size);
+              setEquipmentPage(1);
+            }}
+          />
+          </nav>
         </div>
       </div>
     </FormalReportFrame>

@@ -1231,3 +1231,10 @@
     box-shadow: none;
   }
 }
+
+@media screen and (max-width: 767px) {
+  .report-records-scope { width: 100%; min-width: 0; }
+  .report-records-scope .table-scroll-container { overflow: visible !important; min-width: 0 !important; width: 100%; }
+  .admin-workspace .report-records-scope .table-scroll-container > table { display: block; min-width: 0 !important; width: 100%; table-layout: fixed; }
+  .report-records-scope td > * { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+}
