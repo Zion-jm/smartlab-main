@@ -1253,3 +1253,41 @@
     box-shadow: none;
   }
 }
+
+/* Bleed mobile toolbars through nested page padding, within the scroll area. */
+@media screen and (max-width: 767px) {
+  .portal-content {
+    container-type: inline-size;
+    container-name: mobile-workspace;
+  }
+
+  .portal-content .page-control-ribbon:not(.page-control-ribbon .page-control-ribbon),
+  .portal-content .request-mobile-navigator,
+  .portal-content .schedule-mobile-navigator {
+    width: calc(100cqw + 1rem);
+    max-width: none;
+    margin-inline: calc(50% - 50cqw - .5rem);
+    border-inline: 0;
+    border-radius: 0;
+    background: #fff;
+  }
+
+  .portal-content .page-control-ribbon:not(.page-control-ribbon .page-control-ribbon) {
+    box-shadow: 0 4px 14px rgba(76, 37, 24, .08);
+  }
+
+  .portal-content .request-mobile-navigator,
+  .portal-content .schedule-mobile-navigator {
+    box-shadow: 0 -4px 16px rgba(76, 37, 24, .08);
+  }
+
+  .portal-content .request-mobile-navigator .table-pagination {
+    border-radius: 0;
+    padding-left: max(.75rem, env(safe-area-inset-left));
+    padding-right: max(.75rem, env(safe-area-inset-right));
+  }
+
+  .portal-content .schedule-mobile-navigator {
+    padding-inline: .75rem;
+  }
+}
