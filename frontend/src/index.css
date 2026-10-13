@@ -953,6 +953,40 @@
     padding-bottom: 4mm;
     border-bottom: 1px solid #c8aaa2;
   }
+  body.printing-schedule-chart .schedule-chart-institution-header {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    margin-bottom: 4mm;
+    color: #111;
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.02;
+  }
+  body.printing-schedule-chart .schedule-chart-institution-header img {
+    width: 22mm;
+    height: 22mm;
+    flex: 0 0 22mm;
+    object-fit: contain;
+  }
+  body.printing-schedule-chart .schedule-chart-institution-header p {
+    margin: 0;
+    font-size: 9pt;
+    font-variant: small-caps;
+  }
+  body.printing-schedule-chart .schedule-chart-institution-header p:nth-child(2) {
+    font-size: 13pt;
+  }
+  body.printing-schedule-chart .schedule-chart-institution-header p:last-child {
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  body.printing-schedule-chart .schedule-chart-print-title {
+    margin: 0;
+    font-size: 16pt;
+    font-weight: 700;
+    color: #321d1d;
+  }
   body.printing-schedule-chart .schedule-chart-controls {
     display: none !important;
   }
@@ -970,6 +1004,6 @@
   }
   body.printing-schedule-chart .schedule-chart-time-axis,
   body.printing-schedule-chart .schedule-chart-grid {
-    height: 235mm !important;
+    height: 215mm !important;
   }
 }

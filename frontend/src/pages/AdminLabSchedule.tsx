@@ -554,13 +554,20 @@ export default function AdminLabSchedule() {
       @page { size: 8.5in 13in !important; margin: 10mm !important; }
       html, body { width: 195.9mm !important; min-width: 195.9mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
       .schedule-chart-print-area { page: auto !important; width: 195.9mm !important; }
-      .schedule-chart-time-axis, .schedule-chart-grid { height: 235mm !important; }
+      .schedule-chart-time-axis, .schedule-chart-grid { height: 215mm !important; }
     </style></head><body class="printing-schedule-chart">${chart.outerHTML}</body></html>`);
     printDocument.close();
 
     const finish = () => window.setTimeout(() => frame.remove(), 500);
     const print = async () => {
       await printDocument.fonts?.ready;
+      await Promise.all(Array.from(printDocument.images).map(image => {
+        if (image.complete) return Promise.resolve();
+        return new Promise<void>(resolve => {
+          image.addEventListener('load', () => resolve(), { once: true });
+          image.addEventListener('error', () => resolve(), { once: true });
+        });
+      }));
       frame.contentWindow?.addEventListener('afterprint', finish, { once: true });
       frame.contentWindow?.focus();
       frame.contentWindow?.print();

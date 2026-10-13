@@ -126,8 +126,16 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
   return (
     <div className="schedule-chart-print-area p-4 lg:p-5">
       <header className="schedule-chart-print-header hidden">
-        <p className="text-[10pt] font-bold uppercase tracking-[0.12em] text-[#800000]">SmartLab</p>
-        <h1 className="mt-1 text-[18pt] font-bold text-[#321d1d]">Weekly Laboratory Schedule</h1>
+        <div className="schedule-chart-institution-header">
+          <img src="/PUPLogo.png" alt="Polytechnic University of the Philippines" />
+          <div>
+            <p>Republic of the Philippines</p>
+            <p>Polytechnic University of the Philippines</p>
+            <p>Office of the Vice President for Academic Affairs</p>
+            <p>College of Computer and Information Sciences</p>
+          </div>
+        </div>
+        <h1 className="schedule-chart-print-title">Weekly Laboratory Schedule</h1>
         <p className="mt-1 text-[10pt] text-[#514343]">{selectedLab || 'Laboratory'} · {weekRangeLabel(selectedWeekStart)}</p>
       </header>
       <div className="rounded-2xl border border-[#e5e7eb]">
