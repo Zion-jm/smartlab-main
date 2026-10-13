@@ -1,5 +1,5 @@
 import ScheduleDetailModal from '../../components/lab-schedule/ScheduleDetailModal';
-import { IconActionButton } from '../../components/shared/TableActionButtons';
+import ScheduleAgenda from './ScheduleAgenda';
 import type { LabSchedule } from '../../types/labSchedule';
 import { useMemo, useState } from 'react';
 import type { SchedulesState } from './useRequestData';
@@ -8,13 +8,12 @@ import FilterToolbar from '../../components/FilterToolbar';
 import DateRangeFilter from '../../components/shared/DateRangeFilter';
 import ResetFiltersButton from '../../components/shared/ResetFiltersButton';
 import { CalendarView, ChartView } from '../../components/lab-schedule/ScheduleViews';
-import ScheduleDataTable from '../../components/lab-schedule/ScheduleDataTable';
-import { EmptyState, ErrorState, LoadingState } from '../../components/shared/EmptyState';
+import { ErrorState, LoadingState } from '../../components/shared/EmptyState';
 import PageTabGroup from '../../components/shared/PageTabGroup';
 import { getPageTabId } from '../../components/shared/pageTabGroupUtils';
 
 const scheduleViewTabs = [
-  { id: 'table', label: 'Table View', description: 'View schedules in a detailed table.' },
+  { id: 'agenda', label: 'Agenda', description: 'Browse sessions grouped by date.' },
   { id: 'chart', label: 'Chart View', description: 'View schedules on a weekly utilization chart.' },
   { id: 'calendar', label: 'Calendar', description: 'View schedules in a calendar layout.' },
 ] as const;
@@ -22,12 +21,10 @@ const scheduleViewTabs = [
 type ReadOnlyScheduleExplorerProps = SchedulesState & { computerLabNames: string[] };
 
 export default function ReadOnlyScheduleExplorer({ schedules, loading, error, dateFilter, setDateFilter, reload, computerLabNames }: ReadOnlyScheduleExplorerProps) {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
   const [selectedSchedule, setSelectedSchedule] = useState<LabSchedule | null>(null);
   const [search, setSearch] = useState('');
   const [range, setRange] = useState({from:'',to:''});
-  const [viewMode, setViewMode] = useState<'table' | 'chart' | 'calendar'>('table');
+  const [viewMode, setViewMode] = useState<'agenda' | 'chart' | 'calendar'>('agenda');
 
   const filteredSchedules = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -56,14 +53,6 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
         .includes(query)
     );
   }, [schedules, search, range, viewMode]);
-
-  const [previousResults, setPreviousResults] = useState(filteredSchedules);
-  if (previousResults !== filteredSchedules) {
-    setPreviousResults(filteredSchedules);
-    setPage(1);
-  }
-  const currentPage = Math.min(page, Math.max(1, Math.ceil(filteredSchedules.length / pageSize)));
-  const visibleSchedules = filteredSchedules.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <>
@@ -94,7 +83,7 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
           <PageTabGroup
             tabs={scheduleViewTabs}
             value={viewMode}
-            onChange={(value) => setViewMode(value as 'table' | 'chart' | 'calendar')}
+            onChange={(value) => setViewMode(value as 'agenda' | 'chart' | 'calendar')}
             ariaLabel="Schedule views"
             panelId="readonly-schedule-tabpanel"
           />
@@ -122,29 +111,17 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
       >
         <header className="flex items-center justify-between gap-4 border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
           <div>
-          <h3 className="text-sm font-semibold text-[#57322d]">{viewMode === 'table' ? 'Schedule records' : viewMode === 'chart' ? 'Weekly utilization chart' : 'Monthly schedule calendar'}</h3>
-          <p className="mt-1 text-xs text-[#786565]">{viewMode === 'table' ? 'Review assignments, academic context, and schedule details.' : viewMode === 'chart' ? 'Choose a lab and week. Select a block to view schedule details.' : 'Explore dates and select a session to view its details.'}</p>
+          <h3 className="text-sm font-semibold text-[#57322d]">{viewMode === 'agenda' ? 'Schedule agenda' : viewMode === 'chart' ? 'Weekly utilization chart' : 'Monthly schedule calendar'}</h3>
+          <p className="mt-1 text-xs text-[#786565]">{viewMode === 'agenda' ? 'Browse seven days at a time and select a session to review its details.' : viewMode === 'chart' ? 'Choose a lab and week. Select a block to view schedule details.' : 'Explore dates and select a session to view its details.'}</p>
           </div>
-          {viewMode === 'table' && !loading && !error && <span className="shrink-0 rounded-full bg-[#faf4f1] px-2.5 py-1 text-[10px] font-semibold text-[#800000]">{filteredSchedules.length} records</span>}
+          {viewMode === 'agenda' && !loading && !error && <span className="shrink-0 rounded-full bg-[#faf4f1] px-2.5 py-1 text-[10px] font-semibold text-[#800000]">{filteredSchedules.length} records</span>}
         </header>
         {loading ? (
           <LoadingState message="Loading schedules…" />
         ) : error ? (
           <ErrorState message={error} onRetry={reload} />
-        ) : filteredSchedules.length === 0 && viewMode === 'table' ? (
-          <EmptyState
-            title="No schedules found"
-            description="No schedules match your filters yet."
-            variant="minimal"
-          />
-        ) : viewMode === 'table' ? (
-          <div className="p-4 lg:p-5">
-            <ScheduleDataTable
-              schedules={visibleSchedules}
-              actions={schedule => <IconActionButton label={`View details for ${schedule.roomLabel}`} icon="view" onClick={() => setSelectedSchedule(schedule)} />}
-              pagination={{currentPage, pageSize, totalItems: filteredSchedules.length, onPageChange: setPage, onPageSizeChange: size => { setPageSize(size); setPage(1); }}}
-            />
-          </div>
+        ) : viewMode === 'agenda' ? (
+          <ScheduleAgenda key={`${range.from}:${range.to}`} schedules={filteredSchedules} range={range} onSelect={setSelectedSchedule} />
         ) : viewMode === 'chart' ? (
           <ChartView showEmptyGrid schedules={schedules} computerLabNames={computerLabNames} />
         ) : (
