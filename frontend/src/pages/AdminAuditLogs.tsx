@@ -311,6 +311,7 @@ export default function AdminAuditLogs() {
           </section>
         </div>
 
+        <div className="relative min-w-0">
         <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" data-testid="card-audit-log-history">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f3f4f6] px-5 py-4">
           <div className="flex items-center gap-2">
@@ -330,7 +331,6 @@ export default function AdminAuditLogs() {
                 <div className="space-y-3 p-4"><div><h3 className="break-words text-sm font-semibold text-[#321d1d]">{log.actor?.name || 'Unknown actor'}</h3><p className="mt-1 break-all text-xs text-[#786565]">{log.actor?.email || 'No email'}</p></div><p className="break-words text-sm leading-relaxed text-[#514343]">{log.summary || 'No summary available.'}</p><div className="rounded-xl bg-[#faf7f5] p-3"><p className="text-xs font-semibold text-[#786565]">{log.entityLabel || log.entityType}</p><p className="mt-1 break-all text-xs text-[#514343]">{log.recordReference || log.entityId}</p></div></div>
                 <footer className="border-t border-[#f1e6e3] p-3"><button type="button" onClick={() => setSelectedLog(log)} className="min-h-11 w-full rounded-xl border border-[#ead7d3] text-xs font-semibold text-[#800000]">View recorded changes</button></footer>
               </article>)}</div>
-              <TablePagination currentPage={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} onPageSizeChange={handlePageSizeChange} />
             </>}
           </div>
           <div className="hidden md:block"><DataTable embedded label="Administrator activity" rows={logs} rowKey={log=>log.id} rowTestId={log=>'row-audit-log-'+log.id}
@@ -353,6 +353,12 @@ export default function AdminAuditLogs() {
 
         </div>
         </section>
+        {!loading && !error && logs.length > 0 && (
+          <nav aria-label="Audit logs page navigation" className="request-mobile-navigator sticky bottom-0 z-30 rounded-t-xl border border-[#ead7d3] bg-white/95 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(76,37,24,0.08)] backdrop-blur-sm md:hidden">
+            <TablePagination currentPage={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} onPageSizeChange={handlePageSizeChange} />
+          </nav>
+        )}
+        </div>
 
       {selectedLog && <TableCellDetailModal
         testId="dialog-audit-log-details" closeTestId="button-close-audit-log-details" dismissTestId="button-dismiss-audit-log-details"
