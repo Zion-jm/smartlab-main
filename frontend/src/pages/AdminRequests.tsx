@@ -1,4 +1,4 @@
-import { CalendarDays, Clock, MapPin, UserRound } from 'lucide-react';
+import { ArrowRight, ClipboardList, CalendarDays, Clock, MapPin, UserRound } from 'lucide-react';
 import type { EquipmentAvailabilitySummary } from '../components/equipment/EquipmentConflictChecker';
 import { useRef } from 'react';
 import { useCallback, useEffect, useState } from 'react';
@@ -583,6 +583,16 @@ export default function AdminRequests() {
     }
   };
 
+  const queueStages = [
+    { status: 'PENDING' as const, label: 'Pending review', description: 'Review availability and approve or decline.', color: 'bg-amber-500', tone: 'border-amber-200 bg-amber-50 text-amber-900' },
+    { status: 'APPROVED' as const, label: 'Approved', description: 'Coordinate the reservation or equipment pickup.', color: 'bg-green-600', tone: 'border-green-200 bg-green-50 text-green-900' },
+    { status: 'BORROWED' as const, label: 'Borrowed', description: 'Follow up on equipment and record returns.', color: 'bg-blue-600', tone: 'border-blue-200 bg-blue-50 text-blue-900' },
+  ];
+  const visibleLaboratoryCount = requests.filter(request => request.requestType === 'LABORATORY').length;
+  const visibleEquipmentCount = requests.filter(request => request.requestType === 'EQUIPMENT').length;
+  const visibleOtherCount = requests.length - visibleLaboratoryCount - visibleEquipmentCount;
+  const summaryReady = !loading && !error;
+
   const tableContent = loading ? <LoadingState message="Loading requests…" /> : error ? <ErrorState message={error} onRetry={fetchRequests} /> : !requests.length ? (
         <EmptyState
           title="No requests found"
@@ -655,7 +665,53 @@ export default function AdminRequests() {
           refreshError={Boolean(error)}
         />
 
-        <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <div className="grid items-stretch gap-4 xl:grid-cols-3">
+          <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2" aria-labelledby="request-overview-title">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] bg-[#fffaf7] px-5 py-4">
+              <div className="flex items-center gap-3">
+                <span className="rounded-xl bg-[#800000] p-2.5 text-white"><ClipboardList size={20} aria-hidden="true" /></span>
+                <div><h2 id="request-overview-title" className="text-sm font-semibold text-[#321d1d]">Request overview</h2><p className="mt-1 text-xs text-[#786565]">Laboratory reservations and equipment borrowing</p></div>
+              </div>
+              <span className="rounded-full border border-[#ead7d3] bg-white px-3 py-1 text-xs font-semibold text-[#800000]">{summaryReady ? `${total} matching requests` : loading ? 'Updating...' : 'Summary unavailable'}</span>
+            </header>
+            <div className="p-5">
+              <p className="mb-3 text-xs text-[#786565]">Current page{summaryReady ? `: ${requests.length} requests` : ''} · counts follow your filters</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {queueStages.map(stage => <div key={stage.status} className={`rounded-xl border p-4 ${stage.tone}`}>
+                  <p className="text-xs font-semibold">{stage.label}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums">{summaryReady ? requests.filter(request => request.status === stage.status).length : '—'}</p>
+                  <p className="mt-1 text-[11px] leading-5">{stage.description}</p>
+                </div>)}
+              </div>
+              <div className="mt-4 border-t border-[#f1e6e3] pt-4">
+                <div className="mb-2 flex flex-wrap justify-between gap-2 text-xs"><span className="font-semibold text-[#57322d]">Request types on this page</span><span className="text-[#786565]">{summaryReady && requests.length === 0 ? 'No matching records' : 'Based on displayed records'}</span></div>
+                <div className="flex h-2 overflow-hidden rounded-full bg-[#f2ece8]" aria-hidden="true">
+                  {summaryReady && requests.length > 0 && <><span className="bg-[#800000]" style={{ width: `${visibleLaboratoryCount / requests.length * 100}%` }} /><span className="bg-[#9a7b4f]" style={{ width: `${visibleEquipmentCount / requests.length * 100}%` }} /></>}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-[#786565]">
+                  <span><span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-[#800000]" />Laboratory reservations <strong className="text-[#321d1d]">{summaryReady ? visibleLaboratoryCount : '—'}</strong></span>
+                  <span><span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-[#9a7b4f]" />Equipment borrowing <strong className="text-[#321d1d]">{summaryReady ? visibleEquipmentCount : '—'}</strong></span>
+                  {summaryReady && visibleOtherCount > 0 && <span>Unspecified type <strong>{visibleOtherCount}</strong></span>}
+                </div>
+              </div>
+            </div>
+          </section>
+          <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" aria-labelledby="request-focus-title">
+            <header className="border-b border-[#f1e6e3] px-5 py-4"><h2 id="request-focus-title" className="text-sm font-semibold text-[#321d1d]">Focus your queue</h2><p className="mt-1 text-xs text-[#786565]">Change status while keeping your other filters.</p></header>
+            <div className="space-y-2 p-4">
+              {[...queueStages, { status: 'ALL' as const, label: 'All requests', description: 'Include completed, declined and cancelled requests.', color: 'bg-[#9a7b4f]' }].map(stage => <button key={stage.status} type="button" aria-pressed={filters.status === stage.status} onClick={() => handleFilterChange('status', stage.status)} className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000] ${filters.status === stage.status ? 'border-[#800000] bg-[#800000] text-white' : 'border-[#e8dfdb] bg-white text-[#321d1d] hover:bg-[#fff8f5]'}`}>
+                <span className={`h-2 w-2 shrink-0 rounded-full ${filters.status === stage.status ? 'bg-white' : stage.color}`} />
+                <span className="min-w-0 flex-1"><span className="block text-xs font-semibold">{stage.label}</span><span className="mt-1 block text-[11px] leading-4 opacity-80">{stage.description}</span></span><ArrowRight size={15} aria-hidden="true" />
+              </button>)}
+            </div>
+          </section>
+        </div>
+
+        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4">
+            <div><h2 className="text-sm font-semibold text-[#321d1d]">Request records</h2><p className="mt-1 text-xs text-[#786565]">Open a request to review its details, availability and next action.</p></div>
+            <span className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${statusMeta[filters.status].className}`}>{statusMeta[filters.status].label}</span>
+          </header>
           <div className="px-4 py-5 lg:px-6">
             {tableContent}
           </div>
