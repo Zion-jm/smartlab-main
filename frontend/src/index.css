@@ -1151,3 +1151,38 @@
     height: 215mm !important;
   }
 }
+
+/* Role-specific request forms share the same visual structure and retain their fields. */
+.request-form-sections.request-workflow-grid {
+  display: grid;
+  gap: 1rem;
+  border: 0;
+  background: transparent;
+}
+.request-form-sections.request-workflow-grid > section {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid #ead7d3;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 1px 3px #321d1d0a;
+}
+.request-workflow-grid > section > div:first-child {
+  margin: -1.25rem -1.25rem 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #ead7d3;
+  border-radius: 1rem 1rem 0 0;
+  background: #fffaf7;
+}
+.request-workflow-grid .request-section-heading {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: #57322d;
+  margin-bottom: .375rem;
+}
+.request-workflow-grid .request-section-heading svg { color: #800000; }
+@media (min-width: 1280px) {
+  .request-form-sections.request-workflow-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
+  .request-workflow-grid > section:first-child { grid-row: span 2; }
+}

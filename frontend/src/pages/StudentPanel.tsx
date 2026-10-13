@@ -725,15 +725,15 @@ function RequestFormScaffold({
       )}
 
       <PanelSection
-        title={editingRequest ? `Edit ${formatReference(editingRequest.id)}` : 'Request details'}
+        title={editingRequest ? `Edit ${formatReference(editingRequest.id)}` : 'Student equipment request'}
         helper={editingRequest
           ? 'Edit your request below. Your changes will be sent to the administrator for review.'
           : 'Choose equipment, a borrowing time, and a usage location. Same-day requests are allowed while the selected time is still available.'}
       >
-        <div className="request-form-sections rounded-2xl border border-[#f1f5f9] bg-[#fdfdfd] divide-y divide-[#f1f5f9]">
+        <div className="request-form-sections request-workflow-grid rounded-2xl border border-[#f1f5f9] bg-[#fdfdfd] divide-y divide-[#f1f5f9]">
           <section className="space-y-4 p-4 lg:p-5">
             <div>
-              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestCalendarIcon size={18} aria-hidden="true" className="md:hidden" />Request type & schedule</h4>
+              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestCalendarIcon size={18} aria-hidden="true" className="shrink-0" />1. Equipment & schedule</h4>
               <p className="text-xs text-[#6b7280]">Choose where you will use the equipment. This does not reserve a room.</p>
             </div>
             <div className="flex flex-col gap-3">
@@ -841,8 +841,8 @@ function RequestFormScaffold({
 
           <section className="space-y-4 p-4 lg:p-5">
             <div>
-              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestAcademicIcon size={18} aria-hidden="true" className="md:hidden" />Academic details</h4>
-              <p className="text-xs text-[#6b7280]">Select the faculty member supervising your session, along with your program, year level, and subject.</p>
+              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestAcademicIcon size={18} aria-hidden="true" className="shrink-0" />2. Academic details</h4>
+              <p className="text-xs text-[#6b7280]">Choose your supervising faculty and subject. Your program and year level come from your academic record; contact an administrator if they need correction.</p>
             </div>
             <div className="space-y-3">
               <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
@@ -894,8 +894,8 @@ function RequestFormScaffold({
 
           <section className="space-y-4 p-4 lg:p-5">
             <div>
-              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestPurposeIcon size={18} aria-hidden="true" className="md:hidden" />Purpose & contact</h4>
-              <p className="text-xs text-[#6b7280]">Provide contacts plus rationale for your request.</p>
+              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestPurposeIcon size={18} aria-hidden="true" className="shrink-0" />3. Purpose & contact</h4>
+              <p className="text-xs text-[#6b7280]">Explain how the equipment or laboratory will be used. You may add an optional contact number or email.</p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <div className="flex flex-col gap-2">
@@ -928,7 +928,7 @@ function RequestFormScaffold({
         </div>
       </PanelSection>
 
-      <div className="bg-white border border-[#e5e7eb] rounded-2xl p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="bg-[#fffaf7] border border-[#ead7d3] border-t-4 border-t-[#800000] rounded-2xl p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between shadow-sm">
         <div>
           <p className="text-sm font-semibold text-[#111827]">Request summary</p>
           <p role="status" className="mt-1 text-xs font-semibold text-[#b91c1c]">
