@@ -910,15 +910,15 @@
 }
 
 /* Admin profile follows the full-width settings workspace. */
-.profile-page--admin { max-width: none; padding: 1rem 1.5rem; }
-.profile-page--admin > .grid { gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #c8aaa2; }
-.profile-page--admin > .grid > section { padding: 1.25rem; background: #fff; border-color: #e5e7eb; box-shadow: 0 1px 3px #0000001a; }
-.profile-page--admin .profile-section-heading { margin: -1.25rem -1.25rem 1.25rem; padding: 1.1rem 1.25rem; border-color: #ead7d3; background: #fffaf7; border-radius: 1rem 1rem 0 0; }
-.profile-page--admin .profile-section-heading > div > p:first-child { display: none; }
-.profile-page--admin .profile-section-heading h2 { font-size: .875rem; letter-spacing: normal; }
-.profile-page--admin .profile-section-heading p { font-size: .75rem; line-height: 1.5; }
-.profile-page--admin button { border-radius: .75rem; }
-@media (max-width: 639px) { .profile-page--admin { padding: 1rem .75rem; } }
+.profile-page--cards { max-width: none; padding: 1rem 1.5rem; }
+.profile-page--cards > .grid { gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #c8aaa2; }
+.profile-page--cards > .grid > section { padding: 1.25rem; background: #fff; border-color: #e5e7eb; box-shadow: 0 1px 3px #0000001a; }
+.profile-page--cards .profile-section-heading { margin: -1.25rem -1.25rem 1.25rem; padding: 1.1rem 1.25rem; border-color: #ead7d3; background: #fffaf7; border-radius: 1rem 1rem 0 0; }
+.profile-page--cards .profile-section-heading > div > p:first-child { display: none; }
+.profile-page--cards .profile-section-heading h2 { font-size: .875rem; letter-spacing: normal; }
+.profile-page--cards .profile-section-heading p { font-size: .75rem; line-height: 1.5; }
+.profile-page--cards button { border-radius: .75rem; }
+@media (max-width: 639px) { .profile-page--cards { padding: 1rem .75rem; } }
 
 /* Keep the schedule action intact when the mobile ribbon wraps its controls. */
 .page-control-ribbon__actions button.schedule-add-button { white-space: nowrap; overflow-wrap: normal; flex-shrink: 0; }

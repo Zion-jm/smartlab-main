@@ -52,12 +52,6 @@ const roleDescriptions: Record<User['role'], string> = {
   STUDENT: 'Academic laboratory access and learning',
 };
 
-const roleAccent: Record<User['role'], string> = {
-  ADMIN: 'bg-[#f6efe8] text-[#7a1d20]',
-  FACULTY: 'bg-[#f2f0e7] text-[#6d5b1d]',
-  STUDENT: 'bg-[#edf3f1] text-[#28645c]',
-};
-
 const initialsFor = (user: ProfileRecord | null) => {
   if (!user) return '—';
   const first = user.firstName?.trim().charAt(0) ?? '';
@@ -125,14 +119,6 @@ function ShieldIcon() {
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 3 19 6v5.4c0 4.5-3 7.8-7 9.6-4-1.8-7-5.1-7-9.6V6l7-3Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
       <path d="m9 12 2 2 4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ChevronIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="m9 18 6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -243,8 +229,7 @@ export default function ProfilePage({
   }, [role, user]);
 
   return (
-    <div className={`profile-page ${role !== 'ADMIN' ? 'profile-page--portal' : 'profile-page--admin'} mx-auto w-full max-w-[1180px] px-2 py-4 sm:px-4 sm:py-7 lg:px-6`}>
-      {role === 'ADMIN' ? (
+    <div className={`profile-page profile-page--cards mx-auto w-full max-w-[1180px] px-2 py-4 sm:px-4 sm:py-7 lg:px-6`}>
         <header className="profile-summary overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4 bg-[#fffaf7] p-5">
             <div className="flex min-w-0 items-center gap-3">
@@ -259,31 +244,6 @@ export default function ProfilePage({
             <div><dt className="text-[11px] uppercase text-[#9a8985]">Phone number</dt><dd className="mt-1 text-sm">{user?.phone || 'Not provided'}</dd></div>
           </dl>
         </header>
-      ) : (
-      <div className="profile-page__header mb-7 flex flex-col justify-between gap-5 border-b border-[#e8ddd8] pb-7 sm:flex-row sm:items-end">
-        <div className="profile-page__introduction">
-          <div className="profile-page__breadcrumb mb-3 flex items-center gap-2 text-xs font-medium text-[#9a8985]">
-            <span>SmartLab</span>
-            <ChevronIcon />
-            <span className="text-[#7a1d20]">Profile</span>
-          </div>
-          <p className="profile-page__intro mt-2 max-w-xl text-sm leading-6 text-[#756969]">
-            Keep your contact details current so the SmartLab team can reach you when it matters.
-          </p>
-        </div>
-        <div className="profile-page__identity flex items-center gap-3 rounded-2xl border border-[#eadfd9] bg-[#fffdfb] px-4 py-3 shadow-[0_5px_18px_rgba(76,37,24,0.04)]">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${roleAccent[role]}`}>
-            {initialsFor(user)}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-[#3d2b2b]">{displayName}</p>
-            <p className="mt-0.5 text-xs text-[#907f7b]">{roleLabels[role]}</p>
-          </div>
-        </div>
-      </div>
-
-      )}
-
       {user === null && (
         <div className="mb-6 flex items-start gap-3 rounded-2xl border border-[#ead5c8] bg-[#fff9f5] px-4 py-3.5 text-sm text-[#754b39]" role="status">
           <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-[#b77955]" />
@@ -372,10 +332,10 @@ export default function ProfilePage({
             title={`${roleLabels[role]} information`}
             description={roleDescriptions[role]}
           />
-          {role === 'ADMIN' && <div className="mb-5 grid grid-cols-2 gap-3">
+          <div className="mb-5 grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#800000] bg-[#fffaf7] p-3"><p className="text-[11px] font-semibold text-[#786565]">Email address</p><p className="mt-2 text-sm font-semibold text-[#321d1d]">{user?.email ? 'Provided' : 'Not provided'}</p><p className="mt-1 text-[11px] text-[#786565]">Saved account detail</p></div>
             <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-3"><p className="text-[11px] font-semibold text-[#786565]">Phone number</p><p className="mt-2 text-sm font-semibold text-[#321d1d]">{user?.phone ? 'Provided' : 'Not provided'}</p><p className="mt-1 text-[11px] text-[#786565]">Optional contact detail</p></div>
-          </div>}
+          </div>
           <dl>
             {roleDetails.map(([label, value, muted]) => (
               <DetailRow key={label} label={label} value={value} muted={muted} />
@@ -385,11 +345,11 @@ export default function ProfilePage({
             <ShieldIcon />
             <p>Role and academic information is managed by SmartLab administrators.</p>
           </div>
-          {role === 'ADMIN' && <div className="mt-5 space-y-3 border-t border-[#eee4df] pt-5">
+          <div className="mt-5 space-y-3 border-t border-[#eee4df] pt-5">
             <h3 className="text-xs font-semibold text-[#57322d]">Profile actions</h3>
             <button type="button" onClick={() => { const field = document.querySelector<HTMLInputElement>('#profile-security-form input'); field?.scrollIntoView({ behavior: 'smooth', block: 'center' }); field?.focus({ preventScroll: true }); }} className="w-full rounded-xl border border-[#ead7d3] bg-[#fffaf7] px-4 py-3 text-left text-xs font-semibold text-[#800000] hover:bg-[#f5eae5]">Change password →</button>
-            <Link to="/settings" className="block rounded-xl border border-[#ead7d3] bg-white px-4 py-3 text-xs font-semibold text-[#57322d] hover:bg-[#fffaf7]">Workspace settings →<span className="mt-1 block font-normal text-[#786565]">Configure layout defaults and keyboard shortcuts.</span></Link>
-          </div>}
+            {role === 'ADMIN' && <Link to="/settings" className="block rounded-xl border border-[#ead7d3] bg-white px-4 py-3 text-xs font-semibold text-[#57322d] hover:bg-[#fffaf7]">Workspace settings →<span className="mt-1 block font-normal text-[#786565]">Configure layout defaults and keyboard shortcuts.</span></Link>}
+          </div>
 
         </section>
 
