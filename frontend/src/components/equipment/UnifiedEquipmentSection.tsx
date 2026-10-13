@@ -206,10 +206,13 @@ export default function UnifiedEquipmentSection({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className={`flex flex-wrap items-center justify-between gap-3 ${fullWidthCatalog ? "request-equipment-header" : ""}`}>
         <div>
-          <h3 className="request-section-heading text-base font-semibold text-gray-800"><Package size={18} aria-hidden="true" className="md:hidden" /><span className="md:hidden">Equipment</span><span className="hidden md:inline">{fullWidthCatalog ? "4. Equipment selection" : "Equipment Availability & Selection"}</span></h3>
-          <p className="text-sm text-gray-600">
+          <h3 className={fullWidthCatalog ? "mb-1.5 flex items-center gap-2 text-sm font-semibold text-[#57322d]" : "request-section-heading text-base font-semibold text-gray-800"}>
+            <Package size={18} aria-hidden="true" className={fullWidthCatalog ? "shrink-0 text-[#800000]" : "md:hidden"} />
+            {fullWidthCatalog ? '4. Equipment selection' : <><span className="md:hidden">Equipment</span><span className="hidden md:inline">Equipment Availability & Selection</span></>}
+          </h3>
+          <p className={fullWidthCatalog ? "text-xs text-[#6b7280]" : "text-sm text-gray-600"}>
             {dateNeeded} at {timeStart} - {timeEnd} • Select equipment and specify quantities needed
           </p>
         </div>

@@ -1195,3 +1195,14 @@
 @media (min-width: 1600px) {
   .request-catalog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+.request-equipment-header {
+  margin: -1rem -1rem 0;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #ead7d3;
+  border-radius: 1rem 1rem 0 0;
+  background: #fffaf7;
+}
+@media (min-width: 1024px) {
+  .request-equipment-header { margin: -1.25rem -1.25rem 0; }
+}
