@@ -504,6 +504,7 @@ export default function AdminAcademicPeriod() {
 
 
 
+        <div className="relative min-w-0">
         <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <div className="flex items-center gap-2 border-b border-[#f3f4f6] px-5 py-4">
             <History className="h-4 w-4 text-[#800000]" />
@@ -531,6 +532,7 @@ export default function AdminAcademicPeriod() {
               ))}
               {(data?.history.length ?? 0) === 0 && <p className="px-5 py-8 text-sm text-[#6b7280]">No changes have been recorded yet.</p>}
             </div>
+            <div className="hidden md:block">
             <TablePagination
               currentPage={safeHistoryPage}
               pageSize={historyPageSize}
@@ -541,8 +543,24 @@ export default function AdminAcademicPeriod() {
                 setHistoryPage(1);
               }}
             />
+            </div>
           </div>
         </section>
+        {historyEntries.length > 0 && (
+          <nav aria-label="Academic period history page navigation" className="request-mobile-navigator sticky bottom-0 z-30 rounded-t-xl border border-[#ead7d3] bg-white/95 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(76,37,24,0.08)] backdrop-blur-sm md:hidden">
+            <TablePagination
+              currentPage={safeHistoryPage}
+              pageSize={historyPageSize}
+              totalItems={historyEntries.length}
+              onPageChange={setHistoryPage}
+              onPageSizeChange={(pageSize) => {
+                setHistoryPageSize(pageSize);
+                setHistoryPage(1);
+              }}
+            />
+          </nav>
+        )}
+        </div>
       </div>
       <ConfirmationModal
         isOpen={pendingActivation !== null}
