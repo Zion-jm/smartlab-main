@@ -573,7 +573,8 @@ export default function AdminAcademicDirectory() {
               />
             </div>
           ) : (
-            <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+            <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+              <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4"><div><h2 className="text-sm font-semibold text-[#321d1d]">{tabDefinitions[activeTab].label} records</h2><p className="mt-1 text-xs text-[#786565]">Review existing entries or open a record to edit its details.</p></div><span className="rounded-full bg-[#f6eeea] px-3 py-1 text-xs font-semibold text-[#800000]">{currentCollection.length} matching records</span></header>
               <div className="px-4 py-5 lg:px-6">
                 <div className="space-y-3 md:hidden">
                   {paginatedData && paginatedData[activeTab].map(record => {
@@ -609,6 +610,18 @@ export default function AdminAcademicDirectory() {
     );
   };
 
+  const roomGroups = data ? [
+    ...data.buildings.map(building => ({ id: building.id, label: building.name, count: building.roomCount })),
+    { id: 'unassigned', label: 'Unassigned rooms', count: data.rooms.filter(room => !room.buildingId).length },
+  ].sort((a, b) => b.count - a.count) : [];
+  const catalogContext: Record<DirectoryEntity, { title: string; note: string; related: DirectoryEntity; action: string }> = {
+    buildings: { title: 'Campus spaces', note: 'Buildings organize rooms. Review room assignments before renaming campus locations.', related: 'rooms', action: 'Manage rooms' },
+    rooms: { title: 'Room assignments', note: 'Room names, building assignments and computer-lab classification help admins select the right space for schedules and reservations.', related: 'buildings', action: 'Manage buildings' },
+    programs: { title: 'Academic programs', note: 'Keep program codes and names consistent for student records, requests, schedules and reports.', related: 'subjects', action: 'Manage subjects' },
+    subjects: { title: 'Teaching references', note: 'Maintain clear subject codes and names so requesters and administrators can select the correct subject.', related: 'programs', action: 'Manage programs' },
+    departments: { title: 'Faculty organization', note: 'Maintain department names used for faculty account assignments. Check existing entries before adding a new department.', related: 'programs', action: 'View programs' },
+  };
+
   return (
     <AdminLayout>
       <div className="academic-directory-workspace mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
@@ -635,6 +648,31 @@ export default function AdminAcademicDirectory() {
           tabIndex={0}
           className="min-w-0"
         >
+          {data && !loading && !error && <div className="mt-4 grid items-stretch gap-4 xl:grid-cols-3">
+            <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
+              <header className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><p className="text-[10px] font-semibold uppercase tracking-widest text-[#967348]">Academic directory</p><h2 className="mt-1 text-base font-semibold text-[#321d1d]">{tabDefinitions[activeTab].label} overview</h2><p className="mt-1 text-xs text-[#786565]">{tabDefinitions[activeTab].description}</p></header>
+              <div className="p-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    { label: 'Catalog total', value: data.summary[activeTab], detail: `All ${tabDefinitions[activeTab].label.toLowerCase()}` },
+                    { label: 'Matching records', value: currentCollection.length, detail: 'After search and filters' },
+                    activeTab === 'buildings' ? { label: 'With rooms', value: data.buildings.filter(building => building.roomCount > 0).length, detail: 'Across all buildings' }
+                      : activeTab === 'rooms' ? { label: 'Computer labs', value: data.rooms.filter(room => room.isComputerLab).length, detail: 'Across the room catalog' }
+                      : { label: 'On this page', value: paginatedData?.[activeTab].length ?? 0, detail: 'Records currently displayed' },
+                  ].map(metric => <div key={metric.label} className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4"><p className="text-xs font-semibold text-[#57322d]">{metric.label}</p><p className="mt-2 text-2xl font-bold tabular-nums text-[#321d1d]">{metric.value}</p><p className="mt-1 text-xs text-[#786565]">{metric.detail}</p></div>)}
+                </div>
+                {(activeTab === 'rooms' || activeTab === 'buildings') && <div className="mt-4 border-t border-[#f1e6e3] pt-4"><h3 className="text-xs font-semibold text-[#57322d]">Rooms by building</h3><p className="mt-1 text-xs text-[#786565]">All directory rooms, independent of the current filters.</p><div className="mt-3 max-h-44 space-y-3 overflow-y-auto pr-2">{roomGroups.map(group => <div key={group.id} className="grid grid-cols-[minmax(6rem,1fr)_2fr_2rem] items-center gap-3 text-xs"><span className="break-words text-[#786565]">{group.label}</span><div className="h-2 rounded-full bg-[#f2ece8]" aria-hidden="true"><div className="h-full rounded-full bg-[#800000]" style={{ width: `${group.count / Math.max(1, ...roomGroups.map(item => item.count)) * 100}%` }} /></div><strong className="text-right tabular-nums">{group.count}</strong></div>)}</div></div>}
+              </div>
+            </section>
+            <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+              <header className="border-b border-[#f1e6e3] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">{catalogContext[activeTab].title}</h2></header>
+              <div className="space-y-4 p-4"><p className="text-sm leading-6 text-[#786565]">{catalogContext[activeTab].note}</p>
+                <button type="button" onClick={() => openDrawer(activeTab, 'create')} className="w-full rounded-xl bg-[#800000] px-4 py-3 text-left text-sm font-semibold text-white hover:bg-[#650000]">+ Add {tabDefinitions[activeTab].label.slice(0, -1)}</button>
+                <button type="button" onClick={() => handleTabChange(catalogContext[activeTab].related)} className="w-full rounded-xl border border-[#ead7d3] bg-[#fffaf7] px-4 py-3 text-left text-sm font-semibold text-[#57322d] hover:bg-[#f5eae5]">{catalogContext[activeTab].action} →</button>
+                {activeTab === 'rooms' && <p className="rounded-xl border border-[#ead7d3] bg-[#faf7f5] p-3 text-xs leading-5 text-[#786565]">{data.rooms.filter(room => !room.buildingId).length} rooms have no building assigned. Building assignment is optional.</p>}
+              </div>
+            </section>
+          </div>}
           {renderContent()}
         </div>
       </div>
