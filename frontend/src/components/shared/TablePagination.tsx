@@ -71,7 +71,7 @@ export default function TablePagination({
             aria-label="Previous page"
           >
             <span className="hidden sm:inline">Previous</span>
-            <span className="sm:hidden">Prev</span>
+            <span className="sm:hidden">‹ Previous</span>
           </button>
           <div className="flex items-center gap-1.5 whitespace-nowrap font-semibold text-[#374151]">
             <span className="hidden sm:inline">Page</span>
@@ -86,7 +86,7 @@ export default function TablePagination({
             aria-label="Next page"
           >
             <span className="hidden sm:inline">Next</span>
-            <span className="sm:hidden">Next</span>
+            <span className="sm:hidden">Next ›</span>
           </button>
           <button
             type="button"
