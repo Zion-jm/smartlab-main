@@ -1,3 +1,4 @@
+import DropdownField from '../components/shared/DropdownField';
 import { Navigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 import type { SidebarIconProps } from '../components/PortalLayout';
@@ -131,6 +132,28 @@ function SettingsPage() {
             onChange={(checked) => updatePreference('sidebarCollapsedByDefault', checked)}
             label="Collapse the sidebar by default"
           />
+          <div className="mt-5 border-t border-[#eee4df] pt-5">
+            <h3 className="text-sm font-semibold text-[#3d2b2b]">Keyboard shortcuts</h3>
+            <p className="mt-1 text-sm text-[#756969]">Choose an Alt + Shift + letter shortcut, or disable it. Changes apply immediately on this device. Shortcuts pause while typing or using a dialog.</p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {([
+                ['controlsShortcut', 'Show / hide page controls', 'sidebarShortcut'],
+                ['sidebarShortcut', 'Collapse / expand sidebar', 'controlsShortcut'],
+              ] as const).map(([key, label, otherKey]) => (
+                <div key={key}>
+                  <DropdownField
+                    label={label}
+                    value={preferences[key]}
+                    onChange={value => updatePreference(key, value)}
+                    options={[
+                      { value: '', label: 'Disabled' },
+                      ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(letter => letter !== preferences[otherKey]).map(letter => ({ value: letter, label: `Alt + Shift + ${letter}` })),
+                    ]}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="mt-5 flex flex-col gap-3 border-t border-[#f1e3df] pt-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs leading-5 text-[#6b7280]">Reset only affects this account on this device.</p>
             <button

@@ -539,8 +539,8 @@ export default function AdminLabSchedule() {
       const periodLine = document.createElement('p');
       periodLine.className = 'schedule-chart-active-period';
       periodLine.textContent = data.current
-        ? `Active academic period: ${data.current.academicYear.year} · ${data.current.term.name}`
-        : 'Active academic period: Not configured';
+        ? `Academic period: ${data.current.academicYear.year} · ${data.current.term.name}`
+        : 'Academic period: Not configured';
       printChart.querySelector('.schedule-chart-print-title')?.after(periodLine);
     } catch {
       setError('Unable to load the active academic period for printing. Please try again.');

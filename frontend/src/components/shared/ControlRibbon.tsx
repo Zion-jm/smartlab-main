@@ -1,3 +1,4 @@
+import { useAdminShortcut } from '../../hooks/useAdminShortcut';
 import { TableScrollContext } from './tableScrollContext';
 import { useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { RefreshCw } from 'lucide-react';
@@ -46,6 +47,10 @@ export default function ControlRibbon({
   const preferencesByUser = usePreferencesStore((state) => state.preferencesByUser);
   const ribbonExpandedByDefault = !getUserPreferences(preferencesByUser, userId).ribbonControlsHiddenByDefault;
   const [expanded, setExpanded] = useState(ribbonExpandedByDefault);
+  const controlsShortcut = getUserPreferences(preferencesByUser, userId).controlsShortcut;
+  useAdminShortcut(controlsShortcut, () => {
+    if (ribbonRef.current?.getClientRects().length) setExpanded(current => !current);
+  });
   const [trackedLastUpdated, setTrackedLastUpdated] = useState<Date | null>(null);
   const wasRefreshing = useRef(refreshing);
   const id = useId().replace(/:/g, '');
@@ -109,6 +114,7 @@ export default function ControlRibbon({
             type="button"
             aria-expanded={expanded}
             aria-controls={contentId}
+            title={controlsShortcut ? `Toggle page controls (Alt + Shift + ${controlsShortcut})` : undefined}
             onClick={() => setExpanded((current) => !current)}
                 className="page-control-ribbon__toggle"
           >

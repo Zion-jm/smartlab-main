@@ -4,11 +4,15 @@ import { persist } from 'zustand/middleware';
 export type UserPreferences = {
   ribbonControlsHiddenByDefault: boolean;
   sidebarCollapsedByDefault: boolean;
+  controlsShortcut: string;
+  sidebarShortcut: string;
 };
 
 const defaultPreferences: UserPreferences = {
   ribbonControlsHiddenByDefault: true,
   sidebarCollapsedByDefault: false,
+  controlsShortcut: 'F',
+  sidebarShortcut: 'S',
 };
 
 type PreferencesState = {

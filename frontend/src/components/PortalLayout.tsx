@@ -1,3 +1,4 @@
+import { useAdminShortcut } from '../hooks/useAdminShortcut';
 import { TableScrollContext } from './shared/tableScrollContext';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -154,6 +155,11 @@ export default function PortalLayout({
   const [isCollapsed, setIsCollapsed] = useState(sidebarCollapsedByDefault);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const sidebarShortcut = getUserPreferences(preferencesByUser, userId).sidebarShortcut;
+  useAdminShortcut(sidebarShortcut, () => {
+    if (window.matchMedia('(min-width: 1024px)').matches) setIsCollapsed(current => !current);
+    else setMobileMenuOpen(current => !current);
+  });
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const resolvedNavItems = useMemo(
@@ -375,6 +381,7 @@ export default function PortalLayout({
                 }}
                 className="hidden lg:inline-flex p-2 rounded-lg hover:bg-[rgba(128,0,0,0.05)] text-[#4b5563] transition-all"
                 aria-label="Toggle sidebar"
+                title={user?.role === 'ADMIN' && sidebarShortcut ? `Toggle sidebar (Alt + Shift + ${sidebarShortcut})` : undefined}
               >
                 <MenuIcon />
               </button>
