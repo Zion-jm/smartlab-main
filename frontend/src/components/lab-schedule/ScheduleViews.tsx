@@ -146,14 +146,15 @@ export function ChartView({ flush = false, schedules, computerLabNames = [], onS
             <h3 className="text-sm font-semibold text-[#111827]">Weekly Lab Utilization</h3>
             <p className="text-xs text-[#6b7280]">Select a schedule to view full details. Short blocks show a brief summary.</p>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="schedule-chart-toolbar flex w-full flex-wrap items-center justify-start gap-2 lg:w-auto lg:justify-end">
             <div className="flex min-h-10 items-center overflow-hidden rounded-lg border border-[#e5d5d1] bg-white">
               <button type="button" onClick={() => selectWeek(addCalendarDays(selectedWeekStart, -7))} aria-label="Previous week" className="inline-flex h-10 w-10 items-center justify-center text-[#786565] hover:bg-[#fff8f6] hover:text-[#800000]"><ChevronLeft size={16} /></button>
               <button type="button" onClick={() => selectWeek(mondayForDate(manilaTodayForPicker()))} className="inline-flex h-10 items-center gap-1.5 border-x border-[#e5d5d1] px-3 text-xs font-semibold text-[#800000]"><CalendarDays size={14} />This week</button>
               <button type="button" onClick={() => selectWeek(addCalendarDays(selectedWeekStart, 7))} aria-label="Next week" className="inline-flex h-10 w-10 items-center justify-center text-[#786565] hover:bg-[#fff8f6] hover:text-[#800000]"><ChevronRight size={16} /></button>
             </div>
-            <label className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</label>
-            <DropdownField value={selectedLab} onChange={selectLab} options={labs.map(lab => ({value:lab,label:lab}))} placeholder="No labs available" disabled={!labs.length} className="min-w-[140px]" />
+            <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto"><span className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</span>
+            <DropdownField value={selectedLab} onChange={selectLab} options={labs.map(lab => ({value:lab,label:lab}))} placeholder="No labs available" disabled={!labs.length} className="min-w-0 flex-1 sm:min-w-[140px]" />
+            </div>
             {onPrint && <button type="button" onClick={onPrint} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Print weekly lab utilization chart or save it as PDF"><Printer size={15} aria-hidden="true" />Print / PDF</button>}
             {onExpand && <button type="button" onClick={onExpand} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Expand weekly lab utilization chart"><Maximize2 size={15} aria-hidden="true" />Expand</button>}
           </div>
@@ -166,7 +167,7 @@ export function ChartView({ flush = false, schedules, computerLabNames = [], onS
         ) : visibleScheduleCount === 0 && !showEmptyGrid ? (
           <div className="p-6 text-center text-xs lg:text-sm text-[#6b7280]">No schedules for {selectedLab} during {weekRangeLabel(selectedWeekStart)}.</div>
         ) : (
-          <div className="p-4 overflow-x-auto">
+          <div className="overflow-x-auto p-2 sm:p-4" role="region" aria-label="Weekly lab timetable; scroll horizontally to see all days" tabIndex={0}>
             <div className="min-w-[700px]">
               {showEmptyGrid && visibleScheduleCount === 0 && <p className="pb-3 text-center text-xs lg:text-sm text-[#6b7280]">No schedules for {selectedLab} during {weekRangeLabel(selectedWeekStart)}.</p>}
               <div className="schedule-chart-day-headings pl-20 grid grid-cols-6 gap-0 pb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">
