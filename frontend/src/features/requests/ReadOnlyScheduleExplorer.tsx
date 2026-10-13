@@ -1,3 +1,6 @@
+import ScheduleDetailModal from '../../components/lab-schedule/ScheduleDetailModal';
+import { IconActionButton } from '../../components/shared/TableActionButtons';
+import type { LabSchedule } from '../../types/labSchedule';
 import { useMemo, useState } from 'react';
 import type { SchedulesState } from './useRequestData';
 import MobileScheduleExplorer from './MobileScheduleExplorer';
@@ -19,6 +22,9 @@ const scheduleViewTabs = [
 type ReadOnlyScheduleExplorerProps = SchedulesState & { computerLabNames: string[] };
 
 export default function ReadOnlyScheduleExplorer({ schedules, loading, error, dateFilter, setDateFilter, reload, computerLabNames }: ReadOnlyScheduleExplorerProps) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+  const [selectedSchedule, setSelectedSchedule] = useState<LabSchedule | null>(null);
   const [search, setSearch] = useState('');
   const [range, setRange] = useState({from:'',to:''});
   const [viewMode, setViewMode] = useState<'table' | 'chart' | 'calendar'>('table');
@@ -50,6 +56,14 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
         .includes(query)
     );
   }, [schedules, search, range, viewMode]);
+
+  const [previousResults, setPreviousResults] = useState(filteredSchedules);
+  if (previousResults !== filteredSchedules) {
+    setPreviousResults(filteredSchedules);
+    setPage(1);
+  }
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(filteredSchedules.length / pageSize)));
+  const visibleSchedules = filteredSchedules.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <>
@@ -106,9 +120,12 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
         aria-labelledby={getPageTabId('readonly-schedule-tabpanel', viewMode)}
         tabIndex={0}
       >
-        <header className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4">
+        <header className="flex items-center justify-between gap-4 border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
+          <div>
           <h3 className="text-sm font-semibold text-[#57322d]">{viewMode === 'table' ? 'Schedule records' : viewMode === 'chart' ? 'Weekly utilization chart' : 'Monthly schedule calendar'}</h3>
-          <p className="mt-1 text-xs text-[#786565]">{viewMode === 'table' ? 'Review room assignments, subjects, and session times.' : viewMode === 'chart' ? 'Choose a lab and week. Select a block to view schedule details.' : 'Explore dates and select a session to view its details.'}</p>
+          <p className="mt-1 text-xs text-[#786565]">{viewMode === 'table' ? 'Review assignments, academic context, and schedule details.' : viewMode === 'chart' ? 'Choose a lab and week. Select a block to view schedule details.' : 'Explore dates and select a session to view its details.'}</p>
+          </div>
+          {viewMode === 'table' && !loading && !error && <span className="shrink-0 rounded-full bg-[#faf4f1] px-2.5 py-1 text-[10px] font-semibold text-[#800000]">{filteredSchedules.length} records</span>}
         </header>
         {loading ? (
           <LoadingState message="Loading schedules…" />
@@ -121,7 +138,13 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
             variant="minimal"
           />
         ) : viewMode === 'table' ? (
-          <ScheduleDataTable schedules={filteredSchedules} />
+          <div className="p-4 lg:p-5">
+            <ScheduleDataTable
+              schedules={visibleSchedules}
+              actions={schedule => <IconActionButton label={`View details for ${schedule.roomLabel}`} icon="view" onClick={() => setSelectedSchedule(schedule)} />}
+              pagination={{currentPage, pageSize, totalItems: filteredSchedules.length, onPageChange: setPage, onPageSizeChange: size => { setPageSize(size); setPage(1); }}}
+            />
+          </div>
         ) : viewMode === 'chart' ? (
           <ChartView showEmptyGrid schedules={schedules} computerLabNames={computerLabNames} />
         ) : (
@@ -129,6 +152,7 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
         )}
       </div>
     </section>
+    {selectedSchedule && <ScheduleDetailModal schedule={selectedSchedule} onClose={() => setSelectedSchedule(null)} />}
     </>
   );
 }
