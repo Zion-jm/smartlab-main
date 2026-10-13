@@ -384,6 +384,7 @@ export default function AdminEquipment() {
     }
 
     return (
+      <div className="relative">
       <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4"><div><h2 className="text-sm font-semibold text-[#321d1d]">Equipment records</h2><p className="mt-1 text-xs text-[#786565]">Maintain quantities, inspect damaged stock, and archive or restore catalog items.</p></div><span className="rounded-full bg-[#f6eeea] px-3 py-1 text-xs font-semibold text-[#800000]">{serverTotal} matching items</span></header>
         <div className="px-4 py-5 lg:px-6">
@@ -446,6 +447,7 @@ export default function AdminEquipment() {
               </TableBody>
             </Table>
           </TableContainer></div>
+          <div className="hidden md:block">
           <TablePagination
             currentPage={equipmentPage}
             pageSize={equipmentPageSize}
@@ -456,8 +458,22 @@ export default function AdminEquipment() {
               setEquipmentPage(1);
             }}
           />
+          </div>
         </div>
       </section>
+        <nav aria-label="Equipment page navigation" className="request-mobile-navigator sticky bottom-0 z-30 rounded-t-xl border border-[#ead7d3] bg-white/95 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(76,37,24,0.08)] backdrop-blur-sm md:hidden">
+          <TablePagination
+            currentPage={equipmentPage}
+            pageSize={equipmentPageSize}
+            totalItems={serverTotal}
+            onPageChange={setEquipmentPage}
+            onPageSizeChange={(size) => {
+              setEquipmentPageSize(size);
+              setEquipmentPage(1);
+            }}
+          />
+        </nav>
+      </div>
     );
   };
 
