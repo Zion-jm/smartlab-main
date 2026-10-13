@@ -205,7 +205,7 @@ export default function UnifiedEquipmentSection({
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`${fullWidthCatalog ? "flex flex-col gap-4" : "space-y-6"} ${className}`}>
       <div className={`flex flex-wrap items-center justify-between gap-3 ${fullWidthCatalog ? "request-equipment-header" : ""}`}>
         <div>
           <h3 className={fullWidthCatalog ? "mb-1.5 flex items-center gap-2 text-sm font-semibold text-[#57322d]" : "request-section-heading text-base font-semibold text-gray-800"}>
@@ -242,15 +242,15 @@ export default function UnifiedEquipmentSection({
 
       <div className={fullWidthCatalog ? 'hidden md:block' : 'hidden md:block bg-white border border-gray-200 rounded-lg'}>
         {fullWidthCatalog && (
-          <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[#ead7d3] bg-[#fffaf7] p-3">
-            <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-semibold text-[#57322d]">
+          <div className="mb-4 flex flex-col items-stretch gap-3 lg:flex-row lg:items-end">
+            <label className="flex w-full min-w-0 flex-col gap-1 text-xs font-semibold text-[#57322d] lg:max-w-[480px] lg:flex-1">
               Search equipment
               <input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search by equipment name" className="min-h-11 w-full rounded-lg border border-[#d8c7c2] bg-white px-3 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-[#800000]" />
             </label>
-            <button type="button" aria-pressed={selectedOnly} onClick={() => setSelectedOnly(value => !value)} className={`min-h-11 rounded-lg border px-4 text-sm font-semibold ${selectedOnly ? 'border-[#800000] bg-[#800000] text-white' : 'border-[#d8c7c2] bg-white text-[#800000]'}`}>
+            <button type="button" aria-pressed={selectedOnly} onClick={() => setSelectedOnly(value => !value)} className={`min-h-11 shrink-0 rounded-lg border px-4 text-sm font-semibold ${selectedOnly ? 'border-[#800000] bg-[#800000] text-white' : 'border-[#d8c7c2] bg-white text-[#800000]'}`}>
               Selected only ({selected.length})
             </button>
-            <p role="status" className="py-3 text-xs text-[#786565]">Showing {filteredEquipment.length} of {equipment.length} items</p>
+            <p role="status" className="py-3 text-xs text-[#786565] lg:ml-auto">Showing {filteredEquipment.length} of {equipment.length} items</p>
           </div>
         )}
         <div className={fullWidthCatalog ? "" : "p-4"}>
