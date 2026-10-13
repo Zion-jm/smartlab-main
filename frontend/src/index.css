@@ -1159,8 +1159,7 @@
   border: 0;
   background: transparent;
 }
-.request-form-sections.request-workflow-grid > section,
-.request-details-stack > section {
+.request-form-sections.request-workflow-grid > section {
   min-width: 0;
   padding: 1.25rem;
   border: 1px solid #ead7d3;
@@ -1168,8 +1167,7 @@
   background: #fff;
   box-shadow: 0 1px 3px #321d1d0a;
 }
-.request-workflow-grid > section > div:first-child,
-.request-details-stack > section > div:first-child {
+.request-workflow-grid > section > div:first-child {
   margin: -1.25rem -1.25rem 1rem;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid #ead7d3;
@@ -1185,11 +1183,11 @@
 }
 .request-workflow-grid .request-section-heading svg { color: #800000; }
 @media (min-width: 1280px) {
-  .request-form-sections.request-workflow-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
+  .request-form-sections.request-workflow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
 
 }
 
-.request-details-stack { display: grid; gap: 1rem; min-width: 0; border: 0; }
+.request-workflow-grid > .request-purpose-section { grid-column: 1 / -1; }
 .request-catalog-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 @media (min-width: 1280px) {
   .request-catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

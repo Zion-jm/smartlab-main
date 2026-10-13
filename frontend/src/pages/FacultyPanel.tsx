@@ -781,96 +781,94 @@ function RequestFormScaffold({
 
           </section>
 
-          <div className="request-details-stack">
-            <section className="space-y-4 p-4 lg:p-5">
-              <div>
-                <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestAcademicIcon size={18} aria-hidden="true" className="shrink-0" />2. Academic details</h4>
-                <p className="text-xs text-[#6b7280]">You are the faculty in charge. Select the program, year level and subject for this session.</p>
-              </div>
-              <div className="space-y-3">
-                <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="flex flex-col gap-1" data-field="facultyId">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
-                      <FieldLabel text="Faculty in charge" required showMissing={missingFields.includes('facultyId')} />
-                    </label>
-                    <div className="rounded-xl border border-[#d1d5db] bg-[#f3f4f6] px-3 py-2 text-sm text-[#6b7280]">
-                      <span className="font-semibold text-[#111827]">
-                        {resources?.faculty.find((option) => option.value === resources?.selfFacultyProfileId)?.label || 'Your faculty profile'}
-                      </span>
-                      <span className="ml-2 text-[11px] uppercase tracking-wide">Read only</span>
-                    </div>
-                    <p className="text-[11px] text-[#6b7280]">Contact the admin if you need another faculty assigned.</p>
+          <section className="space-y-4 p-4 lg:p-5">
+            <div>
+              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestAcademicIcon size={18} aria-hidden="true" className="shrink-0" />2. Academic details</h4>
+              <p className="text-xs text-[#6b7280]">You are the faculty in charge. Select the program, year level and subject for this session.</p>
+            </div>
+            <div className="space-y-3">
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-1" data-field="facultyId">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                    <FieldLabel text="Faculty in charge" required showMissing={missingFields.includes('facultyId')} />
+                  </label>
+                  <div className="rounded-xl border border-[#d1d5db] bg-[#f3f4f6] px-3 py-2 text-sm text-[#6b7280]">
+                    <span className="font-semibold text-[#111827]">
+                      {resources?.faculty.find((option) => option.value === resources?.selfFacultyProfileId)?.label || 'Your faculty profile'}
+                    </span>
+                    <span className="ml-2 text-[11px] uppercase tracking-wide">Read only</span>
                   </div>
-                  <div className="min-w-0" data-field="subjectId">
-                    <DropdownField
-                      label={<FieldLabel text="Subject" required showMissing={missingFields.includes('subjectId')} />}
-                      value={form.subjectId}
-                      options={subjectOptions.map((option) => ({ value: option.value, label: option.label }))}
-                      placeholder="Select subject"
-                      disabled={!subjectOptions.length || loading}
-                      onChange={(value) => updateForm('subjectId', value)}
-                    />
-                  </div>
+                  <p className="text-[11px] text-[#6b7280]">Contact the admin if you need another faculty assigned.</p>
                 </div>
-                <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="min-w-0" data-field="programId">
-                    <DropdownField
-                      label={<FieldLabel text="Program" required showMissing={missingFields.includes('programId')} />}
-                      value={form.programId}
-                      options={programOptions.map((option) => ({ value: option.value, label: option.label }))}
-                      placeholder="Select program"
-                      disabled={!programOptions.length || loading}
-                      onChange={(value) => updateForm('programId', value)}
-                    />
-                  </div>
-                  <div className="min-w-0" data-field="yearLevel">
-                    <DropdownField
-                      label={<FieldLabel text="Year level" required showMissing={missingFields.includes('yearLevel')} />}
-                      value={form.yearLevel}
-                      options={YEAR_LEVELS.map((year) => ({ value: year, label: `Year ${year}` }))}
-                      placeholder="Select year"
-                      disabled={loading}
-                      onChange={(value) => updateForm('yearLevel', value)}
-                    />
-                  </div>
+                <div className="min-w-0" data-field="subjectId">
+                  <DropdownField
+                    label={<FieldLabel text="Subject" required showMissing={missingFields.includes('subjectId')} />}
+                    value={form.subjectId}
+                    options={subjectOptions.map((option) => ({ value: option.value, label: option.label }))}
+                    placeholder="Select subject"
+                    disabled={!subjectOptions.length || loading}
+                    onChange={(value) => updateForm('subjectId', value)}
+                  />
                 </div>
               </div>
-            </section>
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="min-w-0" data-field="programId">
+                  <DropdownField
+                    label={<FieldLabel text="Program" required showMissing={missingFields.includes('programId')} />}
+                    value={form.programId}
+                    options={programOptions.map((option) => ({ value: option.value, label: option.label }))}
+                    placeholder="Select program"
+                    disabled={!programOptions.length || loading}
+                    onChange={(value) => updateForm('programId', value)}
+                  />
+                </div>
+                <div className="min-w-0" data-field="yearLevel">
+                  <DropdownField
+                    label={<FieldLabel text="Year level" required showMissing={missingFields.includes('yearLevel')} />}
+                    value={form.yearLevel}
+                    options={YEAR_LEVELS.map((year) => ({ value: year, label: `Year ${year}` }))}
+                    placeholder="Select year"
+                    disabled={loading}
+                    onChange={(value) => updateForm('yearLevel', value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
 
-            <section className="space-y-4 p-4 lg:p-5">
-              <div>
-                <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestPurposeIcon size={18} aria-hidden="true" className="shrink-0" />3. Purpose & contact</h4>
-                <p className="text-xs text-[#6b7280]">Explain how the equipment or laboratory will be used. You may add an optional contact number or email.</p>
+          <section className="request-purpose-section space-y-4 p-4 lg:p-5">
+            <div>
+              <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestPurposeIcon size={18} aria-hidden="true" className="shrink-0" />3. Purpose & contact</h4>
+              <p className="text-xs text-[#6b7280]">Explain how the equipment or laboratory will be used. You may add an optional contact number or email.</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold text-[#6b7280]">
+                  <FieldLabel text="Contact details" optional />
+                </label>
+                <input
+                  type="text"
+                  placeholder="Mobile number or email"
+                  value={form.contactDetails}
+                  onChange={(event) => updateForm('contactDetails', event.target.value)}
+                  className="rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
+                />
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-[#6b7280]">
-                    <FieldLabel text="Contact details" optional />
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Mobile number or email"
-                    value={form.contactDetails}
-                    onChange={(event) => updateForm('contactDetails', event.target.value)}
-                    className="rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-[#6b7280]">
-                    <FieldLabel text="Purpose" required showMissing={missingFields.includes('purpose')} />
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Ex: Capstone rehearsal, board exam review..."
-                    value={form.purpose}
-                    onChange={(event) => updateForm('purpose', event.target.value)}
-                    className="rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
-                    data-field="purpose"
-                  />
-                </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold text-[#6b7280]">
+                  <FieldLabel text="Purpose" required showMissing={missingFields.includes('purpose')} />
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Ex: Capstone rehearsal, board exam review..."
+                  value={form.purpose}
+                  onChange={(event) => updateForm('purpose', event.target.value)}
+                  className="rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
+                  data-field="purpose"
+                />
               </div>
-            </section>
-          </div>
+            </div>
+          </section>
         </div>
         <div className="request-equipment-catalog mt-4 rounded-2xl border border-[#ead7d3] bg-white p-4 lg:p-5">
           <UnifiedEquipmentSection
