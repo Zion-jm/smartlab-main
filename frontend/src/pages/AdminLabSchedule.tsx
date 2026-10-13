@@ -61,7 +61,7 @@ const isScheduleView = (value: string | null): value is ScheduleView =>
 
 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function ExpandedChartDialog({ schedules, computerLabNames, selectedLab, onSelectedLabChange, selectedWeekStart, onSelectedWeekStartChange, onSelectSchedule, onPrint, onClose }: { schedules: LabSchedule[]; computerLabNames: string[]; selectedLab: string; onSelectedLabChange: (lab: string) => void; selectedWeekStart: string; onSelectedWeekStartChange: (weekStart: string) => void; onSelectSchedule: (id: string) => void; onPrint: () => void; onClose: () => void }) {
+function ExpandedChartDialog({ schedules, computerLabNames, selectedLab, onSelectedLabChange, selectedWeekStart, onSelectedWeekStartChange, onSelectSchedule, onPrint, printTitle, onClose }: { schedules: LabSchedule[]; computerLabNames: string[]; selectedLab: string; onSelectedLabChange: (lab: string) => void; selectedWeekStart: string; onSelectedWeekStartChange: (weekStart: string) => void; onSelectSchedule: (id: string) => void; onPrint: () => void; printTitle: string; onClose: () => void }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -76,7 +76,7 @@ function ExpandedChartDialog({ schedules, computerLabNames, selectedLab, onSelec
         <button type="button" autoFocus onClick={onClose} aria-label="Close expanded chart" className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#786565] transition hover:bg-[#f6e8e4] hover:text-[#800000] focus-visible:outline-2 focus-visible:outline-[#800000]"><X size={20} /></button>
       </header>
       <div className="min-h-0 flex-1 overflow-auto">
-        <ChartView dayLabels={dayNames} showEmptyGrid schedules={schedules} computerLabNames={computerLabNames} onSelectSchedule={onSelectSchedule} selectedLab={selectedLab} onSelectedLabChange={onSelectedLabChange} selectedWeekStart={selectedWeekStart} onSelectedWeekStartChange={onSelectedWeekStartChange} onPrint={onPrint} />
+        <ChartView dayLabels={dayNames} showEmptyGrid schedules={schedules} computerLabNames={computerLabNames} onSelectSchedule={onSelectSchedule} selectedLab={selectedLab} onSelectedLabChange={onSelectedLabChange} selectedWeekStart={selectedWeekStart} onSelectedWeekStartChange={onSelectedWeekStartChange} onPrint={onPrint} printTitle={printTitle} />
       </div>
     </section>
   </div>;
@@ -524,12 +524,18 @@ export default function AdminLabSchedule() {
     setDetailsModalConfig({ schedule: target });
   };
 
+  const chartPrintTitle = scheduleTypeFilter === 'WEEKLY'
+    ? 'Weekly Laboratory Schedule'
+    : scheduleTypeFilter === 'ONE_TIME'
+      ? 'One-Time Laboratory Schedule'
+      : 'Laboratory Schedule';
+
   const printScheduleChart = () => {
     const chart = document.querySelector<HTMLElement>('[aria-labelledby="expanded-chart-title"] .schedule-chart-print-area') ?? document.querySelector<HTMLElement>('.schedule-chart-print-area');
     if (!chart) return;
 
     const frame = document.createElement('iframe');
-    frame.setAttribute('title', 'Weekly laboratory schedule print document');
+    frame.setAttribute('title', `${chartPrintTitle} print document`);
     frame.style.position = 'fixed';
     frame.style.right = '0';
     frame.style.bottom = '0';
@@ -550,7 +556,7 @@ export default function AdminLabSchedule() {
         : `<style>${node.textContent ?? ''}</style>`)
       .join('');
     printDocument.open();
-    printDocument.write(`<!doctype html><html><head><meta charset="utf-8"><title>Weekly Laboratory Schedule</title>${styles}<style>
+    printDocument.write(`<!doctype html><html><head><meta charset="utf-8"><title>${chartPrintTitle}</title>${styles}<style>
       @page { size: 8.5in 13in !important; margin: 10mm !important; }
       html, body { width: 195.9mm !important; min-width: 195.9mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
       .schedule-chart-print-area { page: auto !important; width: 195.9mm !important; }
@@ -684,7 +690,7 @@ export default function AdminLabSchedule() {
                 </>
               )
             ) : viewMode === 'chart' ? (
-              <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm"><div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Weekly utilization chart</h2><p className="mt-1 text-xs text-[#786565]">Compare laboratory occupancy across the week and open any block for its full schedule details.</p></div><ChartView dayLabels={dayNames} showEmptyGrid schedules={filteredSchedules} computerLabNames={computerLabNames} onSelectSchedule={handleViewSchedule} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onPrint={printScheduleChart} onExpand={() => setChartExpanded(true)} /></section>
+              <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm"><div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Weekly utilization chart</h2><p className="mt-1 text-xs text-[#786565]">Compare laboratory occupancy across the week and open any block for its full schedule details.</p></div><ChartView dayLabels={dayNames} showEmptyGrid schedules={filteredSchedules} computerLabNames={computerLabNames} onSelectSchedule={handleViewSchedule} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onPrint={printScheduleChart} printTitle={chartPrintTitle} onExpand={() => setChartExpanded(true)} /></section>
             ) : (
               <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm"><div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Monthly schedule calendar</h2><p className="mt-1 text-xs text-[#786565]">Review schedule density by date and select a day to inspect its sessions.</p></div><CalendarView dayLabels={dayNames} schedules={filteredSchedules} /></section>
             )}
@@ -713,7 +719,7 @@ export default function AdminLabSchedule() {
         }} />
       )}
 
-      {chartExpanded && <ExpandedChartDialog schedules={filteredSchedules} computerLabNames={computerLabNames} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onSelectSchedule={handleViewSchedule} onPrint={printScheduleChart} onClose={() => setChartExpanded(false)} />}
+      {chartExpanded && <ExpandedChartDialog schedules={filteredSchedules} computerLabNames={computerLabNames} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onSelectSchedule={handleViewSchedule} onPrint={printScheduleChart} printTitle={chartPrintTitle} onClose={() => setChartExpanded(false)} />}
     </AdminLayout>
   );
 }

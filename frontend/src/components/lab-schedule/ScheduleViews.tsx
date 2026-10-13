@@ -16,6 +16,7 @@ export type ChartViewProps = {
   onSelectedLabChange?: (lab: string) => void;
   onExpand?: () => void;
   onPrint?: () => void;
+  printTitle?: string;
   selectedWeekStart?: string;
   onSelectedWeekStartChange?: (weekStart: string) => void;
 };
@@ -47,7 +48,7 @@ const weekRangeLabel = (monday: string) => {
   return `${startMonth} ${startDay}, ${startYear}–${endMonth} ${endDay}, ${endYear}`;
 };
 
-export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand, onPrint, selectedWeekStart: controlledWeekStart, onSelectedWeekStartChange }: ChartViewProps) {
+export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand, onPrint, printTitle = 'Laboratory Schedule', selectedWeekStart: controlledWeekStart, onSelectedWeekStartChange }: ChartViewProps) {
   const [labOverride, setLabOverride] = useState<string | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<LabSchedule | null>(null);
   const [weekOverride, setWeekOverride] = useState(() => mondayForDate(manilaTodayForPicker()));
@@ -135,7 +136,7 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
             <p>College of Computer and Information Sciences</p>
           </div>
         </div>
-        <h1 className="schedule-chart-print-title">Weekly Laboratory Schedule</h1>
+        <h1 className="schedule-chart-print-title">{printTitle}</h1>
         <p className="mt-1 text-[10pt] text-[#514343]">{selectedLab || 'Laboratory'} · {weekRangeLabel(selectedWeekStart)}</p>
       </header>
       <div className="rounded-2xl border border-[#e5e7eb]">
