@@ -2,7 +2,7 @@ import { toast } from '../stores/toastStore';
 import { useRef } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Users, ArrowRight, ShieldCheck } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
 import FilterToolbar from '../components/FilterToolbar';
 import AccountDrawer from '../components/accounts/AccountDrawer';
@@ -394,22 +394,48 @@ export default function ManageAccounts() {
           refreshError={Boolean(accountsError)}
           className="mb-1"
         />
-        <section aria-label="Account totals" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid items-stretch gap-4 xl:grid-cols-3">
+        <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2" aria-labelledby="accounts-overview-title">
+          <header className="flex items-center gap-3 border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><span className="rounded-xl bg-[#800000] p-2.5 text-white"><Users size={20} aria-hidden="true" /></span><div><h2 id="accounts-overview-title" className="text-sm font-semibold text-[#321d1d]">Account overview</h2><p className="mt-1 text-xs text-[#786565]">System-wide totals, independent of search and table filters.</p></div></header>
+        <div className="p-4">
+        <p className="mb-3 text-xs text-[#786565]">Select a total to show that group and clear the current search.</p>
+        <div aria-label="Account totals" className="grid gap-3 sm:grid-cols-2">
           {[
             {label:'Active students',value:stats?.activeStudents,detail:'Can access the student portal',role:'STUDENT' as RoleFilter,status:'ACTIVE' as StatusFilter},
             {label:'Active faculty',value:stats?.activeFaculty,detail:'Can access the faculty portal',role:'FACULTY' as RoleFilter,status:'ACTIVE' as StatusFilter},
             {label:'Administrators',value:stats?.administrators,detail:'Active administrator accounts',role:'ADMIN' as RoleFilter,status:'ACTIVE' as StatusFilter},
             {label:'Archived accounts',value:stats?.archivedAccounts,detail:stats?`${stats.archivedBreakdown.students} students · ${stats.archivedBreakdown.faculty} faculty`: 'Preserved historical accounts',role:'all' as RoleFilter,status:'DEACTIVATED' as StatusFilter},
-            {label:'Pending reactivation',value:stats?.pendingReactivation,detail:'Archived users awaiting review',role:'all' as RoleFilter,status:'DEACTIVATED' as StatusFilter},
           ].map(card => {
             const active=roleFilter===card.role&&statusFilter===card.status&&!search.trim();
-            return <button key={card.label} type="button" onClick={()=>{setSearch('');setRoleFilter(card.role);setStatusFilter(card.status);}} aria-pressed={active} className={`rounded-2xl border p-4 text-left shadow-sm transition ${active?'border-[#800000] bg-[#fff5f2] ring-2 ring-[#800000]/10':'border-[#ead7d3] bg-white hover:border-[#c98f83]'}`}>
+            return <button key={card.label} type="button" onClick={()=>{setSearch('');setRoleFilter(card.role);setStatusFilter(card.status);}} aria-pressed={active} className={`rounded-2xl border p-4 text-left shadow-sm transition ${active?'border-[#800000] bg-[#fff5f2] ring-2 ring-[#800000]/10':'border-[#ead7d3] bg-[#fffaf7] hover:border-[#c98f83]'}`}>
               <span className="text-[11px] font-semibold uppercase tracking-wide text-[#786565]">{card.label}</span><strong className="mt-1 block text-2xl text-[#321d1d]">{card.value ?? '—'}</strong><span className={`mt-1 block text-xs ${card.label==='Pending reactivation'&&(card.value??0)>0?'font-semibold text-amber-700':'text-[#786565]'}`}>{card.detail}</span>
             </button>;
           })}
+        </div>
+        <div className="mt-4 border-t border-[#f1e6e3] pt-4">
+          <h3 className="text-xs font-semibold text-[#57322d]">Active accounts by role</h3>
+          {stats ? <div className="mt-3 space-y-3">{[
+            { label: 'Students', count: stats.activeStudents, color: 'bg-[#800000]' },
+            { label: 'Faculty', count: stats.activeFaculty, color: 'bg-[#9a7b4f]' },
+            { label: 'Administrators', count: stats.administrators, color: 'bg-[#a85d4e]' },
+          ].map(item => <div key={item.label} className="grid grid-cols-[7rem_1fr_3rem] items-center gap-3 text-xs"><span className="text-[#786565]">{item.label}</span><div className="h-2 overflow-hidden rounded-full bg-[#f2ece8]" aria-hidden="true"><div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.count / Math.max(1, stats.activeStudents + stats.activeFaculty + stats.administrators) * 100}%` }} /></div><strong className="text-right tabular-nums text-[#321d1d]">{item.count}</strong></div>)}</div> : <p className="mt-2 text-xs text-[#786565]">Account summary unavailable.</p>}
+        </div>
+        </div>
         </section>
+        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" aria-labelledby="account-access-title">
+          <header className="flex items-center gap-2 border-b border-[#f1e6e3] px-5 py-4"><ShieldCheck size={18} className="text-[#800000]" aria-hidden="true" /><h2 id="account-access-title" className="text-sm font-semibold text-[#321d1d]">Access review</h2></header>
+          <div className="space-y-4 p-4">
+            <div className={`rounded-xl border p-4 ${stats && stats.pendingReactivation > 0 ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-[#ead7d3] bg-[#fffaf7] text-[#57322d]'}`}>
+              <p className="text-xs font-semibold">Pending reactivation</p><p className="mt-2 text-3xl font-bold tabular-nums">{stats?.pendingReactivation ?? '—'}</p><p className="mt-2 text-xs leading-5">{stats ? stats.pendingReactivation > 0 ? 'Archived users are awaiting review.' : 'No reactivation requests are awaiting review.' : 'Summary unavailable.'}</p>
+            </div>
+            <button type="button" onClick={() => { setSearch(''); setRoleFilter('all'); setStatusFilter('DEACTIVATED'); }} className="flex w-full items-center justify-between gap-3 rounded-xl border border-[#ead7d3] p-4 text-left text-[#57322d] hover:bg-[#fffaf7]"><span><span className="block text-sm font-semibold">Review archived accounts</span><span className="mt-1 block text-xs">Shows all deactivated accounts.</span></span><ArrowRight size={18} aria-hidden="true" /></button>
+            <p className="border-t border-[#f1e6e3] pt-4 text-xs leading-5 text-[#786565]">Use the account records below to update roles and access, or send a password reset link to a specific user.</p>
+          </div>
+        </section>
+        </div>
         <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-        <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4"><div><h2 className="text-sm font-semibold text-[#321d1d]">Account records</h2><p className="mt-1 text-xs text-[#786565]">{roleFilterOptions.find(option => option.value === roleFilter)?.label} roles · {statusFilterOptions.find(option => option.value === statusFilter)?.label}</p></div><span className="rounded-full bg-[#f6eeea] px-3 py-1 text-xs font-semibold text-[#800000]">{accountsLoading ? 'Updating...' : accountsError ? 'Records unavailable' : `${serverTotal} matching accounts`}</span></header>
           <div className="px-4 py-5 lg:px-6">
             <div className="overflow-x-auto lg:overflow-x-visible overflow-y-visible">
               {accountsLoading ? (
@@ -445,7 +471,7 @@ export default function ManageAccounts() {
                         {paginatedAccounts.map((account) => (
                           <TableRow key={account.id}>
                             <TableCell>
-                              <span className="font-semibold text-[#111827]">{account.role}</span>
+                              <span className="font-semibold text-[#111827]">{roleSelectOptions.find(role => role.value === account.role)?.label ?? account.role}</span>
                             </TableCell>
                             <TableCell>
                               <span className="font-semibold text-[#111827]">{account.name}</span>
@@ -458,7 +484,7 @@ export default function ManageAccounts() {
                             </TableCell>
                             <TableCell>
                               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusStyles[account.status]}`}>
-                                {account.status}
+                                {account.status === 'ACTIVE' ? 'Active' : 'Deactivated'}
                               </span>
                             </TableCell>
                             <TableCell align="center">
