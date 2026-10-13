@@ -91,9 +91,10 @@ export interface CompactStatCardProps {
   value: string | number;
   subtext: string;
   className?: string;
+  padding?: 'sm' | 'md';
 }
 
-export function CompactStatCard({ title, value, subtext, className = '' }: CompactStatCardProps) {
+export function CompactStatCard({ title, value, subtext, className = '', padding = 'md' }: CompactStatCardProps) {
   const titleStyles: React.CSSProperties = {
     fontSize: '0.6875rem',
     fontWeight: fontWeight.semibold,
@@ -115,7 +116,7 @@ export function CompactStatCard({ title, value, subtext, className = '' }: Compa
   };
 
   return (
-    <Card className={className} padding="md" shadow="sm" border>
+    <Card className={className} padding={padding} shadow="sm" border>
       <p style={titleStyles}>{title}</p>
       <p style={valueStyles}>{value}</p>
       <p style={subtextStyles}>{subtext}</p>

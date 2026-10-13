@@ -350,9 +350,10 @@ export default function AdminEquipment() {
     ];
 
     return (
-      <div className="equipment-summary grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="equipment-summary grid grid-cols-2 md:grid-cols-3 gap-2">
         {cards.map((card) => (
           <CompactStatCard
+            padding="sm"
             key={card.title}
             title={card.title}
             value={card.value}
@@ -622,7 +623,7 @@ export default function AdminEquipment() {
         >
             <div className="space-y-4">
 
-              {viewMode === 'table' && <div className="grid items-start gap-4 xl:grid-cols-3">
+              {viewMode === 'table' && <div className="grid items-stretch gap-4 xl:grid-cols-3">
                 <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
                   <header className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Inventory overview</h2><p className="mt-1 text-xs text-[#786565]">Current stock across the equipment catalog. Request activity follows the selected academic period.</p></header>
                   <div className="p-4">{loading ? <LoadingState message="Updating stock overview…" /> : error ? <p className="text-sm text-red-700">Stock overview unavailable.</p> : renderSummaryCards()}</div>
