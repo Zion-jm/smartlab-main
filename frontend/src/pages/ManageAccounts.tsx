@@ -434,6 +434,7 @@ export default function ManageAccounts() {
         </section>
         </div>
 
+        <div className="relative min-w-0">
         <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4"><div><h2 className="text-sm font-semibold text-[#321d1d]">Account records</h2><p className="mt-1 text-xs text-[#786565]">{roleFilterOptions.find(option => option.value === roleFilter)?.label} roles · {statusFilterOptions.find(option => option.value === statusFilter)?.label}</p></div><span className="rounded-full bg-[#f6eeea] px-3 py-1 text-xs font-semibold text-[#800000]">{accountsLoading ? 'Updating...' : accountsError ? 'Records unavailable' : `${serverTotal} matching accounts`}</span></header>
           <div className="px-4 py-5 lg:px-6">
@@ -502,6 +503,7 @@ export default function ManageAccounts() {
                       </TableBody>
                     </Table>
                   </TableContainer></div>
+                  <div className="hidden md:block">
                   <TablePagination
                     currentPage={accountPage}
                     pageSize={accountPageSize}
@@ -512,11 +514,27 @@ export default function ManageAccounts() {
                       setAccountPage(1);
                     }}
                   />
+                  </div>
                 </>
               )}
             </div>
           </div>
         </section>
+        {!accountsLoading && !accountsError && filteredAccounts.length > 0 && (
+          <nav aria-label="Account page navigation" className="request-mobile-navigator sticky bottom-0 z-30 rounded-t-xl border border-[#ead7d3] bg-white/95 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(76,37,24,0.08)] backdrop-blur-sm md:hidden">
+                  <TablePagination
+                    currentPage={accountPage}
+                    pageSize={accountPageSize}
+                    totalItems={serverTotal}
+                    onPageChange={setAccountPage}
+                    onPageSizeChange={(size) => {
+                      setAccountPageSize(size);
+                      setAccountPage(1);
+                    }}
+                  />
+          </nav>
+        )}
+        </div>
       </div>
       {drawerState && (
         <AccountDrawer
