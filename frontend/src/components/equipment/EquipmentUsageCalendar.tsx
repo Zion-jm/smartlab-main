@@ -218,48 +218,25 @@ export default function EquipmentUsageCalendar({
       </div>
 
       </section>
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3">
+      <section aria-labelledby="equipment-calendar-heading" className="space-y-4 rounded-2xl border border-[#ead7d3] bg-white p-4 shadow-sm lg:p-5">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eadfd9] pb-4">
         <div>
-          <h3 className="text-base font-semibold text-[#111827]">{getMonthLabel(currentMonth)}</h3>
-          <p className="text-xs text-[#6b7280]">Select a day to review equipment usage.</p>
+          <h3 id="equipment-calendar-heading" className="text-sm font-semibold text-[#57322d]">Monthly equipment usage calendar</h3>
+          <p className="mt-1 text-xs text-[#786565]">Select a day to review equipment usage.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="equipment-usage-filter" className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">
-            Equipment
-          </label>
-          <DropdownField id="equipment-usage-filter" value={selectedEquipmentId} onChange={setSelectedEquipmentId} className="w-full min-w-0 md:w-56" options={[{ value: '', label: 'All equipment' }, ...equipment.map(item => ({ value: item.id, label: item.name }))]} />
-          <button
-            type="button"
-            onClick={() => {
-              const now = manilaTodayForPicker();
-              setCurrentMonth(new Date(now.getFullYear(), now.getMonth(), 1));
-              setSelectedDate(now);
-            }}
-            className="rounded-full border border-[#d1d5db] px-3 py-1.5 text-xs font-semibold text-[#374151] hover:border-[#9ca3af]"
-          >
-            Today
-          </button>
-          <div className="flex items-center rounded-full border border-[#d1d5db]">
-            <button
-              type="button"
-              onClick={() => setCurrentMonth((previous) => new Date(previous.getFullYear(), previous.getMonth() - 1, 1))}
-              className="px-3 py-1.5 text-[#374151] hover:text-[#111827]"
-              aria-label="Previous month"
-            >
-              ‹
-            </button>
-            <div className="h-4 w-px bg-[#e5e7eb]" />
-            <button
-              type="button"
-              onClick={() => setCurrentMonth((previous) => new Date(previous.getFullYear(), previous.getMonth() + 1, 1))}
-              className="px-3 py-1.5 text-[#374151] hover:text-[#111827]"
-              aria-label="Next month"
-            >
-              ›
-            </button>
+        <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
+          <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
+            <label htmlFor="equipment-usage-filter" className="text-[11px] font-semibold uppercase tracking-wide text-[#786565]">Equipment</label>
+            <DropdownField id="equipment-usage-filter" value={selectedEquipmentId} onChange={setSelectedEquipmentId} className="min-w-0 flex-1 sm:w-56" options={[{ value: '', label: 'All equipment' }, ...equipment.map(item => ({ value: item.id, label: item.name }))]} />
           </div>
+          <div className="flex items-center rounded-xl border border-[#d8c7c2] bg-white">
+            <button type="button" onClick={() => setCurrentMonth(previous => new Date(previous.getFullYear(), previous.getMonth() - 1, 1))} className="h-11 w-11 rounded-l-xl text-[#800000] hover:bg-[#fffaf7]" aria-label="Previous month">‹</button>
+            <span aria-live="polite" className="px-2 text-sm font-semibold text-[#57322d]">{getMonthLabel(currentMonth)}</span>
+            <button type="button" onClick={() => setCurrentMonth(previous => new Date(previous.getFullYear(), previous.getMonth() + 1, 1))} className="h-11 w-11 rounded-r-xl text-[#800000] hover:bg-[#fffaf7]" aria-label="Next month">›</button>
+          </div>
+          <button type="button" onClick={() => { const now = manilaTodayForPicker(); setCurrentMonth(new Date(now.getFullYear(), now.getMonth(), 1)); }} className="min-h-11 rounded-xl border border-[#d8c7c2] bg-white px-4 text-xs font-semibold text-[#800000] hover:bg-[#fffaf7]">Today</button>
         </div>
-      </div>
+      </header>
 
       <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold text-[#6b7280]">
         {(['PENDING', 'APPROVED', 'BORROWED', 'RETURNED'] as BorrowRequestStatus[]).map((status) => (
@@ -276,7 +253,7 @@ export default function EquipmentUsageCalendar({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border border-[#e5e7eb] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-[#eadfd9] bg-white">
         <div className="p-2 md:hidden">
           <div className="grid grid-cols-7 text-center text-xs text-[#786565]">{['Su','Mo','Tu','We','Th','Fr','Sa'].map(day => <span key={day} className="py-2">{day}</span>)}</div>
           <div className="grid grid-cols-7">{calendarCells.map(cell => <button type="button" key={cell.date.toISOString()} aria-label={cell.date.toLocaleDateString('en-US', { dateStyle: 'full' }) + ', ' + cell.requests.length + ' usage requests'} aria-pressed={sameDay(cell.date, selectedDate ?? today)} onClick={() => setSelectedDate(cell.date)} className={'min-h-11 rounded-lg text-xs ' + (sameDay(cell.date, selectedDate ?? today) ? 'bg-[#800000] text-white' : cell.inCurrentMonth ? 'text-[#57322d]' : 'text-gray-400')}><span>{cell.date.getDate()}</span><span className="block h-2 text-[8px]" aria-hidden="true">{cell.requests.length ? '●' : ''}</span></button>)}</div>
@@ -295,7 +272,7 @@ export default function EquipmentUsageCalendar({
                   key={date.toISOString()}
                   type="button"
                   onClick={() => setSelectedDate(date)}
-                  className={`min-h-[125px] rounded-xl border border-white bg-white p-2 text-left transition hover:border-[#cbd5f5] ${
+                  className={`min-h-[110px] rounded-xl border border-white bg-white p-2 text-left transition hover:border-[#cbd5f5] ${
                     inCurrentMonth ? 'text-[#111827]' : 'text-[#9ca3af]'
                   }`}
                 >
@@ -327,6 +304,8 @@ export default function EquipmentUsageCalendar({
           </div>
         </div>
       </div>
+
+      </section>
 
       {(
         <div className={`equipment-usage-details md:fixed md:inset-0 md:z-30 md:items-center md:justify-center md:bg-black/40 md:px-4 ${selectedDate ? 'md:flex' : 'md:hidden'}`} onClick={() => setSelectedDate(null)}>
