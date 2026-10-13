@@ -1,18 +1,15 @@
+import ReadOnlyScheduleExplorer from '../features/requests/ReadOnlyScheduleExplorer';
 import UsageLocationField from '../features/requests/UsageLocationField';
 import RequestSubmittedDialog from '../features/requests/RequestSubmittedDialog';
-import DateRangeFilter from '../components/shared/DateRangeFilter';
-import MobileScheduleExplorer from '../features/requests/MobileScheduleExplorer';
 import { CalendarDays as RequestCalendarIcon, GraduationCap as RequestAcademicIcon, FileText as RequestPurposeIcon } from 'lucide-react';
-import { CalendarView, ChartView } from '../components/lab-schedule/ScheduleViews';
 import { ConflictDetailModal } from '../components/shared/ConflictDetailModal';
 import { ConflictStatusCard } from '../components/shared/ConflictStatusCard';
 import { MyRequestsPreview } from '../features/requests/MyRequestsPreview';
 import { PanelSection } from '../features/requests/PanelSection';
 import { type ApiBorrowRequest, type RequestResources, type RequestRow, formatReference, requestStartTimeOptions, requestTimeHasElapsed, timeOptions, toDateInputValue, toManilaTimeInputValue } from '../features/requests/requestModels';
-import { type SchedulesState, useLabSchedules, useMyBorrowRequests, useRequestResources } from '../features/requests/useRequestData';
+import { useLabSchedules, useMyBorrowRequests, useRequestResources } from '../features/requests/useRequestData';
 import { useRequestClock } from '../features/requests/useRequestClock';
 
-import ScheduleDataTable from '../components/lab-schedule/ScheduleDataTable';
 
 
 import { combineManilaDateTime as combineDateTime } from '../utils/dateTime';
@@ -21,9 +18,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import PortalLayout, { type PortalNavItem } from '../components/PortalLayout';
 
-import FilterToolbar from '../components/FilterToolbar';
 
-import ResetFiltersButton from '../components/shared/ResetFiltersButton';
 
 import DropdownField from '../components/shared/DropdownField';
 
@@ -44,7 +39,6 @@ import type { User } from '../types';
 
 import { StyledDatePicker } from '../components/shared/StyledDatePicker';
 
-import { EmptyState, ErrorState, LoadingState } from '../components/shared/EmptyState';
 
 import UnifiedEquipmentSection from '../components/equipment/UnifiedEquipmentSection';
 
@@ -53,9 +47,7 @@ import ConfirmationModal from '../components/shared/ConfirmationModal';
 
 import { YEAR_LEVELS } from '../constants/yearLevels';
 
-import PageTabGroup from '../components/shared/PageTabGroup';
 
-import { getPageTabId } from '../components/shared/pageTabGroupUtils';
 
 const tabs = [
   {
@@ -77,11 +69,7 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]['id'];
 
-const studentScheduleViewTabs = [
-  { id: 'table', label: 'Table View', description: 'View schedules in a detailed table.' },
-  { id: 'chart', label: 'Chart View', description: 'View schedules on a weekly utilization chart.' },
-  { id: 'calendar', label: 'Calendar', description: 'View schedules in a calendar layout.' },
-] as const;
+
 
 const FieldLabel = ({
   text,
@@ -268,7 +256,7 @@ export default function StudentPanel() {
           />
         ) : null}
         {activeTab === 'schedule' && (
-          <FacultyScheduleExplorer {...scheduleState} computerLabNames={computerLabNames} />
+          <ReadOnlyScheduleExplorer {...scheduleState} computerLabNames={computerLabNames} />
         )}
       </div>
       <ConfirmationModal
@@ -289,105 +277,6 @@ export default function StudentPanel() {
   );
 }
 
-type FacultyScheduleExplorerProps = SchedulesState & { computerLabNames: string[] };
-
-function FacultyScheduleExplorer({ schedules, loading, error, dateFilter, setDateFilter, reload, computerLabNames }: FacultyScheduleExplorerProps) {
-  const [search, setSearch] = useState('');
-  const [range, setRange] = useState({from:'',to:''});
-  const [viewMode, setViewMode] = useState<'table' | 'chart' | 'calendar'>('table');
-
-  const filteredSchedules = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    const dated = schedules.filter(schedule => {
-      if (viewMode === 'chart' || (!range.from && !range.to)) return true;
-      if (schedule.scheduleType !== 'WEEKLY') { const key = schedule.date?.slice(0,10); return !!key && (!range.from || key >= range.from) && (!range.to || key <= range.to); }
-      if (!range.from || !range.to) return true;
-      const start = new Date(range.from + 'T00:00:00Z');
-      const end = new Date(range.to + 'T00:00:00Z');
-      const offset = ((schedule.dayOfWeekIndex ?? -7) - start.getUTCDay() + 7) % 7;
-      return schedule.dayOfWeekIndex !== null && start.getTime() + offset * 86400000 <= end.getTime();
-    });
-    if (viewMode === 'chart') return schedules;
-    if (!query) return dated;
-    return dated.filter((schedule) =>
-      [
-        schedule.roomLabel,
-        schedule.facultyName,
-        schedule.programLabel,
-        schedule.subjectLabel,
-        schedule.displayDay,
-        schedule.displayDate,
-      ]
-        .join(' ')
-        .toLowerCase()
-        .includes(query)
-    );
-  }, [schedules, search, range, viewMode]);
-
-  return (
-    <>
-    <MobileScheduleExplorer schedules={schedules} loading={loading} error={error} dateFilter={dateFilter} setDateFilter={setDateFilter} reload={reload} computerLabNames={computerLabNames} />
-    <section className="hidden md:block mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
-      <FilterToolbar
-        compactFilters
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchInFilters
-        filters={
-          <div className="schedule-ribbon-filters compact-filter-panel grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-            <label className="flex min-w-0 flex-col gap-1 text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">Search<input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Subject, room, or faculty" className="h-10 rounded-lg border border-[#d8c7c3] bg-white px-3 text-sm font-normal normal-case" /></label>
-            <div className="flex w-full items-end gap-2 md:col-span-2">
-            <DateRangeFilter value={range} onChange={setRange} className="min-w-0 flex-1" />
-            {(range.from || range.to) && <ResetFiltersButton onClick={() => setRange({from:'',to:''})} label="Clear dates" className="mb-0 whitespace-nowrap" />}
-            </div>
-          </div>
-        }
-        filtersActiveCount={range.from || range.to ? 1 : 0}
-        ribbonSummary={`View: ${studentScheduleViewTabs.find((tab) => tab.id === viewMode)?.label ?? 'Schedule'}${range.from || range.to ? ` · Dates: ${range.from || 'Any'} – ${range.to || 'Any'}` : ''}`}
-        onRefresh={reload}
-        refreshing={loading}
-        refreshError={Boolean(error)}
-        className="mb-1"
-      />
-      <div className="page-control-ribbon--flush px-0 pt-3 pb-0">
-          <PageTabGroup
-            tabs={studentScheduleViewTabs}
-            value={viewMode}
-            onChange={(value) => setViewMode(value as 'table' | 'chart' | 'calendar')}
-            ariaLabel="Student schedule views"
-            panelId="student-schedule-tabpanel"
-          />
-      </div>
-      <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-      <div
-        className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm"
-        id="student-schedule-tabpanel"
-        role="tabpanel"
-        aria-labelledby={getPageTabId('student-schedule-tabpanel', viewMode)}
-        tabIndex={0}
-      >
-        {loading ? (
-          <LoadingState message="Loading schedules…" />
-        ) : error ? (
-          <ErrorState message={error} onRetry={reload} />
-        ) : filteredSchedules.length === 0 ? (
-          <EmptyState
-            title="No schedules found"
-            description="No schedules match your filters yet."
-            variant="minimal"
-          />
-        ) : viewMode === 'table' ? (
-          <ScheduleDataTable schedules={filteredSchedules} />
-        ) : viewMode === 'chart' ? (
-          <ChartView schedules={schedules} computerLabNames={computerLabNames} />
-        ) : (
-          <CalendarView schedules={filteredSchedules} />
-        )}
-      </div>
-    </section>
-    </>
-  );
-}
 
 function RequestFormScaffold({
   student,
