@@ -1221,3 +1221,13 @@
   .schedule-chart-lab-control { gap: .375rem; }
   .schedule-chart-lab-control > span { display: none; }
 }
+
+@media (max-width: 767px) {
+  .request-mobile-navigator .table-pagination {
+    position: static;
+    border: 0;
+    border-radius: .75rem .75rem 0 0;
+    background: transparent;
+    box-shadow: none;
+  }
+}

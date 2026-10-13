@@ -633,6 +633,7 @@ export default function AdminRequests() {
             {requests.map(request => <RequestTableRow key={request.id} request={request} onOpen={handleOpenDetailModal} onSelect={setSelectedRequest} onAction={handleAction} />)}            </TableBody>
           </Table>
         </TableContainer></div>
+        <div className="hidden md:block">
         <TablePagination
           currentPage={requestPage}
           pageSize={requestPageSize}
@@ -643,6 +644,7 @@ export default function AdminRequests() {
             setRequestPage(1);
           }}
         />
+        </div>
       </>
     );
 
@@ -716,6 +718,21 @@ export default function AdminRequests() {
             {tableContent}
           </div>
         </section>
+        {!loading && !error && requests.length > 0 && (
+          <nav aria-label="Request page navigation" className="request-mobile-navigator sticky bottom-0 z-30 rounded-t-xl border border-[#ead7d3] bg-white/95 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(76,37,24,0.08)] backdrop-blur-sm md:hidden">
+        <TablePagination
+          currentPage={requestPage}
+          pageSize={requestPageSize}
+          totalItems={total}
+          onPageChange={setRequestPage}
+          onPageSizeChange={(size) => {
+            setRequestPageSize(size);
+            setRequestPage(1);
+          }}
+        />
+          </nav>
+        )}
+
       </div>
 
       <RequestDetailDrawer
