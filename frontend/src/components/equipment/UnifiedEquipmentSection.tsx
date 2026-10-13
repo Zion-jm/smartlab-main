@@ -27,6 +27,7 @@ interface UnifiedEquipmentSectionProps {
   loading?: boolean;
   className?: string;
   compact?: boolean;
+  fullWidthCatalog?: boolean;
   excludeRequestId?: string;
 }
 
@@ -43,8 +44,11 @@ export default function UnifiedEquipmentSection({
   timeEnd,
   className = '',
   compact = false,
+  fullWidthCatalog = false,
   excludeRequestId,
 }: UnifiedEquipmentSectionProps) {
+  const [search, setSearch] = useState('');
+  const [selectedOnly, setSelectedOnly] = useState(false);
   const [reviewVersion, setReviewVersion] = useState(0);
   const [showAllIssues, setShowAllIssues] = useState(false);
   const [modalEquipment, setModalEquipment] = useState<{
@@ -101,6 +105,10 @@ export default function UnifiedEquipmentSection({
       return a.originalIndex - b.originalIndex;
     });
   }, [enhancedEquipment]);
+
+  const filteredEquipment = sortedEquipment.filter(item =>
+    (!selectedOnly || item.isSelected) && item.name.toLowerCase().includes(search.trim().toLowerCase())
+  );
 
   const handleViewDetails = (eq: EquipmentCardData) => {
     setModalEquipment({
@@ -198,9 +206,9 @@ export default function UnifiedEquipmentSection({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="request-section-heading text-base font-semibold text-gray-800"><Package size={18} aria-hidden="true" className="md:hidden" /><span className="md:hidden">Equipment</span><span className="hidden md:inline">Equipment Availability & Selection</span></h3>
+          <h3 className="request-section-heading text-base font-semibold text-gray-800"><Package size={18} aria-hidden="true" className="md:hidden" /><span className="md:hidden">Equipment</span><span className="hidden md:inline">{fullWidthCatalog ? "4. Equipment selection" : "Equipment Availability & Selection"}</span></h3>
           <p className="text-sm text-gray-600">
             {dateNeeded} at {timeStart} - {timeEnd} • Select equipment and specify quantities needed
           </p>
@@ -229,13 +237,31 @@ export default function UnifiedEquipmentSection({
 
       <MobileEquipmentPicker reviewVersion={reviewVersion} equipment={enhancedEquipment} loading={availabilityLoading} error={Boolean(availabilityError)} onChange={onEquipmentChange} onClear={onEquipmentClear} />
 
-      <div className="hidden md:block bg-white border border-gray-200 rounded-lg">
-        <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sortedEquipment.map((eq) => (
+      <div className={fullWidthCatalog ? 'hidden md:block' : 'hidden md:block bg-white border border-gray-200 rounded-lg'}>
+        {fullWidthCatalog && (
+          <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[#ead7d3] bg-[#fffaf7] p-3">
+            <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-semibold text-[#57322d]">
+              Search equipment
+              <input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search by equipment name" className="min-h-11 w-full rounded-lg border border-[#d8c7c2] bg-white px-3 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-[#800000]" />
+            </label>
+            <button type="button" aria-pressed={selectedOnly} onClick={() => setSelectedOnly(value => !value)} className={`min-h-11 rounded-lg border px-4 text-sm font-semibold ${selectedOnly ? 'border-[#800000] bg-[#800000] text-white' : 'border-[#d8c7c2] bg-white text-[#800000]'}`}>
+              Selected only ({selected.length})
+            </button>
+            <p role="status" className="py-3 text-xs text-[#786565]">Showing {filteredEquipment.length} of {equipment.length} items</p>
+          </div>
+        )}
+        <div className={fullWidthCatalog ? "" : "p-4"}>
+          <div className={fullWidthCatalog ? "request-catalog-grid" : "grid grid-cols-1 md:grid-cols-2 gap-4"}>
+            {(fullWidthCatalog ? filteredEquipment : sortedEquipment).map((eq) => (
               <EquipmentCard key={eq.id} equipment={eq} onChange={onEquipmentChange} onClear={onEquipmentClear} onViewDetails={handleViewDetails} />
             ))}
           </div>
+          {fullWidthCatalog && filteredEquipment.length === 0 && (
+            <div className="rounded-xl border border-dashed border-[#d8c7c2] p-6 text-center text-sm text-[#786565]">
+              <p>{selectedOnly && !selected.length ? 'No equipment selected yet. Browse the catalog to add items.' : 'No equipment matches these filters.'}</p>
+              <button type="button" onClick={() => { setSearch(''); setSelectedOnly(false); }} className="mt-2 min-h-11 font-semibold text-[#800000] underline">Show all equipment</button>
+            </div>
+          )}
         </div>
       </div>
 
