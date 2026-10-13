@@ -307,7 +307,7 @@ export default function AdminAcademicPeriod() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto responsive-workspace space-y-4">
+      <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         {error && (
           <div data-testid="status-academic-period-error" className="flex items-start gap-3 rounded-2xl border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
@@ -315,8 +315,9 @@ export default function AdminAcademicPeriod() {
           </div>
         )}
 
-        <section data-testid="card-current-academic-period" className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-linear-to-br from-[#fff8f8] via-white to-[#fffdf5] shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#f1e3df] px-5 py-5">
+        <div className="grid items-stretch gap-4 xl:grid-cols-3">
+        <section data-testid="card-current-academic-period" className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#f1e3df] bg-[#fffaf7] px-5 py-5">
             <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#800000] text-white shadow-sm">
                 <CalendarRange className="h-5 w-5" />
@@ -373,10 +374,19 @@ export default function AdminAcademicPeriod() {
           </div>
         </section>
 
+        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+          <header className="border-b border-[#f1e3df] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Before changing periods</h2><p className="mt-1 text-xs text-[#786565]">Prepare student records for a smooth transition.</p></header>
+          <div className="space-y-3 p-4">
+            <ol className="space-y-3 text-xs leading-5 text-[#786565]">{['Review student records for the current year.', 'Choose the destination year and semester.', 'Review the confirmation and any missing-record warnings.'].map((step, index) => <li key={step} className="flex items-start gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#f5eae5] font-semibold text-[#800000]">{index + 1}</span><span>{step}</span></li>)}</ol>
+            <button type="button" disabled={!data?.current} onClick={() => navigate(`/admin/student-records?yearId=${encodeURIComponent(data?.current?.academicYear.id ?? '')}`)} className="w-full rounded-xl border border-[#ead7d3] bg-[#fffaf7] px-4 py-3 text-left text-xs font-semibold text-[#800000] hover:bg-[#f5eae5] disabled:opacity-50">Review current-year student records →</button>
+          </div>
+        </section>
+        </div>
+
         <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_2px_minmax(320px,0.85fr)]">
-          <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
             <div className="border-b border-[#f3f4f6] px-5 py-4">
               <div className="flex items-center gap-2">
                 <CalendarRange className="h-4 w-4 text-[#800000]" />
@@ -385,6 +395,10 @@ export default function AdminAcademicPeriod() {
               <p className="mt-1 text-xs text-[#6b7280]">Existing records will not be moved or rewritten.</p>
             </div>
             <form onSubmit={submit} className="space-y-4 p-5">
+              <div className="grid gap-3 rounded-xl border border-[#ead7d3] bg-[#fffaf7] p-4 sm:grid-cols-2" aria-live="polite">
+                <div><p className="text-[10px] font-semibold uppercase tracking-wide text-[#967348]">Current period</p><p className="mt-1 text-sm font-semibold text-[#321d1d]">{data?.current?.label ?? 'Not configured'}</p></div>
+                <div><p className="text-[10px] font-semibold uppercase tracking-wide text-[#967348]">Selected destination</p><p className="mt-1 text-sm font-semibold text-[#800000]">{year.trim() && termName.trim() ? `${year} · ${termName}` : 'Choose a year and term'}</p><p className="mt-1 text-xs text-[#786565]">{year === data?.current?.academicYear.year && termName === data?.current?.term.name ? 'Already the active period' : 'Not applied until confirmed'}</p></div>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="block">
                   <DropdownField
@@ -463,9 +477,9 @@ export default function AdminAcademicPeriod() {
             </form>
           </section>
 
-          <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2] xl:-my-4 xl:h-auto xl:w-0.5 xl:self-stretch" />
 
-          <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+
+          <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
             <div className="border-b border-[#f3f4f6] px-5 py-4">
               <div className="flex items-center gap-2">
                 <Archive className="h-4 w-4 text-[#800000]" />
@@ -473,9 +487,9 @@ export default function AdminAcademicPeriod() {
               </div>
               <p className="mt-1 text-xs text-[#6b7280]">Records are kept for reporting and history.</p>
             </div>
-            <div className="max-h-[320px] overflow-y-auto p-3">
+            <div className="max-h-[360px] space-y-2 overflow-y-auto p-4">
               {(data?.academicYears ?? []).map((academicYear) => (
-                <div key={academicYear.id} data-testid={`row-academic-year-${academicYear.id}`} className="flex items-center justify-between gap-3 rounded-xl px-3 py-3 hover:bg-[#fff8f8]">
+                <div key={academicYear.id} data-testid={`row-academic-year-${academicYear.id}`} className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-3 ${academicYear.isActive ? 'border-[#cda59b] bg-[#fff5f1]' : 'border-[#eee4df] bg-[#faf9f8]'}`}>
                   <div>
                     <p className="text-sm font-semibold text-[#1f2937]">{academicYear.year}</p>
                     <p className="text-[11px] text-[#9ca3af]">Academic year record</p>
@@ -490,7 +504,7 @@ export default function AdminAcademicPeriod() {
 
         <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
-        <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <div className="flex items-center gap-2 border-b border-[#f3f4f6] px-5 py-4">
             <History className="h-4 w-4 text-[#800000]" />
             <div>
