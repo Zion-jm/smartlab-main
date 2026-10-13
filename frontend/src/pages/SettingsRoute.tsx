@@ -134,12 +134,13 @@ function SettingsPage() {
           />
           <div className="mt-5 border-t border-[#eee4df] pt-5">
             <h3 className="text-sm font-semibold text-[#3d2b2b]">Keyboard shortcuts</h3>
-            <p className="mt-1 text-sm text-[#756969]">Choose an Alt + Shift + letter shortcut, or disable it. Changes apply immediately on this device. Shortcuts pause while typing or using a dialog.</p>
+            <p className="mt-1 text-sm text-[#756969]">Choose an Alt + Shift + letter shortcut, or disable it. Changes apply immediately on this device. Shortcuts pause while typing or using a dialog, except the chart shortcut can close the expanded chart.</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {([
-                ['controlsShortcut', 'Show / hide page controls', 'sidebarShortcut'],
-                ['sidebarShortcut', 'Collapse / expand sidebar', 'controlsShortcut'],
-              ] as const).map(([key, label, otherKey]) => (
+                ['controlsShortcut', 'Show / hide page controls'],
+                ['sidebarShortcut', 'Collapse / expand sidebar'],
+                ['chartShortcut', 'Expand / collapse schedule chart'],
+              ] as const).map(([key, label]) => (
                 <div key={key}>
                   <DropdownField
                     label={label}
@@ -147,7 +148,7 @@ function SettingsPage() {
                     onChange={value => updatePreference(key, value)}
                     options={[
                       { value: '', label: 'Disabled' },
-                      ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(letter => letter !== preferences[otherKey]).map(letter => ({ value: letter, label: `Alt + Shift + ${letter}` })),
+                      ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(letter => !(['controlsShortcut', 'sidebarShortcut', 'chartShortcut'] as const).some(otherKey => otherKey !== key && letter === preferences[otherKey])).map(letter => ({ value: letter, label: `Alt + Shift + ${letter}` })),
                     ]}
                   />
                 </div>

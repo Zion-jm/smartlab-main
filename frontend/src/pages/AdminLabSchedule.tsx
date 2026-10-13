@@ -1,3 +1,6 @@
+import { useAdminShortcut } from '../hooks/useAdminShortcut';
+import { useAuthStore } from '../stores/authStore';
+import { getUserPreferences, usePreferencesStore } from '../stores/preferencesStore';
 import MobileScheduleExplorer from '../features/requests/MobileScheduleExplorer';
 import { normalizeSchedule } from '../components/lab-schedule/normalizeSchedule';
 import ScheduleDataTable from '../components/lab-schedule/ScheduleDataTable';
@@ -119,6 +122,12 @@ export default function AdminLabSchedule() {
   }));
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
   const [chartExpanded, setChartExpanded] = useState(false);
+  const shortcutUserId = useAuthStore(state => state.user?.id ?? 'anonymous');
+  const shortcutPreferences = usePreferencesStore(state => state.preferencesByUser);
+  const chartShortcut = getUserPreferences(shortcutPreferences, shortcutUserId).chartShortcut;
+  useAdminShortcut(chartShortcut, () => {
+    if (viewMode === 'chart' && !detailsModalConfig) setChartExpanded(current => !current);
+  }, '[aria-labelledby="expanded-chart-title"]');
   const [chartLab, setChartLab] = useState('');
   const [chartWeekStart, setChartWeekStart] = useState('');
 

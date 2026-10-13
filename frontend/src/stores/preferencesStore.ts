@@ -6,6 +6,7 @@ export type UserPreferences = {
   sidebarCollapsedByDefault: boolean;
   controlsShortcut: string;
   sidebarShortcut: string;
+  chartShortcut: string;
 };
 
 const defaultPreferences: UserPreferences = {
@@ -13,6 +14,7 @@ const defaultPreferences: UserPreferences = {
   sidebarCollapsedByDefault: false,
   controlsShortcut: 'F',
   sidebarShortcut: 'S',
+  chartShortcut: 'E',
 };
 
 type PreferencesState = {
