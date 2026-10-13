@@ -976,6 +976,15 @@
     transform: none;
     box-shadow: 0 2px 5px #321d1d20;
   }
+  .schedule-chart-grid button[data-schedule-type="WEEKLY"] {
+    background: #eaf2fc;
+    border-color: #91afd3;
+    border-left-color: #245a95;
+    color: #193e69;
+  }
+  .schedule-chart-grid button[data-schedule-type="WEEKLY"]:hover {
+    background: #dce9f9;
+  }
   .schedule-chart-grid button:focus-visible {
     outline: 2px solid #800000;
     outline-offset: 2px;
@@ -1115,6 +1124,12 @@
     overflow-wrap: anywhere;
     font-size: 7pt;
     line-height: 1.25;
+  }
+  body.printing-schedule-chart .schedule-chart-grid button[data-schedule-type="WEEKLY"] {
+    background: #eaf2fc !important;
+    border-color: #91afd3;
+    border-left-color: #245a95;
+    color: #193e69;
   }
   body.printing-schedule-chart .schedule-chart-controls {
     display: none !important;

@@ -206,6 +206,7 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
                           <button
                             key={schedule.id}
                             type="button"
+                            data-schedule-type={schedule.scheduleType}
                             onClick={() => onSelectSchedule ? onSelectSchedule(schedule.id) : setSelectedSchedule(schedule)}
                             title={accessibleLabel}
                             aria-label={accessibleLabel}
