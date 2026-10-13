@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import Button from '../components/shared/Button';
 import InputField from '../components/shared/InputField';
@@ -297,7 +298,7 @@ export default function ProfilePage({
             title="Contact information"
             description="Update your name and contact details."
           />
-          <form onSubmit={handleProfileSubmit} className="space-y-5">
+          <form id="profile-contact-form" onSubmit={handleProfileSubmit} className="space-y-5">
             <div className="grid gap-5 sm:grid-cols-2">
               <InputField
                 label="First name"
@@ -371,6 +372,10 @@ export default function ProfilePage({
             title={`${roleLabels[role]} information`}
             description={roleDescriptions[role]}
           />
+          {role === 'ADMIN' && <div className="mb-5 grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#800000] bg-[#fffaf7] p-3"><p className="text-[11px] font-semibold text-[#786565]">Email address</p><p className="mt-2 text-sm font-semibold text-[#321d1d]">{user?.email ? 'Provided' : 'Not provided'}</p><p className="mt-1 text-[11px] text-[#786565]">Saved account detail</p></div>
+            <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-3"><p className="text-[11px] font-semibold text-[#786565]">Phone number</p><p className="mt-2 text-sm font-semibold text-[#321d1d]">{user?.phone ? 'Provided' : 'Not provided'}</p><p className="mt-1 text-[11px] text-[#786565]">Optional contact detail</p></div>
+          </div>}
           <dl>
             {roleDetails.map(([label, value, muted]) => (
               <DetailRow key={label} label={label} value={value} muted={muted} />
@@ -380,6 +385,12 @@ export default function ProfilePage({
             <ShieldIcon />
             <p>Role and academic information is managed by SmartLab administrators.</p>
           </div>
+          {role === 'ADMIN' && <div className="mt-5 space-y-3 border-t border-[#eee4df] pt-5">
+            <h3 className="text-xs font-semibold text-[#57322d]">Profile actions</h3>
+            <button type="button" onClick={() => { const field = document.querySelector<HTMLInputElement>('#profile-security-form input'); field?.scrollIntoView({ behavior: 'smooth', block: 'center' }); field?.focus({ preventScroll: true }); }} className="w-full rounded-xl border border-[#ead7d3] bg-[#fffaf7] px-4 py-3 text-left text-xs font-semibold text-[#800000] hover:bg-[#f5eae5]">Change password →</button>
+            <Link to="/settings" className="block rounded-xl border border-[#ead7d3] bg-white px-4 py-3 text-xs font-semibold text-[#57322d] hover:bg-[#fffaf7]">Workspace settings →<span className="mt-1 block font-normal text-[#786565]">Configure layout defaults and keyboard shortcuts.</span></Link>
+          </div>}
+
         </section>
 
         <section className="rounded-2xl border border-[#eadfd9] bg-[#fffdfb] p-5 shadow-[0_8px_26px_rgba(76,37,24,0.045)] sm:p-7 xl:col-span-2">
@@ -393,7 +404,7 @@ export default function ProfilePage({
               </div>
             }
           />
-          <form onSubmit={handlePasswordSubmit} className="grid gap-5 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
+          <form id="profile-security-form" onSubmit={handlePasswordSubmit} className="grid gap-5 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
             <InputField
               label="Current password"
               value={password.currentPassword}
