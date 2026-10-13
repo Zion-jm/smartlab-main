@@ -61,7 +61,7 @@ const isScheduleView = (value: string | null): value is ScheduleView =>
 
 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function ExpandedChartDialog({ schedules, computerLabNames, selectedLab, onSelectedLabChange, selectedWeekStart, onSelectedWeekStartChange, onSelectSchedule, onClose }: { schedules: LabSchedule[]; computerLabNames: string[]; selectedLab: string; onSelectedLabChange: (lab: string) => void; selectedWeekStart: string; onSelectedWeekStartChange: (weekStart: string) => void; onSelectSchedule: (id: string) => void; onClose: () => void }) {
+function ExpandedChartDialog({ schedules, computerLabNames, selectedLab, onSelectedLabChange, selectedWeekStart, onSelectedWeekStartChange, onSelectSchedule, onPrint, onClose }: { schedules: LabSchedule[]; computerLabNames: string[]; selectedLab: string; onSelectedLabChange: (lab: string) => void; selectedWeekStart: string; onSelectedWeekStartChange: (weekStart: string) => void; onSelectSchedule: (id: string) => void; onPrint: () => void; onClose: () => void }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -76,7 +76,7 @@ function ExpandedChartDialog({ schedules, computerLabNames, selectedLab, onSelec
         <button type="button" autoFocus onClick={onClose} aria-label="Close expanded chart" className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#786565] transition hover:bg-[#f6e8e4] hover:text-[#800000] focus-visible:outline-2 focus-visible:outline-[#800000]"><X size={20} /></button>
       </header>
       <div className="min-h-0 flex-1 overflow-auto">
-        <ChartView dayLabels={dayNames} showEmptyGrid schedules={schedules} computerLabNames={computerLabNames} onSelectSchedule={onSelectSchedule} selectedLab={selectedLab} onSelectedLabChange={onSelectedLabChange} selectedWeekStart={selectedWeekStart} onSelectedWeekStartChange={onSelectedWeekStartChange} />
+        <ChartView dayLabels={dayNames} showEmptyGrid schedules={schedules} computerLabNames={computerLabNames} onSelectSchedule={onSelectSchedule} selectedLab={selectedLab} onSelectedLabChange={onSelectedLabChange} selectedWeekStart={selectedWeekStart} onSelectedWeekStartChange={onSelectedWeekStartChange} onPrint={onPrint} />
       </div>
     </section>
   </div>;
@@ -525,7 +525,7 @@ export default function AdminLabSchedule() {
   };
 
   const printScheduleChart = () => {
-    const chart = document.querySelector<HTMLElement>('.schedule-chart-print-area');
+    const chart = document.querySelector<HTMLElement>('[aria-labelledby="expanded-chart-title"] .schedule-chart-print-area') ?? document.querySelector<HTMLElement>('.schedule-chart-print-area');
     if (!chart) return;
 
     const frame = document.createElement('iframe');
@@ -713,7 +713,7 @@ export default function AdminLabSchedule() {
         }} />
       )}
 
-      {chartExpanded && <ExpandedChartDialog schedules={filteredSchedules} computerLabNames={computerLabNames} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onSelectSchedule={handleViewSchedule} onClose={() => setChartExpanded(false)} />}
+      {chartExpanded && <ExpandedChartDialog schedules={filteredSchedules} computerLabNames={computerLabNames} selectedLab={chartLab} onSelectedLabChange={setChartLab} selectedWeekStart={chartWeekStart} onSelectedWeekStartChange={setChartWeekStart} onSelectSchedule={handleViewSchedule} onPrint={printScheduleChart} onClose={() => setChartExpanded(false)} />}
     </AdminLayout>
   );
 }
