@@ -53,11 +53,6 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
 
   return (
     <>
-      <header className="rounded-2xl border border-[#ead7d3] bg-[#fffaf7] p-5 shadow-sm">
-        <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#9a7b4f]">Laboratory planning</p>
-        <h2 className="mt-1 text-lg font-semibold text-[#57322d]">View schedules</h2>
-        <p className="mt-1 text-xs text-[#786565]">Browse computer lab schedules for the active academic period before planning your request. An empty slot does not reserve a room.</p>
-      </header>
     <MobileScheduleExplorer schedules={schedules} loading={loading} error={error} dateFilter={dateFilter} setDateFilter={setDateFilter} reload={reload} computerLabNames={computerLabNames} />
     <section className="hidden md:block mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
       <FilterToolbar
