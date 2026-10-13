@@ -140,7 +140,7 @@ export function ChartView({ flush = false, schedules, computerLabNames = [], onS
         <h1 className="schedule-chart-print-title">{printTitle}</h1>
         <p className="mt-1 text-[10pt] text-[#514343]">{selectedLab || 'Laboratory'} · {weekRangeLabel(selectedWeekStart)}</p>
       </header>
-      <div className="rounded-2xl border border-[#e5e7eb]">
+      <div className="rounded-2xl border border-[#e5e7eb] bg-white">
         <div className="schedule-chart-controls flex flex-wrap items-center justify-between gap-4 border-b border-[#f3f4f6] px-4 py-4">
           <div>
             <h3 className="text-sm font-semibold text-[#111827]">Weekly Lab Utilization</h3>
