@@ -89,11 +89,11 @@ export default function AdminAcademicDirectory() {
   const [directoryPageSize, setDirectoryPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
 
   const performLoadData = useCallback(async () => {
-    
+
       return directoryApi.getOverview().then((response) => {
       setData((response.data ?? null) as DirectoryPayload);
       setLastUpdated(new Date());
-    
+
     }).catch((err) => {
       console.error('Failed to load academic directory overview', err);
       setError('Unable to load academic directory data.');
@@ -562,7 +562,7 @@ export default function AdminAcademicDirectory() {
 
     return (
       <div className="space-y-3 lg:space-y-4">
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+
         <div className="pb-4">
           {noData ? (
             <div className="px-4 lg:px-6">

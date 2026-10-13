@@ -124,7 +124,7 @@ export default function AdminAcademicPeriod() {
   const [historyPageSize, setHistoryPageSize] = useState(15);
 
   const performLoadData = useCallback(async () => {
-    
+
       return academicPeriodApi.get().then((response) => {
       const payload = response.data as AcademicPeriodPayload;
       setData(payload);
@@ -134,7 +134,7 @@ export default function AdminAcademicPeriod() {
       setYearTouched(false);
       setTermName(payload.current?.term.name ?? payload.terms[0]?.name ?? payload.suggestedTerms[0] ?? defaultTerms[0]);
       setLastUpdated(new Date());
-    
+
     }).catch((loadError) => {
       console.error('Failed to load academic period settings', loadError);
       setError('Academic period settings could not be loaded. Please refresh and try again.');
@@ -383,7 +383,7 @@ export default function AdminAcademicPeriod() {
         </section>
         </div>
 
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+
 
         <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
@@ -502,7 +502,7 @@ export default function AdminAcademicPeriod() {
           </section>
         </div>
 
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+
 
         <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <div className="flex items-center gap-2 border-b border-[#f3f4f6] px-5 py-4">

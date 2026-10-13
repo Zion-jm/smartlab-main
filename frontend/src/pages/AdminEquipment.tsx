@@ -100,7 +100,7 @@ export default function AdminEquipment() {
   const requestVersion = useRef(0);
   const performLoadData = useCallback(async () => {
     const version = ++requestVersion.current;
-    
+
       return Promise.all([
         (viewMode === 'table' ? equipmentApi.getPage : equipmentApi.getAll)({
           page: equipmentPage, pageSize: equipmentPageSize,
@@ -118,7 +118,7 @@ export default function AdminEquipment() {
       if (equipmentPage > 1 && count <= (equipmentPage - 1) * equipmentPageSize) setEquipmentPage(Math.max(1, Math.ceil(count / equipmentPageSize)));
       setEquipment(Array.isArray(equipmentRes.data) ? equipmentRes.data : []);
       setStats((statsRes.data ?? null) as EquipmentStats);
-    
+
     }).catch((err) => {
       if (version !== requestVersion.current) return;
       console.error('Failed to load equipment data', err);
@@ -181,7 +181,7 @@ export default function AdminEquipment() {
   const usageRequestVersion = useRef(0);
   const performLoadUsageData = useCallback(async () => {
     const version = ++usageRequestVersion.current;
-    
+
       return borrowRequestApi.getAll({
         status: 'ALL',
         sort: 'date-asc',
@@ -190,7 +190,7 @@ export default function AdminEquipment() {
       }).then((response) => {
       if (version !== usageRequestVersion.current) return;
       setUsageRequests((response.data?.requests ?? []) as BorrowRequest[]);
-    
+
     }).catch((err) => {
       if (version !== usageRequestVersion.current) return;
       console.error('Failed to load equipment usage schedule', err);
@@ -621,7 +621,7 @@ export default function AdminEquipment() {
           className={viewMode === 'table' ? 'space-y-4' : 'py-2'}
         >
             <div className="space-y-4">
-              <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+
               {viewMode === 'table' && <div className="grid items-start gap-4 xl:grid-cols-3">
                 <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
                   <header className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Inventory overview</h2><p className="mt-1 text-xs text-[#786565]">Current stock across the equipment catalog. Request activity follows the selected academic period.</p></header>
@@ -654,9 +654,6 @@ export default function AdminEquipment() {
                     <p className="text-xs text-[#6b7280]">{stats.overdue?.quantity ?? 0} units overdue</p>
                   </div>
                 </div>
-              )}
-              {viewMode === 'table' && (
-                <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
               )}
               {viewMode === 'table' ? renderTable() : viewMode === 'availability' ? <EquipmentAvailabilityPlanner /> : (
                 <EquipmentUsageCalendar

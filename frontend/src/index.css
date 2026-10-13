@@ -911,7 +911,7 @@
 
 /* Admin profile follows the full-width settings workspace. */
 .profile-page--cards { max-width: none; padding: 1rem 1.5rem; }
-.profile-page--cards > .grid { gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #c8aaa2; }
+.profile-page--cards > .grid { gap: 1rem; margin-top: 1rem; }
 .profile-page--cards > .grid > section { padding: 1.25rem; background: #fff; border-color: #e5e7eb; box-shadow: 0 1px 3px #0000001a; }
 .profile-page--cards .profile-section-heading { margin: -1.25rem -1.25rem 1.25rem; padding: 1.1rem 1.25rem; border-color: #ead7d3; background: #fffaf7; border-radius: 1rem 1rem 0 0; }
 .profile-page--cards .profile-section-heading > div > p:first-child { display: none; }

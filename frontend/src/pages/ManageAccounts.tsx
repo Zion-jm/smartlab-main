@@ -148,7 +148,7 @@ export default function ManageAccounts() {
   const requestVersion = useRef(0);
   const performFetchAccounts = useCallback(async () => {
     const version = ++requestVersion.current;
-    
+
       return userApi.getPage({
         page: accountPage, pageSize: accountPageSize,
         ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
@@ -176,7 +176,7 @@ export default function ManageAccounts() {
         statusId: user.status_id,
       }));
       setAccounts(normalized);
-    
+
     }).catch((error) => {
       if (version !== requestVersion.current) return;
       const fallbackMessage = 'Failed to load accounts.';
@@ -212,7 +212,7 @@ export default function ManageAccounts() {
   }, []);
 
   const fetchDirectoryOptions = useCallback(async () => {
-    
+
       return Promise.all([
         directoryApi.getPrograms(),
         directoryApi.getDepartments(),
@@ -234,7 +234,7 @@ export default function ManageAccounts() {
           value: String(dept.department_id),
         }))
       );
-    
+
     }).catch((error) => {
       console.error('Failed to load department/program lists', error);
     });
@@ -433,7 +433,7 @@ export default function ManageAccounts() {
           </div>
         </section>
         </div>
-        <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+
         <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4"><div><h2 className="text-sm font-semibold text-[#321d1d]">Account records</h2><p className="mt-1 text-xs text-[#786565]">{roleFilterOptions.find(option => option.value === roleFilter)?.label} roles · {statusFilterOptions.find(option => option.value === statusFilter)?.label}</p></div><span className="rounded-full bg-[#f6eeea] px-3 py-1 text-xs font-semibold text-[#800000]">{accountsLoading ? 'Updating...' : accountsError ? 'Records unavailable' : `${serverTotal} matching accounts`}</span></header>
           <div className="px-4 py-5 lg:px-6">

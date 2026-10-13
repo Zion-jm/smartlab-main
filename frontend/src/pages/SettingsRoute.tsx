@@ -110,7 +110,7 @@ function SettingsPage() {
         </dl>
       </header>
 
-      <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
+
 
       <section aria-label="Saved preference summary" className="grid gap-3 sm:grid-cols-3">
         {[

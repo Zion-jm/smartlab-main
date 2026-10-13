@@ -69,7 +69,7 @@ export default function StudentAcademicRecords({years,onRefresh,refreshing=false
    <label className="block text-xs font-semibold text-[#4b5563]">Student name or email<input className={`${inputClass} mt-1 h-11 min-h-0`} placeholder="Search all students" value={search} disabled={saving||confirm} onChange={e=>{setSearch(e.target.value);resetResults();}}/></label>
    <button type="button" disabled={loading||saving||confirm} onClick={()=>void load()} className="h-11 self-end whitespace-nowrap rounded-xl bg-[#800000] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#680000] disabled:opacity-50">{loading?'Loading…':'Load records'}</button>
   </div>
-  <div aria-hidden="true" className="mt-5 h-px w-full bg-[#f1e3df]"/>
+
   {error&&<p role="alert" className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}{success&&<p role="status" className="mt-3 rounded-xl bg-green-50 px-3 py-2 text-sm text-green-800">{success}</p>}
   {results&&!loading&&<><div className="mt-5 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#fffaf7] p-4"><p className="text-sm font-semibold text-[#321d1d]">{results.total} students · {year?.year}</p><p className="text-xs text-[#786565]">Amber means no record is configured.</p></div>
    {results.students.length===0&&<p className="mt-4 rounded-xl border border-dashed border-[#d8c7c3] p-6 text-center text-sm text-[#786565]">No students match this search. Try another name or email.</p>}
@@ -81,6 +81,6 @@ export default function StudentAcademicRecords({years,onRefresh,refreshing=false
   <ConfirmationModal isOpen={confirm} title="Save student academic record?" message={`Record ${selected?.firstName??''} ${selected?.lastName??''} as ${statusLabels[status]?.toLowerCase()}${level?`, Year ${level}`:''}, for ${year?.year??''}? Existing requests and account access will not change.`} confirmLabel="Save academic record" confirmingLabel="Saving…" cancelLabel="Go back" isConfirming={saving} onConfirm={()=>void save()} onClose={()=>{if(!saving)setConfirm(false);}}/>
   </div>
  </section>
- {results&&!loading&&!selected&&<><div id="student-records-batch-tools" className="scroll-mt-24"/><div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]"/><StudentAcademicBatch key={`${yearId}-${search}-${results.page}`} yearId={yearId} years={years} studentIds={results.students.map(student=>student.id)} programs={results.programs} initialOpen={Boolean(initialBatch)} initialMode={initialBatch?.mode} initialSourceYearId={initialBatch?.sourceYearId} autoPreview={initialBatch?.autoPreview} onSaved={()=>{void load(results.page).then(()=>setSuccess('Batch saved.'));}}/></>}
+ {results&&!loading&&!selected&&<><div id="student-records-batch-tools" className="scroll-mt-24"/><StudentAcademicBatch key={`${yearId}-${search}-${results.page}`} yearId={yearId} years={years} studentIds={results.students.map(student=>student.id)} programs={results.programs} initialOpen={Boolean(initialBatch)} initialMode={initialBatch?.mode} initialSourceYearId={initialBatch?.sourceYearId} autoPreview={initialBatch?.autoPreview} onSaved={()=>{void load(results.page).then(()=>setSuccess('Batch saved.'));}}/></>}
  </>;
 }
