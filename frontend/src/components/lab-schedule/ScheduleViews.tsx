@@ -320,30 +320,20 @@ export function CalendarView({ schedules, dayLabels = dayNames }: CalendarViewPr
 
   return (
     <div className="space-y-4 p-4 lg:p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#eadfd9] bg-[#fffdfb] px-4 py-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eadfd9] pb-4">
         <div>
-          <h3 className="text-base font-semibold text-[#111827]">{getMonthLabel(currentMonth)}</h3>
-          <p className="text-xs text-[#6b7280]">Tap any day to review schedules.</p>
+          <h3 className="text-sm font-semibold text-[#57322d]">Monthly schedule calendar</h3>
+          <p className="mt-1 text-xs text-[#786565]">Select a day to view its sessions.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleToday}
-            className="rounded-full border border-[#d1d5db] px-3 py-1.5 text-xs font-semibold text-[#374151] hover:border-[#9ca3af]"
-          >
-            Today
-          </button>
-          <div className="flex items-center rounded-full border border-[#d1d5db]">
-            <button type="button" onClick={handlePrevMonth} className="px-3 py-1.5 text-[#374151] hover:text-[#111827]" aria-label="Previous month">
-              ‹
-            </button>
-            <div className="h-4 w-px bg-[#e5e7eb]" />
-            <button type="button" onClick={handleNextMonth} className="px-3 py-1.5 text-[#374151] hover:text-[#111827]" aria-label="Next month">
-              ›
-            </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center rounded-xl border border-[#d8c7c2] bg-white">
+            <button type="button" onClick={handlePrevMonth} className="h-11 w-11 rounded-l-xl text-[#800000] hover:bg-[#fffaf7]" aria-label="Previous month">‹</button>
+            <span aria-live="polite" className="px-2 text-sm font-semibold text-[#57322d]">{getMonthLabel(currentMonth)}</span>
+            <button type="button" onClick={handleNextMonth} className="h-11 w-11 rounded-r-xl text-[#800000] hover:bg-[#fffaf7]" aria-label="Next month">›</button>
           </div>
+          <button type="button" onClick={handleToday} className="min-h-11 rounded-xl border border-[#d8c7c2] bg-white px-4 text-xs font-semibold text-[#800000] hover:bg-[#fffaf7]">Today</button>
         </div>
-      </div>
+      </header>
 
       <div className="overflow-hidden rounded-xl border border-[#eadfd9] bg-white">
         <div className="grid grid-cols-7 border-b border-[#f3f4f6] text-center text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">

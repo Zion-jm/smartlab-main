@@ -73,7 +73,7 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
           </div>
         }
         filtersActiveCount={viewMode === 'chart' ? 0 : Number(Boolean(search)) + Number(Boolean(range.from || range.to))}
-        ribbonSummary={`View: ${scheduleViewTabs.find((tab) => tab.id === viewMode)?.label ?? 'Schedule'}${viewMode !== 'chart' && (range.from || range.to) ? ` · Dates: ${range.from || 'Any'} – ${range.to || 'Any'}` : ''}`}
+        ribbonSummary={`View: ${scheduleViewTabs.find((tab) => tab.id === viewMode)?.label ?? 'Schedule'}${viewMode === 'agenda' && (range.from || range.to) ? ` · Dates: ${range.from || 'Any'} – ${range.to || 'Any'}` : ''}`}
         onRefresh={reload}
         refreshing={loading}
         refreshError={Boolean(error)}
@@ -109,11 +109,11 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
         aria-labelledby={getPageTabId('readonly-schedule-tabpanel', viewMode)}
         tabIndex={0}
       >
-        {viewMode !== 'chart' && (
+        {viewMode === 'agenda' && (
         <header className="flex items-center justify-between gap-4 border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
           <div>
-          <h3 className="text-sm font-semibold text-[#57322d]">{viewMode === 'agenda' ? 'Schedule agenda' : 'Monthly schedule calendar'}</h3>
-          <p className="mt-1 text-xs text-[#786565]">{viewMode === 'agenda' ? 'Browse seven days at a time and select a session to review its details.' : 'Explore dates and select a session to view its details.'}</p>
+          <h3 className="text-sm font-semibold text-[#57322d]">Schedule agenda</h3>
+          <p className="mt-1 text-xs text-[#786565]">Browse seven days at a time and select a session to review its details.</p>
           </div>
           {viewMode === 'agenda' && !loading && !error && <span className="shrink-0 rounded-full bg-[#faf4f1] px-2.5 py-1 text-[10px] font-semibold text-[#800000]">{filteredSchedules.length} records</span>}
         </header>
