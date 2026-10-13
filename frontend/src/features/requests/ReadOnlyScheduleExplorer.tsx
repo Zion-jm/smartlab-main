@@ -103,7 +103,7 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
         </div>
       </section>}
       <div
-        className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm"
+        className={viewMode === 'chart' ? "min-w-0 bg-white" : "overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm"}
         id="readonly-schedule-tabpanel"
         role="tabpanel"
         aria-labelledby={getPageTabId('readonly-schedule-tabpanel', viewMode)}
@@ -125,7 +125,7 @@ export default function ReadOnlyScheduleExplorer({ schedules, loading, error, da
         ) : viewMode === 'agenda' ? (
           <ScheduleAgenda key={`${range.from}:${range.to}`} schedules={filteredSchedules} range={range} onSelect={setSelectedSchedule} />
         ) : viewMode === 'chart' ? (
-          <ChartView showEmptyGrid schedules={schedules} computerLabNames={computerLabNames} />
+          <ChartView flush showEmptyGrid schedules={schedules} computerLabNames={computerLabNames} />
         ) : (
           <CalendarView schedules={filteredSchedules} />
         )}

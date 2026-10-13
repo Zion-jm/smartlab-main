@@ -7,6 +7,7 @@ import { addCalendarDays, dateKeyToPickerDate, dateToDateKey, manilaTodayForPick
 import { calendarColors, chartDayOrder, chartHourMarks, chartMinuteEnd, chartMinuteStart, chartRowHeight, chartSlotMinutes, chartSlotPercents, chartTotalMinutes, clampMinutes, dayNames, formatClockLabel, getMonthLabel, minutesFromIso, occursOnDate, sameDay, scheduleTypeLabel } from './scheduleViewUtils';
 
 export type ChartViewProps = {
+  flush?: boolean;
   schedules: LabSchedule[];
   computerLabNames?: string[];
   onSelectSchedule?: (scheduleId: string) => void;
@@ -48,7 +49,7 @@ const weekRangeLabel = (monday: string) => {
   return `${startMonth} ${startDay}, ${startYear}–${endMonth} ${endDay}, ${endYear}`;
 };
 
-export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand, onPrint, printTitle = 'Laboratory Schedule', selectedWeekStart: controlledWeekStart, onSelectedWeekStartChange }: ChartViewProps) {
+export function ChartView({ flush = false, schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand, onPrint, printTitle = 'Laboratory Schedule', selectedWeekStart: controlledWeekStart, onSelectedWeekStartChange }: ChartViewProps) {
   const [labOverride, setLabOverride] = useState<string | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<LabSchedule | null>(null);
   const [weekOverride, setWeekOverride] = useState(() => mondayForDate(manilaTodayForPicker()));
@@ -125,7 +126,7 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
   };
 
   return (
-    <div className="schedule-chart-print-area p-4 lg:p-5">
+    <div className={`schedule-chart-print-area ${flush ? "" : "p-4 lg:p-5"}`}>
       <header className="schedule-chart-print-header hidden">
         <div className="schedule-chart-institution-header">
           <img src="/PUPLogo.png" alt="Polytechnic University of the Philippines" />
