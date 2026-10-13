@@ -251,6 +251,14 @@ export default function AdminAuditLogs() {
     </div>
   );
 
+  const summaryReady = !loading && !error;
+  const entityBreakdown = Object.entries(logs.reduce<Record<string, number>>((counts, log) => {
+    counts[log.entityType] = (counts[log.entityType] ?? 0) + 1;
+    return counts;
+  }, {})).sort((a, b) => b[1] - a[1]);
+  const actorCount = new Set(logs.map(log => log.actor?.id || log.actorUserId).filter(Boolean)).size;
+  const actionCount = new Set(logs.map(log => log.action)).size;
+
   return (
     <AdminLayout>
       <div className="mx-auto w-full min-w-0 responsive-workspace space-y-4 p-2 lg:p-3" data-testid="page-audit-logs">
@@ -280,7 +288,30 @@ export default function AdminAuditLogs() {
         </div>
       )}
 
-        <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" data-testid="card-audit-log-history">
+        <div className="grid items-stretch gap-4 xl:grid-cols-3">
+          <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2" aria-labelledby="audit-overview-title">
+            <header className="flex items-center gap-3 border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><span className="rounded-xl bg-[#800000] p-2.5 text-white"><History size={20} aria-hidden="true" /></span><div><h2 id="audit-overview-title" className="text-base font-semibold text-[#321d1d]">Activity overview</h2><p className="mt-1 text-xs text-[#786565]">Trace who changed a record, what changed, and when.</p></div></header>
+            <div className="p-4">
+              <div className="grid gap-3 sm:grid-cols-3">{[
+                { label: 'Matching events', value: total, note: 'Across all result pages' },
+                { label: 'Recorded actors', value: actorCount, note: 'On the current page' },
+                { label: 'Action types', value: actionCount, note: 'On the current page' },
+              ].map(metric => <div key={metric.label} className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4"><p className="text-xs font-semibold text-[#57322d]">{metric.label}</p><p className="mt-2 text-2xl font-bold tabular-nums text-[#321d1d]">{summaryReady ? metric.value : '—'}</p><p className="mt-1 text-[11px] text-[#786565]">{metric.note}</p></div>)}</div>
+              <div className="mt-4 border-t border-[#f1e6e3] pt-4"><h3 className="text-xs font-semibold text-[#57322d]">Activity by entity on this page</h3><p className="mt-1 text-xs text-[#786565]">Counts follow your current filters and pagination.</p><div className="mt-3 max-h-44 space-y-3 overflow-y-auto pr-2">{summaryReady ? entityBreakdown.length ? entityBreakdown.map(([entity, count]) => <div key={entity} className="grid grid-cols-[minmax(7rem,1fr)_1fr_2rem] items-center gap-3 text-xs"><span className="text-[#786565]">{ENTITY_OPTIONS.find(([value]) => value === entity)?.[1] ?? logs.find(log => log.entityType === entity)?.entityLabel ?? entity}</span><div className="h-2 rounded-full bg-[#f2ece8]" aria-hidden="true"><div className="h-full rounded-full bg-[#800000]" style={{ width: `${count / Math.max(1, logs.length) * 100}%` }} /></div><strong className="text-right tabular-nums">{count}</strong></div>) : <p className="text-xs text-[#786565]">No events match these filters.</p> : <p className="text-xs text-[#786565]">{loading ? 'Updating activity summary…' : 'Summary unavailable.'}</p>}</div></div>
+            </div>
+          </section>
+          <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" aria-labelledby="audit-focus-title">
+            <header className="border-b border-[#f1e6e3] px-5 py-4"><h2 id="audit-focus-title" className="text-sm font-semibold text-[#321d1d]">Investigate activity</h2><p className="mt-1 text-xs text-[#786565]">Focus on an entity while keeping other filters.</p></header>
+            <div className="space-y-2 p-4">{[
+              ['User', 'Account changes', 'Review recorded account and access changes.'],
+              ['BorrowRequest', 'Requests and reservations', 'Trace approval, borrowing and return actions.'],
+              ['AcademicPeriod', 'Academic period changes', 'Review changes to the system default period.'],
+              ['ALL', 'All entity types', 'Include every type of recorded activity.'],
+            ].map(([value, label, note]) => <button key={value} type="button" aria-pressed={entityType === value} onClick={() => { setEntityType(value); resetToFirstPage(); }} className={`w-full rounded-xl border p-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000] ${entityType === value ? 'border-[#800000] bg-[#800000] text-white' : 'border-[#ead7d3] bg-white text-[#57322d] hover:bg-[#fffaf7]'}`}><span className="block text-xs font-semibold">{label} →</span><span className="mt-1 block text-[11px] leading-5 opacity-80">{note}</span></button>)}</div>
+          </section>
+        </div>
+
+        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" data-testid="card-audit-log-history">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f3f4f6] px-5 py-4">
           <div className="flex items-center gap-2">
             <History className="h-4 w-4 text-[#800000]" />
