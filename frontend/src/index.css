@@ -1238,3 +1238,18 @@
   .admin-workspace .report-records-scope .table-scroll-container > table { display: block; min-width: 0 !important; width: 100%; table-layout: fixed; }
   .report-records-scope td > * { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
 }
+
+@media screen and (max-width: 767px) {
+  .report-records-scope .table-scroll-container--sticky-header > table > thead {
+    position: absolute;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    border: 0;
+    box-shadow: none;
+  }
+}
