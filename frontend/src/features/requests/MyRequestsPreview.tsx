@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { CalendarDays, MapPin, Package } from 'lucide-react';
+import { CalendarDays, MapPin, Package, ClipboardList, RefreshCw, Info } from 'lucide-react';
 import MyRequestDetailModal from './MyRequestDetailModal';
 import DataTable from '../../components/shared/DataTable';
 import DropdownField from '../../components/shared/DropdownField';
 import { IconActionButton } from '../../components/shared/TableActionButtons';
 import type { BorrowRequestStatus } from '../../types/requests';
-import { PanelSection } from './PanelSection';
 import { type ApiBorrowRequest, type RequestRow } from './requestModels';
 import { type RequestsHookState } from './useRequestData';
 
@@ -37,24 +36,35 @@ export function MyRequestsPreview({
   const pages = Math.max(1, Math.ceil(total / 10));
 
   return (
-    <PanelSection
-      title="My borrow requests"
-      helper="Track approvals, status changes, and upcoming borrow requests."
-    >
-      <div className="flex flex-col gap-3 rounded-xl border border-[#e5e7eb] bg-[#fafafa] p-3 sm:flex-row sm:items-end">
-        <label className="flex-1 text-xs font-semibold text-[#6b7280]">
+    <div className="space-y-4">
+      <section aria-labelledby="my-requests-heading" className="rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
+        <header className="flex flex-wrap items-center justify-between gap-4 rounded-t-2xl border-b border-[#ead7d3] bg-[#fffaf7] p-4 lg:px-5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f4e9e5] text-[#800000]"><ClipboardList size={20} aria-hidden="true" /></span>
+            <div>
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[.16em] text-[#9a7b4f]">Request tracking</p>
+              <h2 id="my-requests-heading" className="text-lg font-semibold text-[#57322d]">My requests</h2>
+              <p className="mt-1 text-xs text-[#786565]">Track your submissions, check approval status, and review request details.</p>
+            </div>
+          </div>
+          <button type="button" onClick={() => void reload()} disabled={loading} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#d8c7c2] bg-white px-4 text-sm font-semibold text-[#800000] disabled:opacity-50">
+            <RefreshCw size={16} aria-hidden="true" className={loading ? 'animate-spin' : ''} />{loading ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </header>
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-end lg:px-5">
+        <label className="min-w-0 flex-1 text-xs font-semibold text-[#57322d] sm:min-w-[240px] lg:max-w-[480px]">
           Search requests
           <input
             type="search"
             value={requestSearch}
             onChange={(event) => setRequestSearch(event.target.value)}
             placeholder="Reference, room, or equipment…"
-            className="mt-1 w-full rounded-lg border border-[#d1d5db] bg-white px-3 py-2 text-sm font-normal text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#800000]"
+            className="mt-1 min-h-11 w-full rounded-xl border border-[#d8c7c2] bg-white px-3 py-2 text-sm font-normal text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#800000]"
           />
         </label>
-        <label className="text-xs font-semibold text-[#6b7280]">
-          Status
+        <div className="w-full text-xs font-semibold text-[#57322d] sm:w-52">
           <DropdownField
+            label="Status"
             value={requestStatus}
             options={[
               { value: 'ALL', label: 'All statuses' },
@@ -68,18 +78,31 @@ export function MyRequestsPreview({
             onChange={(value) => setRequestStatus(value as BorrowRequestStatus | 'ALL')}
             placeholder="All statuses"
           />
-        </label>
+        </div>
         {(requestSearch || requestStatus !== 'ALL') && (
           <button
             type="button"
             onClick={() => { setRequestSearch(''); setRequestStatus('ALL'); }}
-            className="rounded-full border border-[#d1d5db] px-3 py-2 text-xs font-semibold text-[#374151]"
+            className="min-h-11 rounded-xl border border-[#d8c7c2] px-3 py-2 text-xs font-semibold text-[#800000]"
           >
             Clear filters
           </button>
         )}
-      </div>
-      <div className="space-y-3 md:hidden" aria-live="polite">
+        </div>
+        <div className="flex items-start gap-2 border-t border-[#f1e6e3] px-4 py-3 text-xs leading-relaxed text-[#786565] lg:px-5">
+          <Info size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-[#9a7b4f]" />
+          <p>You can edit pending requests and cancel pending or approved requests. Open a request to review its full details.</p>
+        </div>
+      </section>
+      <section aria-labelledby="request-history-heading" className="rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
+        <header className="flex flex-wrap items-center justify-between gap-2 rounded-t-2xl border-b border-[#ead7d3] bg-[#fffaf7] px-4 py-4 lg:px-5">
+          <div>
+            <h3 id="request-history-heading" className="text-sm font-semibold text-[#57322d]">Request history</h3>
+            <p className="mt-1 text-xs text-[#786565]">{requestStatus === 'ALL' ? 'All statuses' : statusLabel(requestStatus)}{requestSearch.trim() ? ' / Search applied' : ''}</p>
+          </div>
+          <span role="status" className="rounded-full bg-[#f4e9e5] px-3 py-1 text-xs font-semibold text-[#800000]">{loading ? 'Loading...' : error ? 'Unavailable' : `${total} matching ${total === 1 ? 'request' : 'requests'}`}</span>
+        </header>
+      <div className="space-y-3 p-4 md:hidden" aria-live="polite">
         {loading ? <p className="py-6 text-center text-sm">Loading requests…</p> : error ? <div role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}<button type="button" onClick={() => void reload()} className="ml-2 min-h-11 underline">Retry</button></div> : !rows.length ? <p className="py-6 text-center text-sm text-gray-500">No requests match the selected filters.</p> : rows.map(request => {
           const items = request.source.items ?? [];
           return <article key={request.id} className="overflow-hidden rounded-xl border border-[#ead7d3] bg-white">
@@ -102,13 +125,13 @@ export function MyRequestsPreview({
       </div>
       {selected && <MyRequestDetailModal key={selected.id} request={selected} onClose={() => setSelected(null)} />}
       <div className="hidden md:block">
-      <DataTable label="My requests" rows={filteredRows} rowKey={request => request.id}
+      <DataTable embedded label="My requests" rows={filteredRows} rowKey={request => request.id}
         loading={loading} error={error} onRetry={reload} emptyMessage="No requests match the selected filters."
         columns={[{ id: '0', header: 'Reference', cell: request => <>
                     <p className="font-semibold text-[#111827]">{request.reference}</p>
                     <p className="text-xs text-[#6b7280]">Filed {request.filed}</p>
                   </> },
-{ id: '1', header: 'Room', cell: request => <>{request.room}</> },
+{ id: '1', header: 'Location', cell: request => <>{request.room}</> },
 { id: '2', header: 'Equipment', cell: request => <>{request.equipment}</> },
 { id: '3', header: 'Date of use', cell: request => <>
                     <p>{request.dateOfUse}</p>
@@ -146,6 +169,7 @@ export function MyRequestsPreview({
         pagination={{currentPage:page,pageSize:10,totalItems:total,onPageChange:setPage,onPageSizeChange:()=>{},pageSizeOptions:[10]}}
       />
       </div>
-    </PanelSection>
+      </section>
+    </div>
   );
 }
