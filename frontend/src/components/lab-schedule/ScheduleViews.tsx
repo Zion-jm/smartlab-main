@@ -157,7 +157,7 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
           </div>
         </div>
 
-        <div className="border-b border-[#f3f4f6] bg-[#fffdfc] px-4 py-2 text-center text-xs font-semibold text-[#6b4f4a]" aria-live="polite">{weekRangeLabel(selectedWeekStart)}</div>
+        <div className="schedule-chart-week-heading border-b border-[#f3f4f6] bg-[#fffdfc] px-4 py-2 text-center text-xs font-semibold text-[#6b4f4a]" aria-live="polite">{weekRangeLabel(selectedWeekStart)}</div>
 
         {labs.length === 0 ? (
           <div className="p-6 text-center text-xs lg:text-sm text-[#6b7280]">No lab rooms available yet.</div>
@@ -167,7 +167,7 @@ export function ChartView({ schedules, computerLabNames = [], onSelectSchedule, 
           <div className="p-4 overflow-x-auto">
             <div className="min-w-[700px]">
               {showEmptyGrid && visibleScheduleCount === 0 && <p className="pb-3 text-center text-xs lg:text-sm text-[#6b7280]">No schedules for {selectedLab} during {weekRangeLabel(selectedWeekStart)}.</p>}
-              <div className="pl-20 grid grid-cols-6 gap-0 pb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">
+              <div className="schedule-chart-day-headings pl-20 grid grid-cols-6 gap-0 pb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">
                 {columnData.map(({ dayIndex, label }) => (
                   <div key={dayIndex}>{label}</div>
                 ))}

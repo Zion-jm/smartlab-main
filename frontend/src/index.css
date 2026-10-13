@@ -983,9 +983,73 @@
   }
   body.printing-schedule-chart .schedule-chart-print-title {
     margin: 0;
-    font-size: 16pt;
+    padding-top: 3mm;
+    border-top: 2px solid #800000;
+    text-align: center;
+    font-size: 15pt;
     font-weight: 700;
     color: #321d1d;
+  }
+  body.printing-schedule-chart .schedule-chart-print-header > p {
+    text-align: center;
+    font-size: 9pt;
+    margin-top: 2mm;
+  }
+  body.printing-schedule-chart .schedule-chart-week-heading {
+    display: none;
+  }
+  body.printing-schedule-chart .schedule-chart-day-headings {
+    padding-left: 19mm;
+    padding-bottom: 0;
+    color: #422929;
+    background: #f5eeeb;
+    border-bottom: 1px solid #bca8a1;
+    font-size: 8pt;
+    letter-spacing: 0;
+  }
+  body.printing-schedule-chart .schedule-chart-day-headings > div {
+    padding: 3mm 0;
+    border-left: 1px solid #d8c7c3;
+  }
+  body.printing-schedule-chart .schedule-chart-time-axis {
+    width: 19mm;
+    flex: 0 0 19mm;
+    padding-right: 2mm;
+    color: #514343;
+    text-align: right;
+    font-size: 7pt;
+    background: #faf8f7;
+  }
+  body.printing-schedule-chart .schedule-chart-grid {
+    gap: 0;
+  }
+  body.printing-schedule-chart .schedule-chart-grid > div {
+    border: 0;
+    border-left: 1px solid #d8c7c3;
+    border-radius: 0;
+  }
+  body.printing-schedule-chart .schedule-chart-grid > div > span {
+    left: 0;
+    right: 0;
+    border-color: #e3ddda;
+  }
+  body.printing-schedule-chart .schedule-chart-grid button {
+    left: 1mm;
+    right: 1mm;
+    border-radius: 1mm;
+    border: 1px solid #a86b63;
+    border-left: 3px solid #800000;
+    padding: 1.5mm;
+    background: #f6e9e6 !important;
+    color: #321d1d;
+    box-shadow: none;
+  }
+  body.printing-schedule-chart .schedule-chart-grid button > span {
+    color: inherit;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 7pt;
+    line-height: 1.25;
   }
   body.printing-schedule-chart .schedule-chart-controls {
     display: none !important;
@@ -996,7 +1060,7 @@
   }
   body.printing-schedule-chart .schedule-chart-print-area .overflow-x-auto {
     overflow: visible !important;
-    padding: 3mm !important;
+    padding: 0 !important;
   }
   body.printing-schedule-chart .schedule-chart-print-area .min-w-\[700px\] {
     min-width: 0 !important;
