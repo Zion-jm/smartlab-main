@@ -17,7 +17,7 @@ import AdminLayout from '../components/AdminLayout';
 
 import FilterToolbar from '../components/FilterToolbar';
 
-import { labScheduleApi } from '../services/api';
+import { academicPeriodApi, labScheduleApi } from '../services/api';
 
 import type { AcademicContextSelection, ApiLabSchedule, LabSchedule, LabScheduleResourceOption, LabScheduleResources, ScheduleType } from '../types/labSchedule';
 
@@ -530,9 +530,22 @@ export default function AdminLabSchedule() {
       ? 'One-Time Laboratory Schedule'
       : 'Laboratory Schedule';
 
-  const printScheduleChart = () => {
+  const printScheduleChart = async () => {
     const chart = document.querySelector<HTMLElement>('[aria-labelledby="expanded-chart-title"] .schedule-chart-print-area') ?? document.querySelector<HTMLElement>('.schedule-chart-print-area');
     if (!chart) return;
+    const printChart = chart.cloneNode(true) as HTMLElement;
+    try {
+      const { data } = await academicPeriodApi.getCurrent();
+      const periodLine = document.createElement('p');
+      periodLine.className = 'schedule-chart-active-period';
+      periodLine.textContent = data.current
+        ? `Active academic period: ${data.current.academicYear.year} · ${data.current.term.name}`
+        : 'Active academic period: Not configured';
+      printChart.querySelector('.schedule-chart-print-title')?.after(periodLine);
+    } catch {
+      setError('Unable to load the active academic period for printing. Please try again.');
+      return;
+    }
 
     const frame = document.createElement('iframe');
     frame.setAttribute('title', `${chartPrintTitle} print document`);
@@ -561,7 +574,7 @@ export default function AdminLabSchedule() {
       html, body { width: 195.9mm !important; min-width: 195.9mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
       .schedule-chart-print-area { page: auto !important; width: 195.9mm !important; }
       .schedule-chart-time-axis, .schedule-chart-grid { height: 215mm !important; }
-    </style></head><body class="printing-schedule-chart">${chart.outerHTML}</body></html>`);
+    </style></head><body class="printing-schedule-chart">${printChart.outerHTML}</body></html>`);
     printDocument.close();
 
     const finish = () => window.setTimeout(() => frame.remove(), 500);
