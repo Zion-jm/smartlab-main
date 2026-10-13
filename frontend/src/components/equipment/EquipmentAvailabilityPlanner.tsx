@@ -56,10 +56,17 @@ export default function EquipmentAvailabilityPlanner() {
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     {query && !changed && !loading && !error && <>
       <p className="text-sm text-[#786565]">{query.date} · {query.timeStart ? query.timeStart + '–' + query.timeEnd : 'Whole day'} (Manila time). Reserved and pending figures show peak simultaneous quantities, not daily totals. Availability uses current stock, including outstanding loans.</p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[
+          ['Available equipment types', rows.filter(row => !row.archived && row.available > 0).length, 'With stock for the checked period'],
+          ['Fully occupied / unavailable', rows.filter(row => !row.archived && row.available <= 0).length, 'Active items with no available units'],
+          ['With pending demand', rows.filter(row => row.pending > 0).length, 'Pending requests do not reserve stock'],
+        ].map(([label, value, note]) => <div key={label} className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4"><p className="text-xs font-semibold text-[#57322d]">{label}</p><p className="mt-2 text-2xl font-bold text-[#321d1d]">{value}</p><p className="mt-1 text-xs text-[#786565]">{note}</p></div>)}
+      </div>
       <input aria-label="Search availability" className="min-h-11 w-full rounded-lg border p-3 text-sm" placeholder="Search equipment…" value={search} onChange={e => setSearch(e.target.value)} />
-      {rows.filter(row => row.name.toLowerCase().includes(search.toLowerCase())).map(row => <article key={row.id} className="rounded-xl border border-[#ead7d3] p-3">
-        <h3 className="font-semibold">{row.name}{row.archived ? ' · Archived' : ''}</h3>
-        <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">{[['Usable stock', row.usable], ['Checked out now', row.checkedOut], ['Reserved (peak)', row.reserved], ['Available for period', row.available], ['Pending (peak)', row.pending]].map(([label, count]) => <div key={label}><dt className="text-xs text-[#786565]">{label}</dt><dd className="mt-1 font-semibold">{count}</dd></div>)}</dl>
+      {rows.filter(row => row.name.toLowerCase().includes(search.toLowerCase())).map(row => <article key={row.id} className="overflow-hidden rounded-xl border border-[#ead7d3] bg-white p-4 shadow-sm">
+        <h3 className="border-b border-[#f1e6e3] pb-3 font-semibold text-[#321d1d]">{row.name}{row.archived ? ' · Archived' : ''}</h3>
+        <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">{[['Usable stock', row.usable], ['Checked out now', row.checkedOut], ['Reserved (peak)', row.reserved], ['Available for period', row.available], ['Pending (peak)', row.pending]].map(([label, count]) => <div key={label} className="rounded-lg bg-[#faf7f5] p-3"><dt className="text-xs text-[#786565]">{label}</dt><dd className="mt-1 font-semibold">{count}</dd></div>)}</dl>
         <button type="button" className="mt-2 min-h-11 text-sm font-semibold text-[#800000] underline" aria-expanded={expanded === row.id} onClick={() => setExpanded(expanded === row.id ? null : row.id)}>{expanded === row.id ? 'Hide requests' : 'View requests'} ({row.requests.length})</button>
         {expanded === row.id && <div className="space-y-3 border-t pt-3">{row.requests.length === 0 && <p className="text-sm">No reservations, pending demand, or outstanding loans.</p>}{row.requests.map(request => <div key={request.id} className="space-y-1 text-sm">
           <p className="font-semibold">{request.reference} · {request.requester} · ×{request.quantity}</p>
@@ -69,6 +76,7 @@ export default function EquipmentAvailabilityPlanner() {
       </article>)}
       {rows.filter(row => row.name.toLowerCase().includes(search.toLowerCase())).length === 0 && <p>No matching equipment.</p>}
     </>}
+    {!query && <div className="rounded-xl border border-dashed border-[#d8c7c3] bg-[#fffaf7] p-6 text-center"><h3 className="text-sm font-semibold text-[#57322d]">Choose a period to begin</h3><p className="mt-2 text-xs text-[#786565]">Check a whole day for planning, or select a time range for a specific borrowing request.</p></div>}
     {changed && query && <p className="text-sm text-[#786565]">Select Check availability to load the new period.</p>}
   </section>;
 }

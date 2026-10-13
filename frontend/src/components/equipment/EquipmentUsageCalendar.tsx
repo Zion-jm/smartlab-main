@@ -197,25 +197,27 @@ export default function EquipmentUsageCalendar({
   }
 
   return (
-    <div className="equipment-usage-calendar px-2 md:px-6 py-5 space-y-4">
-      <div className="equipment-usage-summary grid grid-cols-3 gap-2">
-        <div className="rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-4">
+    <div className="equipment-usage-calendar space-y-4">
+      <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm"><header className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Equipment usage overview</h2><p className="mt-1 text-xs text-[#786565]">Request activity for the selected academic period and equipment. Monthly navigation changes the calendar below.</p></header>
+      <div className="equipment-usage-summary grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
+        <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Usage requests</p>
           <p className="text-2xl font-bold text-[#111827]">{summary.requests}</p>
           <p className="text-xs text-[#6b7280]">Pending, approved, borrowed, or returned</p>
         </div>
-        <div className="rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-4">
+        <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Units scheduled</p>
           <p className="text-2xl font-bold text-[#111827]">{summary.units}</p>
-          <p className="text-xs text-[#6b7280]">Across the visible requests</p>
+          <p className="text-xs text-[#6b7280]">Total requested quantities; not concurrent stock</p>
         </div>
-        <div className="rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-4">
+        <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Equipment tracked</p>
           <p className="text-2xl font-bold text-[#111827]">{summary.equipmentCount}</p>
           <p className="text-xs text-[#6b7280]">Items with scheduled usage</p>
         </div>
       </div>
 
+      </section>
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3">
         <div>
           <h3 className="text-base font-semibold text-[#111827]">{getMonthLabel(currentMonth)}</h3>

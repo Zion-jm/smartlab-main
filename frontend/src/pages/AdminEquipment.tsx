@@ -350,7 +350,7 @@ export default function AdminEquipment() {
     ];
 
     return (
-      <div className="equipment-summary grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="equipment-summary grid grid-cols-2 md:grid-cols-3 gap-3">
         {cards.map((card) => (
           <CompactStatCard
             key={card.title}
@@ -383,7 +383,8 @@ export default function AdminEquipment() {
     }
 
     return (
-      <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4"><div><h2 className="text-sm font-semibold text-[#321d1d]">Equipment records</h2><p className="mt-1 text-xs text-[#786565]">Maintain quantities, inspect damaged stock, and archive or restore catalog items.</p></div><span className="rounded-full bg-[#f6eeea] px-3 py-1 text-xs font-semibold text-[#800000]">{serverTotal} matching items</span></header>
         <div className="px-4 py-5 lg:px-6">
           <div className="space-y-3 md:hidden">
             {paginatedEquipment.map(item => <article key={item.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white">
@@ -621,20 +622,33 @@ export default function AdminEquipment() {
         >
             <div className="space-y-4">
               <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
-              {viewMode === 'table' && renderSummaryCards()}
-              {viewMode === 'table' && stats && (
+              {viewMode === 'table' && <div className="grid items-start gap-4 xl:grid-cols-3">
+                <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
+                  <header className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Inventory overview</h2><p className="mt-1 text-xs text-[#786565]">Current stock across the equipment catalog. Request activity follows the selected academic period.</p></header>
+                  <div className="p-4">{loading ? <LoadingState message="Updating stock overview…" /> : error ? <p className="text-sm text-red-700">Stock overview unavailable.</p> : renderSummaryCards()}</div>
+                </section>
+                <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+                  <header className="border-b border-[#f1e6e3] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Plan equipment use</h2><p className="mt-1 text-xs text-[#786565]">Move from current stock to future demand.</p></header>
+                  <div className="space-y-3 p-4">
+                    <button type="button" onClick={() => setViewMode('availability')} className="w-full rounded-xl bg-[#800000] p-4 text-left text-white hover:bg-[#650000]"><span className="block text-sm font-semibold">Check availability →</span><span className="mt-1 block text-xs">Check usable quantities for a date and time.</span></button>
+                    <button type="button" onClick={() => setViewMode('calendar')} className="w-full rounded-xl border border-[#ead7d3] bg-[#fffaf7] p-4 text-left text-[#57322d] hover:bg-[#f6eeea]"><span className="block text-sm font-semibold">Explore usage calendar →</span><span className="mt-1 block text-xs">Review requests and equipment demand by day.</span></button>
+                    {stats && !loading && !error && <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">{stats.inventory.lowStockCount} low-stock catalog items. Use the low-stock filter to review them.</p>}
+                  </div>
+                </section>
+              </div>}
+              {viewMode === 'table' && stats && !loading && !error && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                  <div className="rounded-2xl border border-[#e5e7eb] p-4 bg-white">
+                  <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4 shadow-sm">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">Pending requests</p>
                     <p className="text-2xl font-semibold text-[#111827]">{stats.pendingRequests ?? 0}</p>
                     <p className="text-xs text-[#6b7280]">Awaiting approval</p>
                   </div>
-                  <div className="rounded-2xl border border-[#e5e7eb] p-4 bg-white">
+                  <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4 shadow-sm">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">Upcoming reservations</p>
                     <p className="text-2xl font-semibold text-[#111827]">{stats.upcoming?.requests ?? 0}</p>
                     <p className="text-xs text-[#6b7280]">{stats.upcoming?.quantity ?? 0} units scheduled</p>
                   </div>
-                  <div className="rounded-2xl border border-[#e5e7eb] p-4 bg-white">
+                  <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4 shadow-sm">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">Overdue returns</p>
                     <p className="text-2xl font-semibold text-[#111827]">{stats.overdue?.requests ?? 0}</p>
                     <p className="text-xs text-[#6b7280]">{stats.overdue?.quantity ?? 0} units overdue</p>
