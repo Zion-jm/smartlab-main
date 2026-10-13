@@ -709,6 +709,7 @@ export default function AdminRequests() {
           </section>
         </div>
 
+        <div className="relative">
         <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4">
             <div><h2 className="text-sm font-semibold text-[#321d1d]">Request records</h2><p className="mt-1 text-xs text-[#786565]">Open a request to review its details, availability and next action.</p></div>
@@ -732,6 +733,7 @@ export default function AdminRequests() {
         />
           </nav>
         )}
+        </div>
 
       </div>
 
