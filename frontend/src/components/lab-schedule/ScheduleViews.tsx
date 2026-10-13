@@ -147,12 +147,12 @@ export function ChartView({ flush = false, schedules, computerLabNames = [], onS
             <p className="text-xs text-[#6b7280]">Select a schedule to view full details. Short blocks show a brief summary.</p>
           </div>
           <div className="schedule-chart-toolbar flex w-full flex-wrap items-center justify-start gap-2 lg:w-auto lg:justify-end">
-            <div className="flex min-h-10 items-center overflow-hidden rounded-lg border border-[#e5d5d1] bg-white">
+            <div className="schedule-chart-week-controls flex min-h-10 shrink-0 items-center overflow-hidden rounded-lg border border-[#e5d5d1] bg-white">
               <button type="button" onClick={() => selectWeek(addCalendarDays(selectedWeekStart, -7))} aria-label="Previous week" className="inline-flex h-10 w-10 items-center justify-center text-[#786565] hover:bg-[#fff8f6] hover:text-[#800000]"><ChevronLeft size={16} /></button>
               <button type="button" onClick={() => selectWeek(mondayForDate(manilaTodayForPicker()))} className="inline-flex h-10 items-center gap-1.5 border-x border-[#e5d5d1] px-3 text-xs font-semibold text-[#800000]"><CalendarDays size={14} />This week</button>
               <button type="button" onClick={() => selectWeek(addCalendarDays(selectedWeekStart, 7))} aria-label="Next week" className="inline-flex h-10 w-10 items-center justify-center text-[#786565] hover:bg-[#fff8f6] hover:text-[#800000]"><ChevronRight size={16} /></button>
             </div>
-            <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto"><span className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</span>
+            <div className="schedule-chart-lab-control flex min-w-0 flex-1 items-center gap-2 sm:flex-none"><span className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</span>
             <DropdownField value={selectedLab} onChange={selectLab} options={labs.map(lab => ({value:lab,label:lab}))} placeholder="No labs available" disabled={!labs.length} className="min-w-0 flex-1 sm:min-w-[140px]" />
             </div>
             {onPrint && <button type="button" onClick={onPrint} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Print weekly lab utilization chart or save it as PDF"><Printer size={15} aria-hidden="true" />Print / PDF</button>}

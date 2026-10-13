@@ -1206,3 +1206,13 @@
 @media (min-width: 1024px) {
   .request-equipment-header { margin: -1.25rem -1.25rem 0; }
 }
+
+@media (max-width: 639px) {
+  .schedule-chart-toolbar { gap: .5rem; }
+  .schedule-chart-week-controls > button:first-child,
+  .schedule-chart-week-controls > button:last-child { width: 1.75rem; }
+  .schedule-chart-week-controls > button:nth-child(2) { padding-inline: .375rem; font-size: .6875rem; white-space: nowrap; }
+  .schedule-chart-week-controls > button:nth-child(2) svg { display: none; }
+  .schedule-chart-lab-control { gap: .375rem; }
+  .schedule-chart-lab-control > span { display: none; }
+}
