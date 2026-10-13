@@ -923,6 +923,71 @@
 /* Keep the schedule action intact when the mobile ribbon wraps its controls. */
 .page-control-ribbon__actions button.schedule-add-button { white-space: nowrap; overflow-wrap: normal; flex-shrink: 0; }
 
+/* Shared chart presentation for the normal and expanded schedule views. */
+@media screen {
+  .schedule-chart-day-headings {
+    padding-bottom: 0;
+    border: 1px solid #d8c7c3;
+    background: #f5eeeb;
+    color: #422929;
+    letter-spacing: .025em;
+  }
+  .schedule-chart-day-headings > div {
+    padding: 12px 0;
+    border-left: 1px solid #d8c7c3;
+  }
+  .schedule-chart-time-axis {
+    flex-shrink: 0;
+    border-left: 1px solid #d8c7c3;
+    border-bottom: 1px solid #d8c7c3;
+    background: #faf8f7;
+    color: #514343;
+    text-align: right;
+  }
+  .schedule-chart-grid {
+    gap: 0;
+    border-right: 1px solid #d8c7c3;
+    border-bottom: 1px solid #d8c7c3;
+  }
+  .schedule-chart-grid > div {
+    min-width: 0;
+    border: 0;
+    border-left: 1px solid #d8c7c3;
+    border-radius: 0;
+  }
+  .schedule-chart-grid > div > span {
+    left: 0;
+    right: 0;
+    border-color: #e3ddda;
+  }
+  .schedule-chart-grid button {
+    left: 4px;
+    right: 4px;
+    border: 1px solid #a86b63;
+    border-left: 3px solid #800000;
+    border-radius: 4px;
+    background: #f6e9e6;
+    background-image: none;
+    color: #321d1d;
+    box-shadow: none;
+  }
+  .schedule-chart-grid button:hover {
+    background: #eed9d4;
+    transform: none;
+    box-shadow: 0 2px 5px #321d1d20;
+  }
+  .schedule-chart-grid button:focus-visible {
+    outline: 2px solid #800000;
+    outline-offset: 2px;
+    transform: none;
+  }
+  .schedule-chart-grid button > span {
+    color: inherit;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
 @page schedule-chart {
   size: 8.5in 13in;
   margin: 10mm;
