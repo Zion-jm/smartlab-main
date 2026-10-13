@@ -105,15 +105,23 @@ function SettingsPage() {
           </div>
           <div>
             <dt className="text-[11px] uppercase text-[#9a8985]">Takes effect</dt>
-            <dd className="mt-1 text-sm">Next time a workspace page opens</dd>
+            <dd className="mt-1 text-sm">Shortcuts now; layout on next page open</dd>
           </div>
         </dl>
       </header>
 
       <div aria-hidden="true" className="h-0.5 w-full rounded-full bg-[#c8aaa2]" />
 
+      <section aria-label="Saved preference summary" className="grid gap-3 sm:grid-cols-3">
+        {[
+          { label: 'Page controls', value: preferences.ribbonControlsHiddenByDefault ? 'Hidden on load' : 'Expanded on load', note: 'Search and filter panel default' },
+          { label: 'Sidebar', value: preferences.sidebarCollapsedByDefault ? 'Collapsed on load' : 'Expanded on load', note: 'Navigation panel default' },
+          { label: 'Keyboard shortcuts', value: `${[preferences.controlsShortcut, preferences.sidebarShortcut, preferences.chartShortcut].filter(Boolean).length} of 3 enabled`, note: 'Alt + Shift + your chosen letter' },
+        ].map(item => <div key={item.label} className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4"><p className="text-xs font-semibold text-[#786565]">{item.label}</p><p className="mt-2 text-lg font-semibold text-[#321d1d]">{item.value}</p><p className="mt-1 text-xs text-[#786565]">{item.note}</p></div>)}
+      </section>
+      <div className="grid items-start gap-4 xl:grid-cols-2">
       <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-        <div className="border-b border-[#f3f4f6] px-5 py-4">
+        <div className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4">
           <h2 className="text-sm font-semibold text-[#1f2937]">Workspace defaults</h2>
           <p className="mt-1 text-xs leading-5 text-[#6b7280]">Set the default layout used when you open admin workspace pages.</p>
         </div>
@@ -132,16 +140,21 @@ function SettingsPage() {
             onChange={(checked) => updatePreference('sidebarCollapsedByDefault', checked)}
             label="Collapse the sidebar by default"
           />
-          <div className="mt-5 border-t border-[#eee4df] pt-5">
+          <p className="mt-4 rounded-xl border border-[#ead7d3] bg-[#fffaf7] p-3 text-xs leading-5 text-[#786565]">Opening a panel or using a shortcut changes the current view. Your saved defaults stay as configured here.</p>
+        </div>
+      </section>
+      <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+          <div className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4">
             <h3 className="text-sm font-semibold text-[#3d2b2b]">Keyboard shortcuts</h3>
             <p className="mt-1 text-sm text-[#756969]">Choose an Alt + Shift + letter shortcut, or disable it. Changes apply immediately on this device. Shortcuts pause while typing or using a dialog, except the chart shortcut can close the expanded chart.</p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          </div>
+            <div className="grid gap-4 p-5">
               {([
                 ['controlsShortcut', 'Show / hide page controls'],
                 ['sidebarShortcut', 'Collapse / expand sidebar'],
                 ['chartShortcut', 'Expand / collapse schedule chart'],
               ] as const).map(([key, label]) => (
-                <div key={key}>
+                <div key={key} className="rounded-xl border border-[#ead7d3] bg-[#fffaf7] p-3">
                   <DropdownField
                     label={label}
                     value={preferences[key]}
@@ -154,9 +167,11 @@ function SettingsPage() {
                 </div>
               ))}
             </div>
-          </div>
-          <div className="mt-5 flex flex-col gap-3 border-t border-[#f1e3df] pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs leading-5 text-[#6b7280]">Reset only affects this account on this device.</p>
+      </section>
+      </div>
+      <section className="rounded-2xl border border-[#ead7d3] bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div><h2 className="text-sm font-semibold text-[#321d1d]">Restore default preferences</h2><p className="mt-1 text-xs leading-5 text-[#786565]">Resets this account on this device: hidden page controls, expanded sidebar, and shortcuts F, S and E. Shortcuts take effect immediately.</p></div>
             <button
               type="button"
               onClick={() => resetPreferences(userId)}
@@ -165,7 +180,6 @@ function SettingsPage() {
               Reset workspace defaults
             </button>
           </div>
-        </div>
       </section>
     </div>
   );
