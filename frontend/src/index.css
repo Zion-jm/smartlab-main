@@ -1350,3 +1350,8 @@
     justify-content: center;
   }
 }
+@media screen and (max-width: 767px) {
+  .student-records-page section[aria-label="Bulk academic records"] > div > div {
+    padding-inline: 0;
+  }
+}
