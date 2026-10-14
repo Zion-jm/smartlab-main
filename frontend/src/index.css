@@ -1870,3 +1870,28 @@
     display: none;
   }
 }
+/* One spacing rhythm for the mobile schedule filter groups. */
+@media screen and (max-width: 767px) {
+  .mobile-schedule-ribbon .page-control-ribbon__groups {
+    gap: 12px;
+    padding: 12px;
+  }
+  .mobile-schedule-ribbon .mobile-schedule-period,
+  .mobile-schedule-ribbon .page-control-ribbon__content .schedule-ribbon-filters {
+    margin: 0;
+    padding: 0;
+  }
+  .mobile-schedule-ribbon .page-control-ribbon__content .schedule-ribbon-filters,
+  .mobile-schedule-ribbon .schedule-ribbon-filters > .grid {
+    gap: 12px;
+  }
+  .mobile-schedule-ribbon .page-control-ribbon__content .schedule-ribbon-filters > * {
+    margin-block: 0;
+  }
+  .mobile-schedule-ribbon .academic-period-filter--dropdown > div {
+    row-gap: 4px;
+  }
+  .mobile-schedule-ribbon .ribbon-filter-label {
+    margin-bottom: 4px;
+  }
+}
