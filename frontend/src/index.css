@@ -1522,3 +1522,28 @@
   .accounts-workspace [aria-label="Account totals"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .accounts-workspace [aria-label="Account totals"] > button { min-width: 0; padding: .75rem; }
 }
+@media screen and (max-width: 767px) {
+  .portal-content:has(.academic-directory-workspace) { padding-block: 0; }
+  .portal-content .academic-directory-workspace { padding-top: 0; padding-inline: .25rem; }
+  .academic-directory-workspace .directory-overview-grid { margin-top: 0; gap: 1.5rem; margin-bottom: 1.5rem; }
+  .academic-directory-workspace .directory-mobile-section {
+    width: calc(100cqw + 1rem);
+    margin-inline: calc(50% - 50cqw - .5rem);
+    border: 1px solid #ead7d3;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  }
+  .academic-directory-workspace .directory-mobile-section > header {
+    padding: 1rem .75rem;
+    background: #fffaf7;
+  }
+  .academic-directory-workspace .directory-mobile-section > div { padding: 1rem .75rem; }
+  .academic-directory-workspace .directory-overview-grid > section:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .directory-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .directory-metrics > div { min-width: 0; padding: .75rem; }
+  .directory-metrics > div:first-child { grid-row: span 2; display: flex; flex-direction: column; justify-content: center; }
+}

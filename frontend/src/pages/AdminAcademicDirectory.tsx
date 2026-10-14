@@ -573,7 +573,8 @@ export default function AdminAcademicDirectory() {
               />
             </div>
           ) : (
-            <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+            <div className="relative min-w-0">
+            <section className="directory-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
               <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4"><div><h2 className="text-sm font-semibold text-[#321d1d]">{tabDefinitions[activeTab].label} records</h2><p className="mt-1 text-xs text-[#786565]">Review existing entries or open a record to edit its details.</p></div><span className="rounded-full bg-[#f6eeea] px-3 py-1 text-xs font-semibold text-[#800000]">{currentCollection.length} matching records</span></header>
               <div className="px-4 py-5 lg:px-6">
                 <div className="space-y-3 md:hidden">
@@ -592,7 +593,7 @@ export default function AdminAcademicDirectory() {
                   })}
                 </div>
                 <div className="hidden md:block"><TableContainer>{renderTable()}</TableContainer></div>
-                <TablePagination
+                <div className="hidden md:block"><TablePagination
                   currentPage={directoryPage}
                   pageSize={directoryPageSize}
                   totalItems={currentCollection.length}
@@ -601,9 +602,19 @@ export default function AdminAcademicDirectory() {
                     setDirectoryPageSize(size);
                     setDirectoryPage(1);
                   }}
-                />
+                /></div>
               </div>
             </section>
+<nav aria-label="Directory page navigation" className="request-mobile-navigator sticky bottom-0 z-30 border border-[#ead7d3] bg-white pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(76,37,24,0.08)] md:hidden"><TablePagination
+                  currentPage={directoryPage}
+                  pageSize={directoryPageSize}
+                  totalItems={currentCollection.length}
+                  onPageChange={setDirectoryPage}
+                  onPageSizeChange={(size) => {
+                    setDirectoryPageSize(size);
+                    setDirectoryPage(1);
+                  }}
+                /></nav></div>
           )}
         </div>
       </div>
@@ -648,11 +659,11 @@ export default function AdminAcademicDirectory() {
           tabIndex={0}
           className="min-w-0"
         >
-          {data && !loading && !error && <div className="mt-4 grid items-stretch gap-4 xl:grid-cols-3">
-            <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
+          {data && !loading && !error && <div className="directory-overview-grid mt-4 grid items-stretch gap-4 xl:grid-cols-3">
+            <section className="directory-mobile-section overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
               <header className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><p className="text-[10px] font-semibold uppercase tracking-widest text-[#967348]">Academic directory</p><h2 className="mt-1 text-base font-semibold text-[#321d1d]">{tabDefinitions[activeTab].label} overview</h2><p className="mt-1 text-xs text-[#786565]">{tabDefinitions[activeTab].description}</p></header>
               <div className="p-4">
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="directory-metrics grid gap-3 sm:grid-cols-3">
                   {[
                     { label: 'Catalog total', value: data.summary[activeTab], detail: `All ${tabDefinitions[activeTab].label.toLowerCase()}` },
                     { label: 'Matching records', value: currentCollection.length, detail: 'After search and filters' },
@@ -664,7 +675,7 @@ export default function AdminAcademicDirectory() {
                 {(activeTab === 'rooms' || activeTab === 'buildings') && <div className="mt-4 border-t border-[#f1e6e3] pt-4"><h3 className="text-xs font-semibold text-[#57322d]">Rooms by building</h3><p className="mt-1 text-xs text-[#786565]">All directory rooms, independent of the current filters.</p><div className="mt-3 max-h-44 space-y-3 overflow-y-auto pr-2">{roomGroups.map(group => <div key={group.id} className="grid grid-cols-[minmax(6rem,1fr)_2fr_2rem] items-center gap-3 text-xs"><span className="break-words text-[#786565]">{group.label}</span><div className="h-2 rounded-full bg-[#f2ece8]" aria-hidden="true"><div className="h-full rounded-full bg-[#800000]" style={{ width: `${group.count / Math.max(1, ...roomGroups.map(item => item.count)) * 100}%` }} /></div><strong className="text-right tabular-nums">{group.count}</strong></div>)}</div></div>}
               </div>
             </section>
-            <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+            <section className="directory-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
               <header className="border-b border-[#f1e6e3] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">{catalogContext[activeTab].title}</h2></header>
               <div className="space-y-4 p-4"><p className="text-sm leading-6 text-[#786565]">{catalogContext[activeTab].note}</p>
                 <button type="button" onClick={() => openDrawer(activeTab, 'create')} className="w-full rounded-xl bg-[#800000] px-4 py-3 text-left text-sm font-semibold text-white hover:bg-[#650000]">+ Add {tabDefinitions[activeTab].label.slice(0, -1)}</button>
