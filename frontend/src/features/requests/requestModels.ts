@@ -5,8 +5,8 @@ import { dateToDateKey, dateToTimeString } from '../../utils/dateTime';
 export const timeOptions: { value: string; label: string }[] = (() => {
   const options: { value: string; label: string }[] = [];
   for (let hour = 7; hour <= 21; hour++) {
-    const startMinute = hour === 7 ? 30 : 0;
-    for (let minute = startMinute; minute < 60; minute += 30) {
+    const startMinute = 0;
+    for (let minute = startMinute; minute < (hour === 21 ? 1 : 60); minute += 30) {
       const h = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
       const ampm = hour < 12 ? 'AM' : 'PM';
       const label = `${h.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`;
@@ -17,13 +17,18 @@ export const timeOptions: { value: string; label: string }[] = (() => {
   return options;
 })();
 
+export const startTimeOptions = timeOptions.filter(option => option.value < '21:00');
+export const endTimeOptions = (start: string) => startTimeOptions.some(option => option.value === start)
+  ? timeOptions.filter(option => option.value > start) : [];
+export const nextEndTime = (start: string) => endTimeOptions(start)[0]?.value ?? '';
+
 /** Start-time choices that have not elapsed in Manila for the selected day. */
 export const requestStartTimeOptions = (dateKey: string, now = new Date()) => {
-  if (!dateKey || dateKey !== dateToDateKey(now)) return timeOptions;
+  if (!dateKey || dateKey !== dateToDateKey(now)) return startTimeOptions;
   const currentTime = dateToTimeString(now);
   // A request starts in the future. At an exact slot boundary that slot has
   // already begun, so it is intentionally excluded as well.
-  return timeOptions.filter(option => option.value > currentTime);
+  return startTimeOptions.filter(option => option.value > currentTime);
 };
 
 export const requestTimeHasElapsed = (dateKey: string, time: string, now = new Date()) =>

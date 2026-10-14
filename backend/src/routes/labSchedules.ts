@@ -1,3 +1,4 @@
+import { assertBookingHours } from '../utils/manilaTime';
 import { resolveRequestIntent } from '../services/requestTypePolicy';
 import { validateRequestItems } from '../services/inventoryCapacityService';
 import { prisma } from '../db/prisma';
@@ -298,6 +299,7 @@ router.post(
       }
       resolvedFacultyId = facultyProfile.id;
 
+      assertBookingHours(timeStartValue, timeEndValue);
       if (timeEndValue <= timeStartValue || minutesFromDate(timeEndValue) <= minutesFromDate(timeStartValue)) {
         res.status(400).json({ error: 'Use a time range within one Manila day, with the end after the start.' });
         return;
@@ -568,6 +570,7 @@ router.put(
         return;
       }
 
+      assertBookingHours(timeStartValue, timeEndValue);
       if (timeEndValue <= timeStartValue || minutesFromDate(timeEndValue) <= minutesFromDate(timeStartValue)) {
         res.status(400).json({ error: 'Use a time range within one Manila day, with the end after the start.' });
         return;

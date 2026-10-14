@@ -4,7 +4,7 @@ import { sendError } from '../middleware/errors';
 import { Router, Response } from 'express';
 import { UserRole } from '@prisma/client';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
-import { manilaDateKey, parseManilaDate } from '../utils/manilaTime';
+import { assertBookingHours, manilaDateKey, parseManilaDate } from '../utils/manilaTime';
 import { dateToTimeString, getTimeBlocks } from '../utils/timeBlocks';
 import { loadCapacity, validateRequestItems, timeWindow, peakReserved } from '../services/inventoryCapacityService';
 import { RequestActionError } from '../services/requestActionError';
@@ -20,6 +20,7 @@ function parseInput(input: Record<string, unknown>) {
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(timeStart) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(timeEnd)) throw new RequestActionError(400, 'Use HH:mm for a same-day time range.');
   const dateNeeded = parseManilaDate(date), key = manilaDateKey(dateNeeded);
   const window = { dateNeeded, timeStart: parseManilaDate(key + 'T' + timeStart + ':00+08:00'), timeEnd: parseManilaDate(key + 'T' + timeEnd + ':00+08:00') };
+  assertBookingHours(window.timeStart, window.timeEnd);
   timeWindow(window);
   return { window, exclude: input.excludeRequestId as string | undefined, requestInfo: { academicYearId, termId, date, timeStart, timeEnd, timeBlocks: getTimeBlocks(timeStart, timeEnd) } };
 }

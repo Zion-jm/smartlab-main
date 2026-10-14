@@ -5,7 +5,7 @@ import { manilaMinutes } from './manilaTime';
 // ====================================================
 
 export const MINUTES_PER_HOUR = 60;
-export const START_TIME_MINUTES = 7 * 60 + 30; // 7:30 AM = 450 minutes
+export const START_TIME_MINUTES = 7 * 60; // 7:00 AM = 420 minutes
 
 /**
  * Convert time string (HH:MM) to minutes from midnight
@@ -32,7 +32,7 @@ export const minutesToTime = (minutes: number): string => {
  * Convert time range to 30-minute time blocks
  * @param timeStart - Start time in "HH:MM" format
  * @param timeEnd - End time in "HH:MM" format
- * @returns Array of block numbers (0-based from 7:30 AM)
+ * @returns Array of block numbers (0-based from 7:00 AM)
  */
 export const getTimeBlocks = (timeStart: string, timeEnd: string): number[] => {
   const startMinutes = timeToMinutes(timeStart);
@@ -43,7 +43,7 @@ export const getTimeBlocks = (timeStart: string, timeEnd: string): number[] => {
     throw new ValidationError('Start time must be before end time');
   }
 
-  // Convert to 30-minute blocks (7:30 AM = block 0)
+  // Convert to 30-minute blocks (7:00 AM = block 0)
   const startBlock = Math.floor((startMinutes - START_TIME_MINUTES) / 30);
   const endBlock = Math.ceil((endMinutes - START_TIME_MINUTES) / 30);
 
@@ -121,7 +121,7 @@ export const isValidTimeString = (timeString: string): boolean => {
 
 /**
  * Get block start time for a given block number
- * @param block - Block number (0 = 7:30 AM)
+ * @param block - Block number (0 = 7:00 AM)
  * @returns Time string for block start
  */
 export const getBlockStartTime = (block: number): string => {
@@ -131,7 +131,7 @@ export const getBlockStartTime = (block: number): string => {
 
 /**
  * Get block end time for a given block number
- * @param block - Block number (0 = 7:30 AM)
+ * @param block - Block number (0 = 7:00 AM)
  * @returns Time string for block end
  */
 export const getBlockEndTime = (block: number): string => {
@@ -162,7 +162,7 @@ export const getBlockDuration = (blocks: number[]): number => {
 };
 
 /**
- * Check if a time is within business hours (7:30 AM - 9:00 PM)
+ * Check if a time is within business hours (7:00 AM - 9:00 PM)
  * @param timeString - Time in HH:MM format
  * @returns True if within business hours
  */
@@ -172,7 +172,7 @@ export const isWithinBusinessHours = (timeString: string): boolean => {
 };
 
 /**
- * Get all blocks for a complete day (7:30 AM - 9:00 PM)
+ * Get all blocks for a complete day (7:00 AM - 9:00 PM)
  * @returns Array of all block numbers for the day
  */
 export const getDailyBlocks = (): number[] => {

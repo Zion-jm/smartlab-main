@@ -11,7 +11,7 @@ import {
 } from '../../hooks/useScheduleConflictCheck';
 import { toast } from '../../stores/toastStore';
 import { YEAR_LEVELS } from '../../constants/yearLevels';
-import { requestStartTimeOptions, requestTimeHasElapsed, timeOptions } from '../../features/requests/requestModels';
+import { requestStartTimeOptions, requestTimeHasElapsed, startTimeOptions as allStartTimeOptions, endTimeOptions, nextEndTime } from '../../features/requests/requestModels';
 import { useRequestClock } from '../../features/requests/useRequestClock';
 import SidebarDrawer from '../shared/SidebarDrawer';
 import { CalendarPlus, Pencil } from 'lucide-react';
@@ -133,7 +133,7 @@ export default function LabScheduleModal({
   );
   const startTimeOptions = formValues.scheduleType === 'ONE_TIME'
     ? requestStartTimeOptions(formValues.scheduleDate, requestClock)
-    : timeOptions;
+    : allStartTimeOptions;
 
   const conflictParams = useMemo(() => {
     if (!academicContext) return null;
@@ -158,9 +158,9 @@ export default function LabScheduleModal({
   const handleSelectChange = (name: keyof typeof formValues, value: string) => {
     setSubmitError(null);
     setFormValues((prev) => {
-      const clearEnd = name === 'timeStart' && prev.timeEnd && prev.timeEnd <= value;
+      const clearEnd = name === 'timeStart' && !endTimeOptions(value).some(option => option.value === prev.timeEnd);
       const clearElapsedRange = name === 'scheduleDate' && prev.scheduleType === 'ONE_TIME' && requestTimeHasElapsed(value, prev.timeStart, requestClock);
-      return { ...prev, [name]: value, ...(clearEnd ? { timeEnd: '' } : {}), ...(clearElapsedRange ? { timeStart: '', timeEnd: '' } : {}) };
+      return { ...prev, [name]: value, ...(clearEnd ? { timeEnd: nextEndTime(value) } : {}), ...(clearElapsedRange ? { timeStart: '', timeEnd: '' } : {}) };
     });
   };
 
@@ -408,7 +408,7 @@ export default function LabScheduleModal({
           id="schedule-timeEnd"
           error={fieldErrors.timeEnd}
               value={formValues.timeEnd}
-              options={timeOptions.filter(option => !formValues.timeStart || option.value > formValues.timeStart)}
+              disabled={!formValues.timeStart} options={endTimeOptions(formValues.timeStart)}
               placeholder="Select end time"
               onChange={(value) => handleSelectChange('timeEnd', value)}
               className="text-xs font-normal"

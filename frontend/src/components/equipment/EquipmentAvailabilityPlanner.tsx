@@ -5,7 +5,7 @@ import api from '../../services/api';
 import { StyledDatePicker } from '../shared/StyledDatePicker';
 import DropdownField from '../shared/DropdownField';
 import { manilaTodayForPicker, formatDate, formatTimeRange } from '../../utils/dateTime';
-import { requestStartTimeOptions, requestTimeHasElapsed, timeOptions } from '../../features/requests/requestModels';
+import { requestStartTimeOptions, requestTimeHasElapsed, endTimeOptions, nextEndTime } from '../../features/requests/requestModels';
 import { useRequestClock } from '../../features/requests/useRequestClock';
 
 type PlanningRequest = { id: string; academicYearId: string; termId: string; reference: string; requester: string; quantity: number; status: string; dateNeeded: string; timeStart: string | null; timeEnd: string | null; location: string };
@@ -15,7 +15,7 @@ const dateKey = (date: Date) => [date.getFullYear(), String(date.getMonth() + 1)
 export default function EquipmentAvailabilityPlanner() {
   const [date, setDate] = useState<Date | null>(manilaTodayForPicker);
   const [mode, setMode] = useState('day');
-  const [start, setStart] = useState('07:30');
+  const [start, setStart] = useState('07:00');
   const [end, setEnd] = useState('09:00');
   const [query, setQuery] = useState<{ date: string; timeStart?: string; timeEnd?: string } | null>(null);
   const [rows, setRows] = useState<PlanningRow[]>([]);
@@ -49,7 +49,7 @@ export default function EquipmentAvailabilityPlanner() {
     }}>
       <div className="col-span-2 min-w-0 sm:col-span-1"><p className="mb-2 text-xs font-semibold text-[#786565]">Date</p><StyledDatePicker browsing value={date} onChange={value => { setDate(value); const key = value ? dateKey(value) : ''; if (requestTimeHasElapsed(key, start, requestClock)) { setStart(''); setEnd(''); } }} /></div>
       <div className="col-span-2 min-w-0 sm:col-span-1"><p className="mb-2 text-xs font-semibold text-[#786565]">Time coverage</p><DropdownField value={mode} onChange={value => { setMode(value); if (value === 'time' && requestTimeHasElapsed(selectedDateKey, start, requestClock)) { setStart(''); setEnd(''); } }} options={[{ value: 'day', label: 'Whole day' }, { value: 'time', label: 'Specific time' }]} /></div>
-      <div className="min-w-0"><p className="mb-2 text-xs font-semibold text-[#786565]">From</p><DropdownField disabled={mode === 'day'} value={mode === 'day' ? '00:00' : start} onChange={value => { setStart(value); if (end <= value) setEnd(''); }} options={mode === 'day' ? [{ value: '00:00', label: '12:00 AM' }] : startOptions} /></div><div className="min-w-0"><p className="mb-2 text-xs font-semibold text-[#786565]">To</p><DropdownField disabled={mode === 'day'} value={mode === 'day' ? '24:00' : end} onChange={setEnd} options={mode === 'day' ? [{ value: '24:00', label: '12:00 AM (next day)' }] : timeOptions.filter(option => !start || option.value > start)} placeholder="Select end time" /></div>
+      <div className="min-w-0"><p className="mb-2 text-xs font-semibold text-[#786565]">From</p><DropdownField disabled={mode === 'day'} value={mode === 'day' ? '00:00' : start} onChange={value => { setStart(value); if (end <= value) setEnd(nextEndTime(value)); }} options={mode === 'day' ? [{ value: '00:00', label: '12:00 AM' }] : startOptions} /></div><div className="min-w-0"><p className="mb-2 text-xs font-semibold text-[#786565]">To</p><DropdownField disabled={mode === 'day' || !start} value={mode === 'day' ? '24:00' : end} onChange={setEnd} options={mode === 'day' ? [{ value: '24:00', label: '12:00 AM (next day)' }] : endTimeOptions(start)} placeholder="Select end time" /></div>
       <div className="col-span-2 flex justify-end xl:col-span-1"><button disabled={loading} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#800000] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#650000] disabled:opacity-60 sm:w-auto" type="submit"><Search size={16} aria-hidden="true" />{loading ? 'Checking…' : 'Check availability'}</button></div>
     </form>
     <div className="flex items-start gap-2 rounded-xl bg-[#faf8f6] px-3 py-2.5 text-xs leading-5 text-[#786565]"><Info size={15} className="mt-0.5 shrink-0 text-[#967348]" aria-hidden="true" /><p>Stock is shared across academic periods. Pending requests do not reserve stock. Checked-out units remain unavailable until returned.</p></div>

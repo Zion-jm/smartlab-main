@@ -13,7 +13,7 @@ import { StyledDatePicker } from '../components/shared/StyledDatePicker';
 import { YEAR_LEVELS } from '../constants/yearLevels';
 import { MyRequestsPreview } from '../features/requests/MyRequestsPreview';
 import { PanelSection } from '../features/requests/PanelSection';
-import { formatReference, requestStartTimeOptions, requestTimeHasElapsed, timeOptions, toDateInputValue, toManilaTimeInputValue, type ApiBorrowRequest, type RequestResources, type RequestRow } from '../features/requests/requestModels';
+import { formatReference, requestStartTimeOptions, requestTimeHasElapsed, endTimeOptions, nextEndTime, toDateInputValue, toManilaTimeInputValue, type ApiBorrowRequest, type RequestResources, type RequestRow } from '../features/requests/requestModels';
 import { useLabSchedules, useMyBorrowRequests, useRequestResources } from '../features/requests/useRequestData';
 import { useRequestClock } from '../features/requests/useRequestClock';
 import { useScheduleConflictCheck } from '../hooks/useScheduleConflictCheck';
@@ -396,9 +396,9 @@ function RequestFormScaffold({
     setSubmitError(null);
     setSubmitSuccess(null);
     setForm((prev) => {
-      const clearEnd = field === 'timeStart' && prev.timeEnd && prev.timeEnd <= value;
+      const clearEnd = field === 'timeStart' && !endTimeOptions(value).some(option => option.value === prev.timeEnd);
       const clearElapsedRange = field === 'dateNeeded' && requestTimeHasElapsed(value, prev.timeStart, requestClock);
-      return { ...prev, [field]: value, ...(clearEnd ? { timeEnd: '' } : {}), ...(clearElapsedRange ? { timeStart: '', timeEnd: '' } : {}) };
+      return { ...prev, [field]: value, ...(clearEnd ? { timeEnd: nextEndTime(value) } : {}), ...(clearElapsedRange ? { timeStart: '', timeEnd: '' } : {}) };
     });
   };
 
@@ -645,7 +645,7 @@ function RequestFormScaffold({
                     </label>
                     <DropdownField
                       value={form.timeEnd}
-                      options={timeOptions.filter(option => !form.timeStart || option.value > form.timeStart)}
+                      disabled={!form.timeStart} options={endTimeOptions(form.timeStart)}
                       placeholder="Select end time"
                       onChange={(value) => updateForm('timeEnd', value)}
                       className="text-xs font-normal"

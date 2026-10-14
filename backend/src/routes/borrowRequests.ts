@@ -1,3 +1,4 @@
+import { assertBookingHours } from '../utils/manilaTime';
 import { studentStanding } from '../services/studentStanding';
 import { resolveRequestIntent } from '../services/requestTypePolicy';
 import { prisma } from '../db/prisma';
@@ -247,6 +248,7 @@ router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FA
     }
     // ─────────────────────────────────────────────────────────────────────────
 
+    assertBookingHours(timeStart, timeEnd);
     let requestProgramId = programId;
     let requestYearLevel = yearLevel;
     if (req.user!.role === UserRole.STUDENT) {
@@ -348,6 +350,7 @@ router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.
 
     const items = validateRequestItems(rawItems);
     const intent = await resolveRequestIntent(prisma, req.body, req.user!.role, items);
+    assertBookingHours(timeStart, timeEnd);
     const periodSelection = { academicYearId: existingRequest.academicYearId, termId: existingRequest.termId };
     const resolvedAcademicYearId = existingRequest.academicYearId;
     const resolvedTermId = existingRequest.termId;

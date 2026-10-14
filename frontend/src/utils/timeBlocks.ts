@@ -22,7 +22,7 @@ export interface TimeBlockConflict {
 
 // Constants matching backend
 export const TIME_BLOCK_START_HOUR = 7;
-export const TIME_BLOCK_START_MINUTE = 30;
+export const TIME_BLOCK_START_MINUTE = 0;
 export const TIME_BLOCK_DURATION = 30; // minutes
 export const TIME_BLOCK_END_HOUR = 21;
 export const TIME_BLOCK_END_MINUTE = 0;
@@ -31,15 +31,15 @@ export const TIME_BLOCK_END_MINUTE = 0;
 export function generateTimeBlocks(): TimeBlock[] {
   const blocks: TimeBlock[] = [];
   let blockId = 0;
-  
-  // Start at 7:30 AM
+
+  // Start at 7:00 AM
   let currentMinutes = TIME_BLOCK_START_HOUR * 60 + TIME_BLOCK_START_MINUTE;
   const endMinutes = TIME_BLOCK_END_HOUR * 60 + TIME_BLOCK_END_MINUTE;
-  
+
   while (currentMinutes < endMinutes) {
     const startMinutes = currentMinutes;
     const blockEndMinutes = Math.min(currentMinutes + TIME_BLOCK_DURATION, endMinutes);
-    
+
     blocks.push({
       id: blockId++,
       startTime: minutesToTimeString(startMinutes),
@@ -47,10 +47,10 @@ export function generateTimeBlocks(): TimeBlock[] {
       startMinutes,
       endMinutes: blockEndMinutes
     });
-    
+
     currentMinutes += TIME_BLOCK_DURATION;
   }
-  
+
   return blocks;
 }
 
@@ -71,16 +71,16 @@ export function minutesToTimeString(minutes: number): string {
 export function timeToBlock(timeStr: string): number {
   const minutes = timeToMinutes(timeStr);
   const startMinutes = TIME_BLOCK_START_HOUR * 60 + TIME_BLOCK_START_MINUTE;
-  
+
   if (minutes < startMinutes) {
     return -1; // Before first block
   }
-  
+
   const blockIndex = Math.floor((minutes - startMinutes) / TIME_BLOCK_DURATION);
   const maxBlockIndex = Math.floor(
     ((TIME_BLOCK_END_HOUR * 60 + TIME_BLOCK_END_MINUTE) - startMinutes) / TIME_BLOCK_DURATION
   ) - 1;
-  
+
   return Math.min(blockIndex, maxBlockIndex);
 }
 
@@ -88,9 +88,9 @@ export function timeToBlock(timeStr: string): number {
 export function blockToTimeRange(blockId: number): TimeRange | null {
   const blocks = generateTimeBlocks();
   const block = blocks.find(b => b.id === blockId);
-  
+
   if (!block) return null;
-  
+
   return {
     start: block.startTime,
     end: block.endTime
@@ -101,16 +101,16 @@ export function blockToTimeRange(blockId: number): TimeRange | null {
 export function getBlocksForTimeRange(startTime: string, endTime: string): number[] {
   const startBlock = timeToBlock(startTime);
   const endBlock = timeToBlock(endTime);
-  
+
   if (startBlock === -1 || endBlock === -1) {
     return [];
   }
-  
+
   const blocks: number[] = [];
   for (let i = startBlock; i <= endBlock; i++) {
     blocks.push(i);
   }
-  
+
   return blocks;
 }
 
@@ -123,16 +123,16 @@ export function hasTimeBlockOverlap(
 ): TimeBlockConflict {
   const blocks1 = getBlocksForTimeRange(start1, end1);
   const blocks2 = getBlocksForTimeRange(start2, end2);
-  
+
   const overlappingBlocks = blocks1.filter(block => blocks2.includes(block));
   const hasConflict = overlappingBlocks.length > 0;
-  
+
   // Calculate conflict duration in minutes
   let conflictDuration = 0;
   if (hasConflict) {
     conflictDuration = overlappingBlocks.length * TIME_BLOCK_DURATION;
   }
-  
+
   return {
     hasConflict,
     overlappingBlocks,
@@ -156,7 +156,7 @@ export function findConflictsInRange(
   existingRanges: TimeRange[]
 ): Array<{ range: TimeRange; conflict: TimeBlockConflict }> {
   const conflicts: Array<{ range: TimeRange; conflict: TimeBlockConflict }> = [];
-  
+
   for (const range of existingRanges) {
     const conflict = hasTimeBlockOverlap(
       targetRange.start,
@@ -164,12 +164,12 @@ export function findConflictsInRange(
       range.start,
       range.end
     );
-    
+
     if (conflict.hasConflict) {
       conflicts.push({ range, conflict });
     }
   }
-  
+
   return conflicts;
 }
 
@@ -194,7 +194,7 @@ export function isWithinOperationalHours(timeStr: string): boolean {
   const minutes = timeToMinutes(timeStr);
   const startMinutes = TIME_BLOCK_START_HOUR * 60 + TIME_BLOCK_START_MINUTE;
   const endMinutes = TIME_BLOCK_END_HOUR * 60 + TIME_BLOCK_END_MINUTE;
-  
+
   return minutes >= startMinutes && minutes <= endMinutes;
 }
 
@@ -202,13 +202,13 @@ export function isWithinOperationalHours(timeStr: string): boolean {
 export function getNextAvailableTime(currentTime: string, duration: number): string | null {
   const currentMinutes = timeToMinutes(currentTime);
   const endMinutes = TIME_BLOCK_END_HOUR * 60 + TIME_BLOCK_END_MINUTE;
-  
+
   const proposedEnd = currentMinutes + duration;
-  
+
   if (proposedEnd > endMinutes) {
     return null; // Cannot fit before end of day
   }
-  
+
   return minutesToTimeString(currentMinutes + duration);
 }
 
@@ -223,10 +223,10 @@ export function formatDuration(startTime: string, endTime: string): string {
   const startMinutes = timeToMinutes(startTime);
   const endMinutes = timeToMinutes(endTime);
   const duration = endMinutes - startMinutes;
-  
+
   const hours = Math.floor(duration / 60);
   const minutes = duration % 60;
-  
+
   if (hours > 0 && minutes > 0) {
     return `${hours}h ${minutes}m`;
   } else if (hours > 0) {
@@ -245,13 +245,13 @@ export function getTimeBlockStats(timeRange: TimeRange): {
 } {
   const blocks = getBlocksForTimeRange(timeRange.start, timeRange.end);
   const duration = timeToMinutes(timeRange.end) - timeToMinutes(timeRange.start);
-  
+
   // Check if this is a partial block (not aligned to 30-minute boundaries)
   const startBlock = timeToBlock(timeRange.start);
   const endBlock = timeToBlock(timeRange.end);
   const expectedDuration = (endBlock - startBlock + 1) * TIME_BLOCK_DURATION;
   const isPartialBlock = duration !== expectedDuration;
-  
+
   return {
     totalBlocks: getTimeBlocks().length,
     duration,

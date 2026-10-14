@@ -37,3 +37,13 @@ export function assertFutureManilaRequestWindow(dateNeeded: Date | string, timeS
   if (dayKey < todayKey) throw new ValidationError('Choose today or a future date.');
   if (dayKey === todayKey && start.getTime() <= now.getTime()) throw new ValidationError('Choose a start time that has not already passed.');
 }
+
+/** Booking boundaries, expressed in Manila time on the same calendar day. */
+export function assertBookingHours(startInput: unknown, endInput: unknown): void {
+  const start = parseManilaDate(startInput), end = parseManilaDate(endInput);
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) throw new ValidationError('Choose valid start and end times.');
+  const from = manilaMinutes(start), to = manilaMinutes(end);
+  if (manilaDateKey(start) !== manilaDateKey(end) || from < 420 || from > 1230 || to > 1260 || to - from < 30 || from % 30 || to % 30 || start.getUTCSeconds() || end.getUTCSeconds() || start.getUTCMilliseconds() || end.getUTCMilliseconds()) {
+    throw new ValidationError('Use 30-minute intervals between 7:00 AM and 9:00 PM, with the end at least 30 minutes after the start.');
+  }
+}
