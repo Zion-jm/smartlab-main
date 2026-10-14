@@ -43,7 +43,7 @@ export function ScheduleDemandPanel({
   const paginatedRows = rows.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   return (
-    <section className="h-full overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
+    <section className="reports-mobile-section h-full overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
       <div className="flex items-start justify-between gap-4 border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
         <div>
           <h3 className="text-sm font-semibold text-[#241f20]">{title}</h3>
@@ -619,7 +619,7 @@ export function ScheduleReportView({
             />
           ) : null}
 
-        <section className="overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
+        <section className="reports-mobile-section overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
           <div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Schedule overview</h2><p className="mt-1 text-xs text-[#786565]">A current snapshot based on the reporting period and active schedule filters.</p></div>
         <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
           {[
@@ -646,7 +646,7 @@ export function ScheduleReportView({
         </section>
 
         <div className="grid items-stretch gap-4 xl:grid-cols-4">
-          <section className="rounded-2xl border border-[#e5d9d5] bg-white shadow-sm xl:col-span-1">
+          <section className="reports-mobile-section rounded-2xl border border-[#e5d9d5] bg-white shadow-sm xl:col-span-1">
           <div className="border-b border-[#f1e6e3] px-4 py-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9a7770]">Demand controls</p>

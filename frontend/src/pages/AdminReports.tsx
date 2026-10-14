@@ -181,7 +181,7 @@ function Panel({
   actions?: React.ReactNode;
 }) {
   return (
-    <section className={`overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm ${className}`}>
+    <section className={`reports-mobile-section overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm ${className}`}>
       <div className="flex items-start justify-between gap-4 border-b border-[#f1e6e3] px-4 py-4 lg:px-5">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-[#321d1d]">{title}</h2>
