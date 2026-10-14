@@ -521,7 +521,7 @@ function RequestFormScaffold({
 
   return (
     <>
-      <form className="space-y-4" onSubmit={handleSubmit}>
+      <form className="portal-new-request space-y-4" onSubmit={handleSubmit}>
       {(loading || error) && (
         <div
           className={`rounded-2xl border px-4 py-3 text-sm ${
@@ -776,7 +776,7 @@ function RequestFormScaffold({
         </div>
       </PanelSection>
 
-      <div className="bg-[#fffaf7] border border-[#ead7d3] border-t-4 border-t-[#800000] rounded-2xl p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between shadow-sm">
+      <div className="request-submit-summary bg-[#fffaf7] border border-[#ead7d3] border-t-4 border-t-[#800000] rounded-2xl p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between shadow-sm">
         <div>
           <p className="text-sm font-semibold text-[#111827]">Request summary</p>
           <p role="status" className="mt-1 text-xs font-semibold text-[#b91c1c]">
