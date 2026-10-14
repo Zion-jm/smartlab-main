@@ -105,20 +105,21 @@ export default function ControlRibbon({
                 className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 text-xs font-medium text-[#4b5563] transition hover:border-[#c9a5a5] hover:text-[#800000] disabled:cursor-wait disabled:opacity-60"
               >
                 <RefreshCw aria-hidden="true" className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? 'Refreshing…' : 'Refresh'}
+                <span className="page-control-ribbon__button-label">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
               </button>
             </div>
           )}
-          {actions}
+          {actions && <div className="page-control-ribbon__extra-actions contents">{actions}</div>}
           <button
             type="button"
+            aria-label={expanded ? 'Hide controls' : 'Show controls'}
             aria-expanded={expanded}
             aria-controls={contentId}
             title={controlsShortcut ? `Toggle page controls (Alt + Shift + ${controlsShortcut})` : undefined}
             onClick={() => setExpanded((current) => !current)}
                 className="page-control-ribbon__toggle"
           >
-            <span>{expanded ? 'Hide controls' : 'Show controls'}</span>
+            <span className="page-control-ribbon__button-label">{expanded ? 'Hide controls' : 'Show controls'}</span>
             <svg
               aria-hidden="true"
               className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`}

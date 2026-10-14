@@ -1769,3 +1769,36 @@
   }
   .mobile-schedule-explorer #mobile-schedule-panel > div:last-of-type { margin-bottom: 1rem; }
 }
+@media screen and (max-width: 767px) {
+  .page-control-ribbon .page-control-ribbon__bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: start;
+    gap: .5rem;
+  }
+  .page-control-ribbon .page-control-ribbon__bar > .min-w-0 { grid-column: 1; grid-row: 1; }
+  .page-control-ribbon .page-control-ribbon__bar > .page-control-ribbon__actions { display: contents; }
+  .page-control-ribbon .page-control-ribbon__refresh { grid-column: 2; grid-row: 1; }
+  .page-control-ribbon .page-control-ribbon__actions > .page-control-ribbon__toggle {
+    grid-column: 3;
+    grid-row: 1;
+    width: 44px;
+  }
+  .page-control-ribbon .page-control-ribbon__refresh > button,
+  .page-control-ribbon .page-control-ribbon__actions > .page-control-ribbon__toggle {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    gap: 0;
+  }
+  .page-control-ribbon .page-control-ribbon__button-label { display: none; }
+  .page-control-ribbon .page-control-ribbon__extra-actions {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+  .page-control-ribbon .page-control-ribbon__extra-actions:empty { display: none; }
+}
