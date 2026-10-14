@@ -1291,3 +1291,23 @@
     padding-inline: .75rem;
   }
 }
+
+/* Student Records mobile trial: one inset for cards and footer controls. */
+@media screen and (max-width: 767px) {
+  .portal-content .student-records-list-section {
+    width: calc(100cqw - .5rem);
+    margin-inline: calc(50% - 50cqw + .25rem);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .student-records-list-section > div:first-child {
+    padding-inline: 0;
+  }
+
+  .student-records-list-section .student-records-list-body {
+    padding: 1rem 0;
+  }
+}
