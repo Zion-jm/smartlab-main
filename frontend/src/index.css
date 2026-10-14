@@ -1802,3 +1802,27 @@
   }
   .page-control-ribbon .page-control-ribbon__extra-actions:empty { display: none; }
 }
+/* Compact Page Controls fields; preset borders are included in total height. */
+@media screen {
+  .page-control-ribbon button[aria-haspopup="listbox"],
+  .page-control-ribbon select:not(.sr-only),
+  .page-control-ribbon .schedule-date-input {
+    box-sizing: border-box;
+    height: 40px;
+    min-height: 40px;
+    padding-top: .375rem;
+    padding-bottom: .375rem;
+  }
+  .page-control-ribbon .ribbon-date-range-filter .ribbon-date-range-actions {
+    box-sizing: border-box;
+    height: 40px;
+    min-height: 40px;
+    padding-block: 0;
+  }
+  .page-control-ribbon .ribbon-date-range-filter .ribbon-date-range-actions > button {
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 0;
+    padding-block: 0;
+  }
+}
