@@ -164,7 +164,7 @@ export default function AcademicPeriodFilter({
               <svg aria-hidden="true" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="m4.5 10 3.5 3.5L15.5 6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Use active
+              <span className="academic-period-active-label">Use active</span>
             </button>
           </div>
         </div>

@@ -1834,3 +1834,32 @@
     --ribbon-target-size: 44px;
   }
 }
+
+/* Keep the two period selectors and active-period shortcut on one mobile row. */
+@media screen and (max-width: 767px) {
+  .academic-period-filter--compact.academic-period-filter--dropdown > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 36px;
+    align-items: center;
+    gap: .5rem;
+  }
+  .academic-period-filter--compact.academic-period-filter--dropdown > div > span {
+    grid-column: 1 / -1;
+  }
+  .academic-period-filter--compact.academic-period-filter--dropdown > div > .grid {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .5rem;
+  }
+  .academic-period-filter--compact.academic-period-filter--dropdown > div > button {
+    width: 36px;
+    min-width: 36px;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+  }
+  .academic-period-filter--dropdown .academic-period-active-label {
+    display: none;
+  }
+}
