@@ -1303,11 +1303,10 @@
   .student-records-page section[aria-label="Bulk academic records"] {
     width: calc(100cqw + 1rem);
     margin-inline: calc(50% - 50cqw - .5rem);
-    border-inline: 0;
-    border-block: 1px solid #ead7d3;
-    border-radius: 0;
+    border: 1px solid #ead7d3;
+    border-radius: 1rem;
     background: #fff;
-    box-shadow: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
     overflow: visible;
   }
 
@@ -1317,6 +1316,7 @@
     padding: 1rem .75rem;
     border: 0;
     background: #fffaf7;
+    border-radius: calc(1rem - 1px) calc(1rem - 1px) 0 0;
   }
 
   .student-records-page .student-records-overview > section > div,
