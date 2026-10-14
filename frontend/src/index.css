@@ -1837,6 +1837,13 @@
 
 /* Keep the two period selectors and active-period shortcut on one mobile row. */
 @media screen and (max-width: 767px) {
+  .academic-period-filter--compact.academic-period-filter--dropdown {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+  }
   .academic-period-filter--compact.academic-period-filter--dropdown > div {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 36px;
