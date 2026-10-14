@@ -1742,3 +1742,30 @@
   }
   .mobile-schedule-explorer .schedule-chart-week-controls { display: none; }
 }
+@media screen and (max-width: 767px) {
+  .portal-content:has(.mobile-schedule-explorer) {
+    display: flex;
+    flex-direction: column;
+  }
+  .portal-content :not(.mobile-schedule-explorer):has(.mobile-schedule-explorer) {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+    padding-bottom: 0;
+  }
+  .portal-content .mobile-schedule-explorer {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+  }
+  .mobile-schedule-explorer #mobile-schedule-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+  }
+  .mobile-schedule-explorer #mobile-schedule-panel > .schedule-mobile-navigator {
+    margin-top: auto;
+    flex-shrink: 0;
+  }
+  .mobile-schedule-explorer #mobile-schedule-panel > div:last-of-type { margin-bottom: 1rem; }
+}
