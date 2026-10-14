@@ -1292,64 +1292,42 @@
   }
 }
 
-/* Student Records mobile trial: one inset for cards and footer controls. */
+/* Full-width mobile sections with aligned, padded content. */
 @media screen and (max-width: 767px) {
-  .portal-content .student-records-list-section {
-    width: calc(100cqw - .5rem);
-    margin-inline: calc(50% - 50cqw + .25rem);
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .student-records-list-section > div:first-child {
-    padding-inline: 0;
-  }
-
-  .student-records-list-section .student-records-list-body {
-    padding: 1rem 0;
-  }
-}
-@media screen and (max-width: 767px) {
-  .portal-content .student-records-page {
-    padding-inline: .25rem;
-  }
-
-  .student-records-page > * + *,
-  .student-records-page .student-records-overview {
-    margin-top: 1.5rem;
-    gap: 1.5rem;
-  }
+  .portal-content .student-records-page { padding-inline: .25rem; }
+  .student-records-page > * + * { margin-top: 1.5rem; }
+  .student-records-page .student-records-overview { gap: 1.5rem; }
 
   .student-records-page .student-records-overview > section,
+  .portal-content .student-records-list-section,
   .student-records-page section[aria-label="Bulk academic records"] {
+    width: calc(100cqw + 1rem);
+    margin-inline: calc(50% - 50cqw - .5rem);
     border: 0;
     border-radius: 0;
-    background: transparent;
+    background: #fff;
     box-shadow: none;
     overflow: visible;
   }
 
   .student-records-page .student-records-overview > section > header,
+  .student-records-list-section > div:first-child,
   .student-records-page section[aria-label="Bulk academic records"] > button {
-    padding: 0 0 1rem;
+    padding: 1rem .75rem;
     border: 0;
-    background: transparent;
+    background: #fffaf7;
   }
 
   .student-records-page .student-records-overview > section > div,
-  .student-records-page section[aria-label="Bulk academic records"] > div {
-    padding-inline: 0;
-    background: transparent;
+  .student-records-page section[aria-label="Bulk academic records"] > div,
+  .student-records-list-section .student-records-list-body {
+    padding: 1rem .75rem;
     border: 0;
   }
 
-  .student-records-page .student-records-overview > section > div {
-    padding-block: 0;
+  .student-records-list-section .student-records-list-body:has(.request-mobile-navigator) {
+    padding-bottom: 0;
   }
-
-  .student-records-page #student-records-batch-tools {
-    margin: 0;
-  }
+  .student-records-list-section .request-mobile-navigator { margin-top: 1rem; }
+  .student-records-page #student-records-batch-tools { margin: 0; }
 }
