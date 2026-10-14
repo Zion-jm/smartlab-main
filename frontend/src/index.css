@@ -1311,3 +1311,45 @@
     padding: 1rem 0;
   }
 }
+@media screen and (max-width: 767px) {
+  .portal-content .student-records-page {
+    padding-inline: .25rem;
+  }
+
+  .student-records-page > * + *,
+  .student-records-page .student-records-overview {
+    margin-top: 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .student-records-page .student-records-overview > section,
+  .student-records-page section[aria-label="Bulk academic records"] {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .student-records-page .student-records-overview > section > header,
+  .student-records-page section[aria-label="Bulk academic records"] > button {
+    padding: 0 0 1rem;
+    border: 0;
+    background: transparent;
+  }
+
+  .student-records-page .student-records-overview > section > div,
+  .student-records-page section[aria-label="Bulk academic records"] > div {
+    padding-inline: 0;
+    background: transparent;
+    border: 0;
+  }
+
+  .student-records-page .student-records-overview > section > div {
+    padding-block: 0;
+  }
+
+  .student-records-page #student-records-batch-tools {
+    margin: 0;
+  }
+}

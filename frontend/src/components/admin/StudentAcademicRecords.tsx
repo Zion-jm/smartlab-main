@@ -47,7 +47,7 @@ export default function StudentAcademicRecords({years,onRefresh,refreshing=false
  const configuredCount=displayedStudents.filter(student=>student.studentAcademicRecords.length>0).length;
  const summaryReady=Boolean(results)&&!loading;
  return <>
- <div className="grid items-stretch gap-4 xl:grid-cols-3">
+ <div className="student-records-overview grid items-stretch gap-4 xl:grid-cols-3">
   <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
    <header className="flex items-center gap-3 border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><span className="rounded-xl bg-[#800000] p-2.5 text-white"><GraduationCap size={22} aria-hidden="true"/></span><div><h2 className="text-base font-semibold text-[#321d1d]">Student records overview</h2><p className="mt-1 text-xs text-[#786565]">{year?.year??'Select an academic year'} · Academic standing and record completeness</p></div></header>
    <div className="p-4"><p className="mb-3 text-xs text-[#786565]">{summaryReady?`${results!.total} matching students. Summary below covers ${displayedStudents.length} students on this page.`:loading?'Loading record summary…':'Load records to see the selected year and search results.'}</p>
