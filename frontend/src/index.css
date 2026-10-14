@@ -1731,3 +1731,14 @@
     box-shadow: 0 -4px 16px rgba(76, 37, 24, .08);
   }
 }
+@media screen and (max-width: 767px) {
+  .portal-content:has(.mobile-schedule-explorer) { padding-bottom: 0; }
+  .mobile-schedule-explorer { padding-bottom: 0; }
+  .mobile-schedule-explorer .schedule-mobile-navigator {
+    bottom: 0;
+    margin-bottom: 0;
+    background: #fff;
+    border-radius: 0;
+  }
+  .mobile-schedule-explorer .schedule-chart-week-controls { display: none; }
+}
