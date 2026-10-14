@@ -487,7 +487,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <div className="grid items-start gap-4 xl:grid-cols-4">
+        <div className="dashboard-sections grid items-start gap-4 xl:grid-cols-4">
         <Card
           className="xl:order-1 xl:col-span-3 xl:h-full xl:self-stretch"
           title="System overview"

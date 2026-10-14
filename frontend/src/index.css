@@ -1361,3 +1361,33 @@
     padding-bottom: 0;
   }
 }
+/* Dashboard mobile trial: match the Student Records section layout. */
+@media screen and (max-width: 767px) {
+  .portal-content:has(.dashboard-workspace) { padding-top: 0; }
+  .portal-content .dashboard-workspace { padding-top: 0; padding-inline: .25rem; }
+  .dashboard-workspace > * + * { margin-top: 1.5rem; }
+  .dashboard-workspace .dashboard-sections { gap: 1.5rem; }
+
+  .dashboard-workspace > header,
+  .dashboard-workspace .dashboard-section {
+    width: calc(100cqw + 1rem);
+    margin-inline: calc(50% - 50cqw - .5rem);
+    border-radius: 1rem;
+  }
+  .dashboard-workspace > header { margin-bottom: 0; }
+  .dashboard-workspace > header > div { padding: 1rem .75rem; }
+  .dashboard-workspace .dashboard-section {
+    border-color: #ead7d3;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  }
+  .dashboard-workspace .dashboard-section > div:first-child {
+    flex-wrap: wrap;
+    padding: 1rem .75rem;
+    background: #fffaf7;
+    border-radius: calc(1rem - 1px) calc(1rem - 1px) 0 0;
+  }
+  .dashboard-workspace .dashboard-section > div:last-child { padding: 1rem .75rem; }
+  .dashboard-workspace .dashboard-stat { padding: .75rem; }
+  .dashboard-workspace .dashboard-stat > div:last-child { flex-wrap: wrap; gap: .5rem; }
+}
