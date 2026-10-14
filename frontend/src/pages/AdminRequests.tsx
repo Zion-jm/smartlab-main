@@ -667,8 +667,8 @@ export default function AdminRequests() {
           refreshError={Boolean(error)}
         />
 
-        <div className="grid items-stretch gap-4 xl:grid-cols-3">
-          <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2" aria-labelledby="request-overview-title">
+        <div className="request-overview-grid grid items-stretch gap-4 xl:grid-cols-3">
+          <section className="request-page-section overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2" aria-labelledby="request-overview-title">
             <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] bg-[#fffaf7] px-5 py-4">
               <div className="flex items-center gap-3">
                 <span className="rounded-xl bg-[#800000] p-2.5 text-white"><ClipboardList size={20} aria-hidden="true" /></span>
@@ -678,7 +678,7 @@ export default function AdminRequests() {
             </header>
             <div className="p-5">
               <p className="mb-3 text-xs text-[#786565]">Current page{summaryReady ? `: ${requests.length} requests` : ''} · counts follow your filters</p>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="request-overview-metrics grid gap-3 sm:grid-cols-3">
                 {queueStages.map(stage => <div key={stage.status} className={`rounded-xl border p-4 ${stage.tone}`}>
                   <p className="text-xs font-semibold">{stage.label}</p>
                   <p className="mt-2 text-2xl font-bold tabular-nums">{summaryReady ? requests.filter(request => request.status === stage.status).length : '—'}</p>
@@ -698,7 +698,7 @@ export default function AdminRequests() {
               </div>
             </div>
           </section>
-          <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" aria-labelledby="request-focus-title">
+          <section className="request-page-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" aria-labelledby="request-focus-title">
             <header className="border-b border-[#f1e6e3] px-5 py-4"><h2 id="request-focus-title" className="text-sm font-semibold text-[#321d1d]">Focus your queue</h2><p className="mt-1 text-xs text-[#786565]">Change status while keeping your other filters.</p></header>
             <div className="space-y-2 p-4">
               {[...queueStages, { status: 'ALL' as const, label: 'All requests', description: 'Include completed, declined and cancelled requests.', color: 'bg-[#9a7b4f]' }].map(stage => <button key={stage.status} type="button" aria-pressed={filters.status === stage.status} onClick={() => handleFilterChange('status', stage.status)} className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000] ${filters.status === stage.status ? 'border-[#800000] bg-[#800000] text-white' : 'border-[#e8dfdb] bg-white text-[#321d1d] hover:bg-[#fff8f5]'}`}>
@@ -710,7 +710,7 @@ export default function AdminRequests() {
         </div>
 
         <div className="relative">
-        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <section className="request-page-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4">
             <div><h2 className="text-sm font-semibold text-[#321d1d]">Request records</h2><p className="mt-1 text-xs text-[#786565]">Open a request to review its details, availability and next action.</p></div>
             <span className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${statusMeta[filters.status].className}`}>{statusMeta[filters.status].label}</span>
