@@ -372,7 +372,7 @@ export default function ManageAccounts() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
+      <div className="accounts-workspace mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         <FilterToolbar
           searchValue={search}
           onSearchChange={setSearch}
@@ -394,8 +394,8 @@ export default function ManageAccounts() {
           refreshError={Boolean(accountsError)}
           className="mb-1"
         />
-        <div className="grid items-stretch gap-4 xl:grid-cols-3">
-        <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2" aria-labelledby="accounts-overview-title">
+        <div className="accounts-overview-grid grid items-stretch gap-4 xl:grid-cols-3">
+        <section className="accounts-mobile-section overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2" aria-labelledby="accounts-overview-title">
           <header className="flex items-center gap-3 border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><span className="rounded-xl bg-[#800000] p-2.5 text-white"><Users size={20} aria-hidden="true" /></span><div><h2 id="accounts-overview-title" className="text-sm font-semibold text-[#321d1d]">Account overview</h2><p className="mt-1 text-xs text-[#786565]">System-wide totals, independent of search and table filters.</p></div></header>
         <div className="p-4">
         <p className="mb-3 text-xs text-[#786565]">Select a total to show that group and clear the current search.</p>
@@ -422,7 +422,7 @@ export default function ManageAccounts() {
         </div>
         </div>
         </section>
-        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" aria-labelledby="account-access-title">
+        <section className="accounts-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" aria-labelledby="account-access-title">
           <header className="flex items-center gap-2 border-b border-[#f1e6e3] px-5 py-4"><ShieldCheck size={18} className="text-[#800000]" aria-hidden="true" /><h2 id="account-access-title" className="text-sm font-semibold text-[#321d1d]">Access review</h2></header>
           <div className="space-y-4 p-4">
             <div className={`rounded-xl border p-4 ${stats && stats.pendingReactivation > 0 ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-[#ead7d3] bg-[#fffaf7] text-[#57322d]'}`}>
@@ -435,7 +435,7 @@ export default function ManageAccounts() {
         </div>
 
         <div className="relative min-w-0">
-        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <section className="accounts-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4"><div><h2 className="text-sm font-semibold text-[#321d1d]">Account records</h2><p className="mt-1 text-xs text-[#786565]">{roleFilterOptions.find(option => option.value === roleFilter)?.label} roles · {statusFilterOptions.find(option => option.value === statusFilter)?.label}</p></div><span className="rounded-full bg-[#f6eeea] px-3 py-1 text-xs font-semibold text-[#800000]">{accountsLoading ? 'Updating...' : accountsError ? 'Records unavailable' : `${serverTotal} matching accounts`}</span></header>
           <div className="px-4 py-5 lg:px-6">
             <div className="overflow-x-auto lg:overflow-x-visible overflow-y-visible">
