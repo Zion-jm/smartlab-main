@@ -1303,7 +1303,8 @@
   .student-records-page section[aria-label="Bulk academic records"] {
     width: calc(100cqw + 1rem);
     margin-inline: calc(50% - 50cqw - .5rem);
-    border: 0;
+    border-inline: 0;
+    border-block: 1px solid #ead7d3;
     border-radius: 0;
     background: #fff;
     box-shadow: none;
