@@ -1575,3 +1575,35 @@
     gap: .75rem;
   }
 }
+@media screen and (max-width: 767px) {
+  .portal-content:has(.audit-workspace) { padding-block: 0; }
+  .portal-content .audit-workspace { padding-top: 0; padding-inline: .25rem; }
+  .audit-workspace > * + * { margin-top: 1.5rem; }
+  .audit-workspace .audit-overview-grid { gap: 1.5rem; margin-top: 0; }
+  .audit-workspace > .filter-toolbar { margin-bottom: 0; }
+  .audit-workspace .audit-mobile-section {
+    width: calc(100cqw + 1rem);
+    margin-inline: calc(50% - 50cqw - .5rem);
+    border: 1px solid #ead7d3;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  }
+  .audit-workspace .audit-mobile-section > :first-child {
+    padding: 1rem .75rem;
+    background: #fffaf7;
+  }
+  .audit-workspace .audit-mobile-section > div:not(:first-child) { padding: 1rem .75rem; }
+  .audit-workspace .audit-overview-grid > section:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .audit-overview-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .audit-overview-metrics > div { min-width: 0; padding: .75rem; }
+  .audit-overview-metrics > div:first-child {
+    grid-row: span 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}

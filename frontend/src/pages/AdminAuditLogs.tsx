@@ -261,7 +261,7 @@ export default function AdminAuditLogs() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto w-full min-w-0 responsive-workspace space-y-4 p-2 lg:p-3" data-testid="page-audit-logs">
+      <div className="audit-workspace mx-auto w-full min-w-0 responsive-workspace space-y-4 p-2 lg:p-3" data-testid="page-audit-logs">
         <FilterToolbar
           searchValue={search}
           onSearchChange={(value) => {
@@ -288,11 +288,11 @@ export default function AdminAuditLogs() {
         </div>
       )}
 
-        <div className="grid items-stretch gap-4 xl:grid-cols-3">
-          <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2" aria-labelledby="audit-overview-title">
+        <div className="audit-overview-grid grid items-stretch gap-4 xl:grid-cols-3">
+          <section className="audit-mobile-section overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2" aria-labelledby="audit-overview-title">
             <header className="flex items-center gap-3 border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><span className="rounded-xl bg-[#800000] p-2.5 text-white"><History size={20} aria-hidden="true" /></span><div><h2 id="audit-overview-title" className="text-base font-semibold text-[#321d1d]">Activity overview</h2><p className="mt-1 text-xs text-[#786565]">Trace who changed a record, what changed, and when.</p></div></header>
             <div className="p-4">
-              <div className="grid gap-3 sm:grid-cols-3">{[
+              <div className="audit-overview-metrics grid gap-3 sm:grid-cols-3">{[
                 { label: 'Matching events', value: total, note: 'Across all result pages' },
                 { label: 'Recorded actors', value: actorCount, note: 'On the current page' },
                 { label: 'Action types', value: actionCount, note: 'On the current page' },
@@ -300,7 +300,7 @@ export default function AdminAuditLogs() {
               <div className="mt-4 border-t border-[#f1e6e3] pt-4"><h3 className="text-xs font-semibold text-[#57322d]">Activity by entity on this page</h3><p className="mt-1 text-xs text-[#786565]">Counts follow your current filters and pagination.</p><div className="mt-3 max-h-44 space-y-3 overflow-y-auto pr-2">{summaryReady ? entityBreakdown.length ? entityBreakdown.map(([entity, count]) => <div key={entity} className="grid grid-cols-[minmax(7rem,1fr)_1fr_2rem] items-center gap-3 text-xs"><span className="text-[#786565]">{ENTITY_OPTIONS.find(([value]) => value === entity)?.[1] ?? logs.find(log => log.entityType === entity)?.entityLabel ?? entity}</span><div className="h-2 rounded-full bg-[#f2ece8]" aria-hidden="true"><div className="h-full rounded-full bg-[#800000]" style={{ width: `${count / Math.max(1, logs.length) * 100}%` }} /></div><strong className="text-right tabular-nums">{count}</strong></div>) : <p className="text-xs text-[#786565]">No events match these filters.</p> : <p className="text-xs text-[#786565]">{loading ? 'Updating activity summary…' : 'Summary unavailable.'}</p>}</div></div>
             </div>
           </section>
-          <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" aria-labelledby="audit-focus-title">
+          <section className="audit-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" aria-labelledby="audit-focus-title">
             <header className="border-b border-[#f1e6e3] px-5 py-4"><h2 id="audit-focus-title" className="text-sm font-semibold text-[#321d1d]">Investigate activity</h2><p className="mt-1 text-xs text-[#786565]">Focus on an entity while keeping other filters.</p></header>
             <div className="space-y-2 p-4">{[
               ['User', 'Account changes', 'Review recorded account and access changes.'],
@@ -312,7 +312,7 @@ export default function AdminAuditLogs() {
         </div>
 
         <div className="relative min-w-0">
-        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" data-testid="card-audit-log-history">
+        <section className="audit-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" data-testid="card-audit-log-history">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f3f4f6] px-5 py-4">
           <div className="flex items-center gap-2">
             <History className="h-4 w-4 text-[#800000]" />
