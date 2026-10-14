@@ -1802,21 +1802,24 @@
   }
   .page-control-ribbon .page-control-ribbon__extra-actions:empty { display: none; }
 }
-/* Compact Page Controls fields; preset borders are included in total height. */
+/* Shared field size also feeds the older compact-panel !important rules. */
 @media screen {
+  .page-control-ribbon__content {
+    --ribbon-target-size: 36px;
+  }
   .page-control-ribbon button[aria-haspopup="listbox"],
   .page-control-ribbon select:not(.sr-only),
-  .page-control-ribbon .schedule-date-input {
+  .page-control-ribbon input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not(.sr-only) {
     box-sizing: border-box;
-    height: 40px;
-    min-height: 40px;
-    padding-top: .375rem;
-    padding-bottom: .375rem;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding-top: .25rem !important;
+    padding-bottom: .25rem !important;
   }
   .page-control-ribbon .ribbon-date-range-filter .ribbon-date-range-actions {
     box-sizing: border-box;
-    height: 40px;
-    min-height: 40px;
+    height: 36px;
+    min-height: 36px;
     padding-block: 0;
   }
   .page-control-ribbon .ribbon-date-range-filter .ribbon-date-range-actions > button {
@@ -1824,5 +1827,10 @@
     height: 100%;
     min-height: 0;
     padding-block: 0;
+  }
+}
+@media screen and (max-width: 767px) {
+  .page-control-ribbon > .page-control-ribbon__bar {
+    --ribbon-target-size: 44px;
   }
 }
