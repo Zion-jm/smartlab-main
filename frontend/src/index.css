@@ -1705,3 +1705,29 @@
   .portal-new-request .request-submit-summary { margin-top: 1.5rem; }
   .portal-new-request .request-equipment-header { margin: -1rem -.75rem 0; padding: 1rem .75rem; }
 }
+@media screen and (max-width: 767px) {
+  .portal-content:has(.portal-my-requests) { padding-block: 0; }
+  .portal-my-requests > section {
+    width: calc(100cqw + 1rem);
+    margin-inline: calc(50% - 50cqw - .5rem);
+    border: 1px solid #ead7d3;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  }
+  .portal-my-requests > section + section { margin-top: 1.5rem; }
+  .portal-my-requests > section > header { padding: 1rem .75rem; background: #fffaf7; }
+  .portal-my-requests > section > div { padding-inline: .75rem; }
+  .portal-my-requests > section:first-child,
+  .portal-my-requests > section:first-child > header {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .portal-my-requests > section > div:has(> .my-requests-mobile-navigator) { padding-bottom: 0; }
+  .portal-my-requests .my-requests-mobile-navigator {
+    width: calc(100cqw + 1rem);
+    margin-inline: calc(50% - 50cqw - .5rem);
+    padding: .75rem .75rem max(.75rem, env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 16px rgba(76, 37, 24, .08);
+  }
+}

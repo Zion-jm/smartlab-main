@@ -36,7 +36,7 @@ export function MyRequestsPreview({
   const pages = Math.max(1, Math.ceil(total / 10));
 
   return (
-    <div className="space-y-4">
+    <div className="portal-my-requests space-y-4">
       <section aria-labelledby="my-requests-heading" className="rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
         <header className="flex flex-wrap items-center justify-between gap-4 rounded-t-2xl border-b border-[#ead7d3] bg-[#fffaf7] p-4 lg:px-5">
           <div className="flex items-center gap-3">
@@ -121,7 +121,7 @@ export function MyRequestsPreview({
             </footer>
           </article>;
         })}
-        {!loading && !error && total > 0 && <nav aria-label="Request pages" className="flex flex-wrap items-center justify-between gap-2 pt-2 text-xs"><span>{(page - 1) * 10 + 1}–{Math.min(page * 10, total)} of {total}</span><div className="flex gap-2"><button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)} className="min-h-11 rounded-lg border px-3 disabled:opacity-40">Previous</button><button type="button" disabled={page >= pages} onClick={() => setPage(page + 1)} className="min-h-11 rounded-lg border px-3 disabled:opacity-40">Next</button></div></nav>}
+        {!loading && !error && total > 0 && <nav aria-label="Request pages" className="my-requests-mobile-navigator sticky bottom-0 z-30 flex flex-wrap items-center justify-between gap-2 border-t border-[#ead7d3] bg-white text-xs"><span>{(page - 1) * 10 + 1}–{Math.min(page * 10, total)} of {total}</span><div className="flex gap-2"><button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)} className="min-h-11 rounded-lg border px-3 disabled:opacity-40">Previous</button><button type="button" disabled={page >= pages} onClick={() => setPage(page + 1)} className="min-h-11 rounded-lg border px-3 disabled:opacity-40">Next</button></div></nav>}
       </div>
       {selected && <MyRequestDetailModal key={selected.id} request={selected} onClose={() => setSelected(null)} />}
       <div className="hidden md:block">
