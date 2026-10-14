@@ -36,7 +36,7 @@ export default function EquipmentAvailabilityPlanner() {
     return () => { active = false; };
   }, [query]);
   const changed = !query || !date || query.date !== dateKey(date) || query.timeStart !== (mode === 'time' ? start : undefined) || query.timeEnd !== (mode === 'time' ? end : undefined);
-  return <section className="space-y-4 rounded-2xl border border-[#ead7d3] bg-white p-4 shadow-sm sm:p-5">
+  return <section className="equipment-mobile-planner space-y-4 rounded-2xl border border-[#ead7d3] bg-white p-4 shadow-sm sm:p-5">
     <header className="-mx-4 -mt-4 flex items-center gap-3 rounded-t-2xl border-b border-[#ead7d3] bg-[#fffaf7] p-4 sm:-mx-5 sm:-mt-5 sm:p-5">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#800000] text-white shadow-sm"><CalendarDays size={22} aria-hidden="true" /></span>
       <div><h2 className="text-base font-semibold text-[#321d1d]">Equipment availability</h2><p className="mt-1 text-xs text-[#786565]">Plan equipment use for a day or a specific time. All times are in Manila time.</p></div>

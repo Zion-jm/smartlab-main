@@ -385,7 +385,7 @@ export default function AdminEquipment() {
 
     return (
       <div className="relative">
-      <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+      <section className="equipment-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1e6e3] px-5 py-4"><div><h2 className="text-sm font-semibold text-[#321d1d]">Equipment records</h2><p className="mt-1 text-xs text-[#786565]">Maintain quantities, inspect damaged stock, and archive or restore catalog items.</p></div><span className="rounded-full bg-[#f6eeea] px-3 py-1 text-xs font-semibold text-[#800000]">{serverTotal} matching items</span></header>
         <div className="px-4 py-5 lg:px-6">
           <div className="space-y-3 md:hidden">
@@ -639,12 +639,12 @@ export default function AdminEquipment() {
         >
             <div className="space-y-4">
 
-              {viewMode === 'table' && <div className="grid items-stretch gap-4 xl:grid-cols-3">
-                <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
+              {viewMode === 'table' && <div className="equipment-overview-grid grid items-stretch gap-4 xl:grid-cols-3">
+                <section className="equipment-mobile-section overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
                   <header className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Inventory overview</h2><p className="mt-1 text-xs text-[#786565]">Current stock across the equipment catalog. Request activity follows the selected academic period.</p></header>
                   <div className="p-4">{loading ? <LoadingState message="Updating stock overview…" /> : error ? <p className="text-sm text-red-700">Stock overview unavailable.</p> : renderSummaryCards()}</div>
                 </section>
-                <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+                <section className="equipment-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
                   <header className="border-b border-[#f1e6e3] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Plan equipment use</h2><p className="mt-1 text-xs text-[#786565]">Move from current stock to future demand.</p></header>
                   <div className="space-y-3 p-4">
                     <button type="button" onClick={() => setViewMode('availability')} className="w-full rounded-xl bg-[#800000] p-4 text-left text-white hover:bg-[#650000]"><span className="block text-sm font-semibold">Check availability →</span><span className="mt-1 block text-xs">Check usable quantities for a date and time.</span></button>

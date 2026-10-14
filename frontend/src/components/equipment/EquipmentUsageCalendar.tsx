@@ -198,7 +198,7 @@ export default function EquipmentUsageCalendar({
 
   return (
     <div className="equipment-usage-calendar space-y-4">
-      <section className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm"><header className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Equipment usage overview</h2><p className="mt-1 text-xs text-[#786565]">Request activity for the selected academic period and equipment. Monthly navigation changes the calendar below.</p></header>
+      <section className="equipment-mobile-section equipment-calendar-overview overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm"><header className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Equipment usage overview</h2><p className="mt-1 text-xs text-[#786565]">Request activity for the selected academic period and equipment. Monthly navigation changes the calendar below.</p></header>
       <div className="equipment-usage-summary grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
         <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Usage requests</p>
@@ -218,7 +218,7 @@ export default function EquipmentUsageCalendar({
       </div>
 
       </section>
-      <section aria-labelledby="equipment-calendar-heading" className="space-y-4 rounded-2xl border border-[#ead7d3] bg-white p-4 shadow-sm lg:p-5">
+      <section aria-labelledby="equipment-calendar-heading" className="equipment-mobile-calendar space-y-4 rounded-2xl border border-[#ead7d3] bg-white p-4 shadow-sm lg:p-5">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eadfd9] pb-4">
         <div>
           <h3 id="equipment-calendar-heading" className="text-sm font-semibold text-[#57322d]">Monthly equipment usage calendar</h3>

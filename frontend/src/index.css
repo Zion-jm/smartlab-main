@@ -1422,3 +1422,44 @@
     justify-content: center;
   }
 }
+@media screen and (max-width: 767px) {
+  .dashboard-workspace > header,
+  .admin-requests-workspace .request-overview-grid > section:first-child,
+  .admin-requests-workspace .request-overview-grid > section:first-child > header {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .portal-content:has(.equipment-workspace) { padding-block: 0; }
+  .equipment-workspace > .responsive-workspace { padding-top: 0; padding-inline: .25rem; }
+  .equipment-workspace .equipment-overview-grid { gap: 1.5rem; }
+  .equipment-workspace #equipment-tabpanel > div > * + * { margin-top: 1.5rem; }
+  .equipment-workspace #equipment-tabpanel { padding-top: 0; }
+  .equipment-workspace .equipment-mobile-section,
+  .equipment-workspace .equipment-mobile-planner,
+  .equipment-workspace .equipment-mobile-calendar {
+    width: calc(100cqw + 1rem);
+    margin-inline: calc(50% - 50cqw - .5rem);
+    border: 1px solid #ead7d3;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  }
+  .equipment-workspace .equipment-mobile-section > header {
+    padding: 1rem .75rem;
+    background: #fffaf7;
+  }
+  .equipment-workspace .equipment-mobile-section > div { padding: 1rem .75rem; }
+  .equipment-workspace .equipment-mobile-planner,
+  .equipment-workspace .equipment-mobile-calendar { padding: 1rem .75rem; }
+  .equipment-workspace .equipment-mobile-planner > header {
+    margin: -1rem -.75rem 0;
+    padding: 1rem .75rem;
+  }
+  .equipment-workspace .equipment-overview-grid > section:first-child,
+  .equipment-workspace .equipment-calendar-overview,
+  .equipment-workspace .equipment-mobile-planner,
+  .equipment-workspace .equipment-mobile-planner > header {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+}
