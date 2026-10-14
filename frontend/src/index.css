@@ -1355,3 +1355,9 @@
     padding-inline: 0;
   }
 }
+@media screen and (max-width: 767px) {
+  /* Keep the sticky footer against the scroll viewport, not its bottom padding. */
+  .portal-content:has(.student-records-page) {
+    padding-bottom: 0;
+  }
+}
