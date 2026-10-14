@@ -67,7 +67,7 @@ export default function DateRangeFilter({
   const parseDate = (key: string) => key ? new Date(key + 'T00:00:00') : null;
   const dateKey = (date: Date | null) => date ? [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-') : '';
   const dateControl = (side: 'from' | 'to') => <div className="schedule-date-control min-w-0">
-    <span id={`${dateId}-${side}-label`} className="mb-1 block text-xs font-medium text-[#74615e]">{side === 'from' ? 'From' : 'To'}</span>
+    <span id={`${dateId}-${side}-label`} className="sr-only">{side === 'from' ? 'From' : 'To'}</span>
     <DatePicker
       selected={parseDate(value[side])}
       onChange={(date: Date | null) => onChange({ ...value, [side]: dateKey(date) })}
