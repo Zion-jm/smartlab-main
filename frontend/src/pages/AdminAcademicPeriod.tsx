@@ -307,7 +307,7 @@ export default function AdminAcademicPeriod() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
+      <div className="academic-period-workspace mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
         {error && (
           <div data-testid="status-academic-period-error" className="flex items-start gap-3 rounded-2xl border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
@@ -316,7 +316,7 @@ export default function AdminAcademicPeriod() {
         )}
 
         <div className="grid items-stretch gap-4 xl:grid-cols-3">
-        <section data-testid="card-current-academic-period" className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
+        <section data-testid="card-current-academic-period" className="period-mobile-section overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm xl:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#f1e3df] bg-[#fffaf7] px-5 py-5">
             <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#800000] text-white shadow-sm">
@@ -374,7 +374,7 @@ export default function AdminAcademicPeriod() {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <section className="period-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <header className="border-b border-[#f1e3df] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">Before changing periods</h2><p className="mt-1 text-xs text-[#786565]">Prepare student records for a smooth transition.</p></header>
           <div className="space-y-3 p-4">
             <ol className="space-y-3 text-xs leading-5 text-[#786565]">{['Review student records for the current year.', 'Choose the destination year and semester.', 'Review the confirmation and any missing-record warnings.'].map((step, index) => <li key={step} className="flex items-start gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#f5eae5] font-semibold text-[#800000]">{index + 1}</span><span>{step}</span></li>)}</ol>
@@ -386,7 +386,7 @@ export default function AdminAcademicPeriod() {
 
 
         <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-          <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+          <section className="period-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
             <div className="border-b border-[#f3f4f6] px-5 py-4">
               <div className="flex items-center gap-2">
                 <CalendarRange className="h-4 w-4 text-[#800000]" />
@@ -479,7 +479,7 @@ export default function AdminAcademicPeriod() {
 
 
 
-          <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+          <section className="period-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
             <div className="border-b border-[#f3f4f6] px-5 py-4">
               <div className="flex items-center gap-2">
                 <Archive className="h-4 w-4 text-[#800000]" />
@@ -505,7 +505,7 @@ export default function AdminAcademicPeriod() {
 
 
         <div className="relative min-w-0">
-        <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+        <section className="period-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <div className="flex items-center gap-2 border-b border-[#f3f4f6] px-5 py-4">
             <History className="h-4 w-4 text-[#800000]" />
             <div>

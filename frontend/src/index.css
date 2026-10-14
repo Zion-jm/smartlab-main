@@ -1547,3 +1547,31 @@
   .directory-metrics > div { min-width: 0; padding: .75rem; }
   .directory-metrics > div:first-child { grid-row: span 2; display: flex; flex-direction: column; justify-content: center; }
 }
+@media screen and (max-width: 767px) {
+  .portal-content:has(.academic-period-workspace) { padding-block: 0; }
+  .portal-content .academic-period-workspace { padding-top: 0; padding-inline: .25rem; }
+  .academic-period-workspace > * + * { margin-top: 1.5rem; }
+  .academic-period-workspace > .grid { gap: 1.5rem; }
+  .academic-period-workspace .period-mobile-section {
+    width: calc(100cqw + 1rem);
+    margin-inline: calc(50% - 50cqw - .5rem);
+    border: 1px solid #ead7d3;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  }
+  .academic-period-workspace .period-mobile-section > :first-child {
+    padding: 1rem .75rem;
+    background: #fffaf7;
+  }
+  .academic-period-workspace .period-mobile-section > div:not(:first-child),
+  .academic-period-workspace .period-mobile-section > form { padding: 1rem .75rem; }
+  .academic-period-workspace [data-testid="card-current-academic-period"] {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .academic-period-workspace [data-testid^="row-academic-period-history-"] {
+    padding-inline: 0;
+    gap: .75rem;
+  }
+}
