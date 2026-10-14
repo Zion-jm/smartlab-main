@@ -1332,3 +1332,8 @@
   .student-records-list-section .request-mobile-navigator { margin-top: 1rem; }
   .student-records-page #student-records-batch-tools { margin: 0; }
 }
+@media screen and (max-width: 767px) {
+  .portal-content:has(.student-records-page) { padding-top: 0; }
+  .portal-content .student-records-page { padding-top: 0; }
+  .student-records-page .student-records-overview { margin-top: 0; }
+}
