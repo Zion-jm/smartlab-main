@@ -79,7 +79,7 @@ function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
+    <div className="settings-workspace mx-auto responsive-workspace space-y-4 p-2 lg:p-3">
       <header className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4 bg-[#fffaf7] p-5">
           <div className="flex min-w-0 items-center gap-3">
@@ -120,7 +120,7 @@ function SettingsPage() {
         ].map(item => <div key={item.label} className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4"><p className="text-xs font-semibold text-[#786565]">{item.label}</p><p className="mt-2 text-lg font-semibold text-[#321d1d]">{item.value}</p><p className="mt-1 text-xs text-[#786565]">{item.note}</p></div>)}
       </section>
       <div className="grid items-start gap-4 xl:grid-cols-2">
-      <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+      <section className="settings-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
         <div className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4">
           <h2 className="text-sm font-semibold text-[#1f2937]">Workspace defaults</h2>
           <p className="mt-1 text-xs leading-5 text-[#6b7280]">Set the default layout used when you open admin workspace pages.</p>
@@ -143,7 +143,7 @@ function SettingsPage() {
           <p className="mt-4 rounded-xl border border-[#ead7d3] bg-[#fffaf7] p-3 text-xs leading-5 text-[#786565]">Opening a panel or using a shortcut changes the current view. Your saved defaults stay as configured here.</p>
         </div>
       </section>
-      <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+      <section className="settings-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
           <div className="border-b border-[#ead7d3] bg-[#fffaf7] px-5 py-4">
             <h3 className="text-sm font-semibold text-[#3d2b2b]">Keyboard shortcuts</h3>
             <p className="mt-1 text-sm text-[#756969]">Choose an Alt + Shift + letter shortcut, or disable it. Changes apply immediately on this device. Shortcuts pause while typing or using a dialog, except the chart shortcut can close the expanded chart.</p>
@@ -169,7 +169,7 @@ function SettingsPage() {
             </div>
       </section>
       </div>
-      <section className="rounded-2xl border border-[#ead7d3] bg-white p-5 shadow-sm">
+      <section className="settings-mobile-reset rounded-2xl border border-[#ead7d3] bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div><h2 className="text-sm font-semibold text-[#321d1d]">Restore default preferences</h2><p className="mt-1 text-xs leading-5 text-[#786565]">Resets this account on this device: hidden page controls, expanded sidebar, and shortcuts F, S and E. Shortcuts take effect immediately.</p></div>
             <button
