@@ -26,5 +26,7 @@
   "testEnvironment.test.js",
   "scheduleYearLevel.test.js",
   "studentAcademicRecords.test.js",
-  "immutableRoles.test.js"
+  "immutableRoles.test.js",
+  "adminAccessProtection.test.js",
+  "adminAccessConcurrency.test.js"
 ]

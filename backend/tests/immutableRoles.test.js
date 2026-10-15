@@ -41,3 +41,13 @@ test('self-service cannot change role either',async()=>{
  expect(response.status).toHaveBeenCalledWith(400);
  expect(mockPrisma.$transaction).not.toHaveBeenCalled();
 });
+
+test.each(['put','patch','post','delete'])('%s account endpoint rejects administrator self-deactivation before writes',async method=>{
+ const path=method==='put'||method==='delete'?'/:id':method==='patch'?'/:id/status':'/:id/retire';
+ const selected=router.stack.find(layer=>layer.route?.path===path && layer.route.methods[method]).route;
+ const action=selected.stack[selected.stack.length-1].handle;
+ user.role='ADMIN';
+ await action({params:{id:user.id},user:{id:user.id,role:'ADMIN'},body:{status:'DEACTIVATED'}},response);
+ expect(response.status).toHaveBeenCalledWith(409);
+ expect(tx.user.update).not.toHaveBeenCalled();
+});

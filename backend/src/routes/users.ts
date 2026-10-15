@@ -1,3 +1,5 @@
+import { assertAccountDeactivationAllowed } from '../services/adminAccessProtection';
+import { inventoryTransaction } from '../services/inventoryTransaction';
 import { currentStudentAcademic } from '../services/currentStudentAcademic';
 import { ValidationError } from '../services/domainError';
 import { allowedAcademicYearWhere } from '../services/academicYearPolicy';
@@ -457,7 +459,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
     }
 
-    const updatedUser = await prisma.$transaction(async (tx) => {
+    const updatedUser = await inventoryTransaction(prisma, async (tx) => {
+      await assertAccountDeactivationAllowed(tx, id, req.user!.id, nextStatus);
       await tx.user.update({
         where: { id, updatedAt: existingUser.updatedAt, sessionVersion: existingUser.sessionVersion },
         data: {
@@ -563,7 +566,8 @@ router.patch(
         return;
       }
 
-      const user = await prisma.$transaction(async tx => {
+      const user = await inventoryTransaction(prisma, async tx => {
+        await assertAccountDeactivationAllowed(tx, id, req.user!.id, requestedStatus);
         const previous = await tx.user.findUniqueOrThrow({ where: { id } });
         const user = await tx.user.update({
           where: { id, updatedAt: previous.updatedAt },

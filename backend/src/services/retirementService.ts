@@ -1,3 +1,4 @@
+import { assertAccountDeactivationAllowed } from './adminAccessProtection';
 import { effectiveStatus } from './equipmentLifecycle';
 import { PrismaClient, UserStatus, EquipmentStatus } from '@prisma/client';
 import { inventoryTransaction } from './inventoryTransaction';
@@ -6,8 +7,8 @@ import { assertStockSupportsReservations } from './inventoryCapacityService';
 
 // Retirement never deletes users, profiles, requests, loan lines or counters.
 export async function retireAccount(prisma: PrismaClient, id: string, actorId: string) {
-  if (id === actorId) throw new RequestActionError(409, 'Use another administrator account to retire this account.');
   return inventoryTransaction(prisma, async tx => {
+    await assertAccountDeactivationAllowed(tx, id, actorId, UserStatus.DEACTIVATED);
     const user = await tx.user.findUnique({ where: { id }, select: { id: true, email: true, status: true } });
     if (!user) throw new RequestActionError(404, 'Account not found.');
     if (user.status === UserStatus.DEACTIVATED) return user;
