@@ -2475,6 +2475,20 @@
     margin-top: auto;
     padding-top: 6px;
   }
+
+  .academic-period-workspace .academic-period-current-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 8px;
+    padding: 12px;
+  }
+
+  .academic-period-workspace .academic-period-current-details > div {
+    min-width: 0;
+  }
+
+  .academic-period-workspace .academic-period-current-details > div:last-child {
+    grid-column: 1 / -1;
+  }
 }
 /* Schedule-inspired mobile table navigator: warm surface and a clear current page. */
 @media screen and (max-width: 767px) {

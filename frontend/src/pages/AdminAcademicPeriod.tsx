@@ -356,7 +356,7 @@ export default function AdminAcademicPeriod() {
               </div>
             </div>
           </div>
-          <div className="grid gap-3 px-5 py-4 sm:grid-cols-3">
+          <div className="academic-period-current-details grid gap-3 px-5 py-4 sm:grid-cols-3">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Academic year</p>
               <p data-testid="text-current-academic-year" className="mt-1 text-sm font-semibold text-[#1f2937]">{data?.current?.academicYear.year ?? '—'}</p>
