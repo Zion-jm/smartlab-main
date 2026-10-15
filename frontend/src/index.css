@@ -1712,7 +1712,7 @@
     border-top-left-radius: 0;
     border-top-right-radius: 0;
   }
-  .portal-my-requests > section > div:has(> .my-requests-mobile-navigator) { padding-bottom: 0; }
+  .portal-my-requests > section > div:has(> .request-mobile-navigator) { padding-bottom: 0; }
   .portal-my-requests .my-requests-mobile-navigator {
     width: calc(100cqw + 1rem);
     margin-inline: calc(50% - 50cqw - .5rem);

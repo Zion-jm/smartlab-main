@@ -1,3 +1,4 @@
+import { DEFAULT_TABLE_PAGE_SIZE } from '../../components/shared/tablePaginationConstants';
 import { studentAcademicApi } from '../../services/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { normalizeSchedule } from '../../components/lab-schedule/normalizeSchedule';
@@ -9,7 +10,7 @@ import type { BorrowRequestStatus } from '../../types/requests';
 import { type ApiBorrowRequest, type FacultySelectOption, normalizeBorrowRequest, type RequestResources, type RequestRow, type SelectOption } from './requestModels';
 
 export type RequestsHookState = {
-  page: number; setPage: (page: number) => void; total: number; requestSearch: string; setRequestSearch: (value: string) => void; requestStatus: BorrowRequestStatus | 'ALL'; setRequestStatus: (value: BorrowRequestStatus | 'ALL') => void;
+  pageSize: number; setPageSize: (size: number) => void; page: number; setPage: (page: number) => void; total: number; requestSearch: string; setRequestSearch: (value: string) => void; requestStatus: BorrowRequestStatus | 'ALL'; setRequestStatus: (value: BorrowRequestStatus | 'ALL') => void;
   rows: RequestRow[];
   loading: boolean;
   error: string | null;
@@ -18,9 +19,10 @@ export type RequestsHookState = {
 
 export const useMyBorrowRequests = (): RequestsHookState => {
   const [page, setPage] = useState(1), [total, setTotal] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
   const [requestSearch, setRequestSearch] = useState('');
   const [requestStatus, setRequestStatus] = useState<BorrowRequestStatus | 'ALL'>('ALL');
-  const pageReset1Inputs = [requestSearch, requestStatus];
+  const pageReset1Inputs = [requestSearch, requestStatus, pageSize];
   const [pageReset1Previous, setpageReset1Previous] = useState<unknown[] | null>(null);
   if (!pageReset1Previous || pageReset1Inputs.some((value, index) => !Object.is(value, pageReset1Previous[index]))) {
     setpageReset1Previous(pageReset1Inputs);
@@ -34,10 +36,10 @@ export const useMyBorrowRequests = (): RequestsHookState => {
   const performLoadRequests = useCallback(async () => {
     const version = ++requestVersion.current;
     
-      return borrowRequestApi.getMyPage({ page, pageSize: 10, search: requestSearch, status: requestStatus }).then((response) => {
+      return borrowRequestApi.getMyPage({ page, pageSize, search: requestSearch, status: requestStatus }).then((response) => {
       if (version !== requestVersion.current) return;
       setTotal(response.data.total);
-      if (page > 1 && response.data.total <= (page - 1) * 10) setPage(Math.max(1, Math.ceil(response.data.total / 10)));
+      if (page > 1 && response.data.total <= (page - 1) * pageSize) setPage(Math.max(1, Math.ceil(response.data.total / pageSize)));
       const data = Array.isArray(response.data?.requests) ? (response.data.requests as ApiBorrowRequest[]) : [];
       setRows(data.map(normalizeBorrowRequest));
     
@@ -49,10 +51,10 @@ export const useMyBorrowRequests = (): RequestsHookState => {
     }).finally(() => {
       if (version === requestVersion.current) setLoading(false);
     });
-  }, [page, requestSearch, requestStatus]);
+  }, [page, pageSize, requestSearch, requestStatus]);
 
   // Automatic loads reset pending state when their query changes; refreshes reset it in the event.
-  const loadRequestsInputs = [page, requestSearch, requestStatus];
+  const loadRequestsInputs = [page, pageSize, requestSearch, requestStatus];
   const [loadRequestsSource, setloadRequestsSource] = useState(loadRequestsInputs);
   if (loadRequestsInputs.some((value, index) => !Object.is(value, loadRequestsSource[index]))) {
     setloadRequestsSource(loadRequestsInputs);
@@ -68,7 +70,7 @@ export const useMyBorrowRequests = (): RequestsHookState => {
   useEffect(() => { void performLoadRequests(); }, [performLoadRequests]);
 
   return {
-    page, setPage, total, requestSearch, setRequestSearch, requestStatus, setRequestStatus,
+    pageSize, setPageSize, page, setPage, total, requestSearch, setRequestSearch, requestStatus, setRequestStatus,
     rows,
     loading,
     error,

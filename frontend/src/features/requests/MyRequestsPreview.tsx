@@ -1,3 +1,4 @@
+import TablePagination from '../../components/shared/TablePagination';
 import { useState } from 'react';
 import { CalendarDays, MapPin, Package, ClipboardList, RefreshCw, Info } from 'lucide-react';
 import MyRequestDetailModal from './MyRequestDetailModal';
@@ -9,7 +10,7 @@ import { type ApiBorrowRequest, type RequestRow } from './requestModels';
 import { type RequestsHookState } from './useRequestData';
 
 export function MyRequestsPreview({
-  page, setPage, total, requestSearch, setRequestSearch, requestStatus, setRequestStatus,
+  pageSize, setPageSize, page, setPage, total, requestSearch, setRequestSearch, requestStatus, setRequestStatus,
   rows,
   loading,
   error,
@@ -33,7 +34,6 @@ export function MyRequestsPreview({
   const filteredRows = rows;
   const [selected, setSelected] = useState<RequestRow | null>(null);
   const statusLabel = (status: RequestRow['status']) => status === 'REJECTED' ? 'Declined' : status.charAt(0) + status.slice(1).toLowerCase();
-  const pages = Math.max(1, Math.ceil(total / 10));
 
   return (
     <div className="portal-my-requests space-y-4">
@@ -121,7 +121,7 @@ export function MyRequestsPreview({
             </footer>
           </article>;
         })}
-        {!loading && !error && total > 0 && <nav aria-label="Request pages" className="my-requests-mobile-navigator sticky bottom-0 z-30 flex flex-wrap items-center justify-between gap-2 border-t border-[#ead7d3] bg-white text-xs"><span>{(page - 1) * 10 + 1}–{Math.min(page * 10, total)} of {total}</span><div className="flex gap-2"><button type="button" aria-label="First page" disabled={page <= 1} onClick={() => setPage(1)} className="min-h-11 rounded-lg border px-3 disabled:opacity-40">&lt;&lt;</button><button type="button" aria-label="Previous page" disabled={page <= 1} onClick={() => setPage(page - 1)} className="min-h-11 rounded-lg border px-3 disabled:opacity-40">&lt;</button><button type="button" aria-label="Next page" disabled={page >= pages} onClick={() => setPage(page + 1)} className="min-h-11 rounded-lg border px-3 disabled:opacity-40">&gt;</button><button type="button" aria-label="Last page" disabled={page >= pages} onClick={() => setPage(pages)} className="min-h-11 rounded-lg border px-3 disabled:opacity-40">&gt;&gt;</button></div></nav>}
+        {!loading && !error && total > 0 && <nav aria-label="Request pages" className="request-mobile-navigator sticky bottom-0 z-30 bg-white shadow-[0_-4px_12px_rgba(17,24,39,0.08)]"><TablePagination currentPage={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} onPageSizeChange={setPageSize} /></nav>}
       </div>
       {selected && <MyRequestDetailModal key={selected.id} request={selected} onClose={() => setSelected(null)} />}
       <div className="hidden md:block">
@@ -166,7 +166,7 @@ export function MyRequestsPreview({
                       )}
                     </div>
                   </> }]}
-        pagination={{currentPage:page,pageSize:10,totalItems:total,onPageChange:setPage,onPageSizeChange:()=>{},pageSizeOptions:[10]}}
+        pagination={{currentPage:page,pageSize,totalItems:total,onPageChange:setPage,onPageSizeChange:setPageSize}}
       />
       </div>
       </section>
