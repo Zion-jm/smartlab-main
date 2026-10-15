@@ -1934,3 +1934,9 @@
     gap: 0;
   }
 }
+@media screen and (max-width: 767px) {
+  .page-control-ribbon .page-control-ribbon__summary {
+    font-size: .625rem;
+    line-height: .875rem;
+  }
+}
