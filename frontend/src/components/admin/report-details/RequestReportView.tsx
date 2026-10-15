@@ -690,15 +690,15 @@ export function RequestReportView({
             <h2 className="text-sm font-semibold text-[#321d1d]">Request overview</h2>
             <p className="mt-1 text-xs leading-5 text-[#786565]">A current snapshot based on the reporting period and active request filters.</p>
           </div>
-          <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
+          <div className="request-report-summary-grid grid grid-cols-2 gap-3 p-4 lg:grid-cols-4 lg:p-5">
             {[
               { label: 'Requests shown', value: requestSummary.requests, detail: 'Matching records', tone: 'border-[#f1d4d4] bg-[#fff8f8] text-[#800000]' },
               { label: 'Equipment units', value: requestSummary.units, detail: 'Units requested', tone: 'border-blue-200 bg-blue-50 text-blue-800' },
               { label: 'Pending review', value: requestSummary.pending, detail: 'Awaiting action', tone: 'border-amber-200 bg-amber-50 text-amber-900' },
               { label: 'Borrowed or returned', value: requestSummary.completed, detail: 'In use or completed', tone: 'border-green-200 bg-green-50 text-green-800' },
             ].map((metric) => (
-              <div key={metric.label} className={`rounded-xl border p-4 ${metric.tone}`}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] opacity-80">{metric.label}</p>
+              <div key={metric.label} className={`request-report-summary-card rounded-xl border p-4 ${metric.tone}`}>
+                <p className="request-report-summary-label text-[10px] font-bold uppercase tracking-[0.12em] opacity-80">{metric.label}</p>
                 <p className="mt-2 text-2xl font-bold">{metric.value}</p>
                 <p className="mt-1 text-[11px] opacity-80">{metric.detail}</p>
               </div>

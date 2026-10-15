@@ -2446,6 +2446,35 @@
     grid-column: 1 / -1;
     margin-top: 4px;
   }
+
+  .reports-mobile-workspace .request-report-summary-grid {
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .reports-mobile-workspace .request-report-summary-card {
+    display: flex;
+    min-width: 0;
+    min-height: 116px;
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .reports-mobile-workspace .request-report-summary-label {
+    min-height: 28px;
+    overflow-wrap: anywhere;
+  }
+
+  .reports-mobile-workspace .request-report-summary-card > p:nth-child(2) {
+    margin-top: 6px;
+    font-size: 20px;
+    line-height: 24px;
+  }
+
+  .reports-mobile-workspace .request-report-summary-card > p:last-child {
+    margin-top: auto;
+    padding-top: 6px;
+  }
 }
 /* Schedule-inspired mobile table navigator: warm surface and a clear current page. */
 @media screen and (max-width: 767px) {
