@@ -837,7 +837,8 @@
 
 
 @media (max-width: 767px) {
- .equipment-workspace .equipment-summary > :last-child { grid-column: 1 / -1; }
+ .equipment-workspace .equipment-summary { align-items: stretch; }
+ .equipment-workspace .equipment-summary > * { min-width: 0; height: 100%; }
  .equipment-workspace button { min-height: 44px; }
  .equipment-usage-summary > div { padding: .625rem; border-radius: .75rem; min-width: 0; }
  .equipment-usage-summary > div > p:first-child { font-size: 9px; letter-spacing: 0; }
