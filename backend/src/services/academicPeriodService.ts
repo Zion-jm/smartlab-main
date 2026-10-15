@@ -100,4 +100,4 @@ export const academicPeriodWhere = (selection: AcademicPeriodSelection) => ({
 export const getPeriodSelectionFromQuery = (query: Record<string, unknown>): AcademicPeriodSelection => ({
   academicYearId: cleanQueryValue(query.academicYearId),
   termId: cleanQueryValue(query.termId),
-}});
+});
