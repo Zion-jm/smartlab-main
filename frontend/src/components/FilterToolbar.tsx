@@ -104,10 +104,10 @@ export default function FilterToolbar({
                 size="sm"
                 onClick={primaryAction.onClick}
                 leftIcon={primaryAction.icon}
-                className="rounded-lg"
+                className="page-control-ribbon__add-button rounded-lg"
                 style={{ borderRadius: '0.55rem' }}
               >
-                {primaryAction.label}
+                <span className="sr-only md:not-sr-only">{primaryAction.label}</span>
               </Button>
             )}
           </>

@@ -915,7 +915,7 @@
 @media (max-width: 639px) { .profile-page--cards { padding: 1rem .75rem; } }
 
 /* Keep the schedule action intact when the mobile ribbon wraps its controls. */
-.page-control-ribbon__actions button.schedule-add-button { white-space: nowrap; overflow-wrap: normal; flex-shrink: 0; }
+.page-control-ribbon__actions button.page-control-ribbon__add-button { white-space: nowrap; overflow-wrap: normal; flex-shrink: 0; }
 
 /* Shared chart presentation for the normal and expanded schedule views. */
 @media screen {
@@ -1916,21 +1916,21 @@
   }
 }
 @media screen and (max-width: 767px) {
-  .page-control-ribbon .page-control-ribbon__bar:has(.schedule-add-button) {
+  .page-control-ribbon .page-control-ribbon__bar:has(.page-control-ribbon__add-button) {
     grid-template-columns: minmax(0, 1fr) auto auto auto;
   }
-  .page-control-ribbon .page-control-ribbon__extra-actions:has(.schedule-add-button) {
+  .page-control-ribbon .page-control-ribbon__extra-actions:has(.page-control-ribbon__add-button) {
     grid-column: 3;
     grid-row: 1;
   }
-  .page-control-ribbon .page-control-ribbon__bar:has(.schedule-add-button) .page-control-ribbon__toggle {
+  .page-control-ribbon .page-control-ribbon__bar:has(.page-control-ribbon__add-button) .page-control-ribbon__toggle {
     grid-column: 4;
   }
-  .page-control-ribbon .page-control-ribbon__actions .schedule-add-button {
+  .page-control-ribbon .page-control-ribbon__actions .page-control-ribbon__add-button {
     width: 44px;
     height: 44px;
     min-width: 44px;
-    padding: 0;
+    padding: 0 !important;
     gap: 0;
   }
 }

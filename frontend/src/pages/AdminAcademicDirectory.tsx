@@ -438,9 +438,9 @@ export default function AdminAcademicDirectory() {
             <button
               type="button"
               onClick={() => openDrawer(activeTab, 'create')}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-[#800000] px-4 text-xs font-semibold text-white shadow"
+              className="page-control-ribbon__add-button inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-[#800000] px-4 text-xs font-semibold text-white shadow"
             >
-              + Add {tabDefinitions[activeTab].label.slice(0, -1)}
+              <span aria-hidden="true">+</span><span className="sr-only md:not-sr-only">Add {tabDefinitions[activeTab].label.slice(0, -1)}</span>
             </button>
           }
           bottomControl={(isRoomsTab || isBuildingsTab) ? <div ref={setAdvancedTogglePortalTarget} /> : undefined}
@@ -678,7 +678,7 @@ export default function AdminAcademicDirectory() {
             <section className="directory-mobile-section overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
               <header className="border-b border-[#f1e6e3] px-5 py-4"><h2 className="text-sm font-semibold text-[#321d1d]">{catalogContext[activeTab].title}</h2></header>
               <div className="space-y-4 p-4"><p className="text-sm leading-6 text-[#786565]">{catalogContext[activeTab].note}</p>
-                <button type="button" onClick={() => openDrawer(activeTab, 'create')} className="w-full rounded-xl bg-[#800000] px-4 py-3 text-left text-sm font-semibold text-white hover:bg-[#650000]">+ Add {tabDefinitions[activeTab].label.slice(0, -1)}</button>
+                <button type="button" onClick={() => openDrawer(activeTab, 'create')} className="w-full rounded-xl bg-[#800000] px-4 py-3 text-left text-sm font-semibold text-white hover:bg-[#650000]"><span aria-hidden="true">+</span><span className="sr-only md:not-sr-only">Add {tabDefinitions[activeTab].label.slice(0, -1)}</span></button>
                 <button type="button" onClick={() => handleTabChange(catalogContext[activeTab].related)} className="w-full rounded-xl border border-[#ead7d3] bg-[#fffaf7] px-4 py-3 text-left text-sm font-semibold text-[#57322d] hover:bg-[#f5eae5]">{catalogContext[activeTab].action} →</button>
                 {activeTab === 'rooms' && <p className="rounded-xl border border-[#ead7d3] bg-[#faf7f5] p-3 text-xs leading-5 text-[#786565]">{data.rooms.filter(room => !room.buildingId).length} rooms have no building assigned. Building assignment is optional.</p>}
               </div>
