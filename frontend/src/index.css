@@ -780,10 +780,6 @@
 /* Keep expanded mobile schedule controls readable at narrow widths. */
 @media (max-width: 767px) {
   .mobile-schedule-period { padding: .75rem .625rem; }
-  .mobile-schedule-ribbon .academic-period-filter--dropdown { padding: .75rem; }
-  .mobile-schedule-ribbon .academic-period-filter--dropdown > div { flex-direction: column; align-items: stretch; gap: .75rem; }
-  .mobile-schedule-ribbon .academic-period-filter--dropdown > div > .grid { flex: auto; width: 100%; grid-template-columns: minmax(0, 1fr); }
-  .mobile-schedule-ribbon .academic-period-filter--dropdown > div > button { width: 100%; min-height: 44px; }
   .mobile-schedule-ribbon .ribbon-date-range-filter > .grid { grid-template-columns: minmax(0, 1fr); }
   .mobile-schedule-ribbon input[type="date"] { font-size: 16px !important; min-height: 44px; width: 100%; max-width: 100%; }
   .mobile-schedule-ribbon .ribbon-date-range-actions { height: auto; }
@@ -810,9 +806,6 @@
 }
 
 @media (max-width: 767px) {
- .admin-requests-workspace .academic-period-filter--dropdown > div { flex-direction: column; align-items: stretch; gap: .5rem; }
- .admin-requests-workspace .academic-period-filter--dropdown > div > .grid { width: 100%; flex: auto; grid-template-columns: minmax(0, 1fr); }
- .admin-requests-workspace .academic-period-filter--dropdown button { min-height: 44px; font-size: .8125rem; }
  .admin-requests-workspace .filter-active-chips { width: 100%; gap: .5rem; }
  .admin-requests-workspace .filter-active-chip { padding: .25rem .625rem; border-radius: .75rem; max-width: 100%; min-height: 40px; }
  .admin-requests-workspace .filter-active-reset { width: 100%; }
@@ -845,8 +838,6 @@
 
 @media (max-width: 767px) {
  .equipment-workspace .equipment-summary > :last-child { grid-column: 1 / -1; }
- .equipment-workspace .academic-period-filter--dropdown > div { flex-direction: column; align-items: stretch; gap: .5rem; }
- .equipment-workspace .academic-period-filter--dropdown > div > .grid { width: 100%; flex: auto; grid-template-columns: minmax(0, 1fr); }
  .equipment-workspace button { min-height: 44px; }
  .equipment-usage-summary > div { padding: .625rem; border-radius: .75rem; min-width: 0; }
  .equipment-usage-summary > div > p:first-child { font-size: 9px; letter-spacing: 0; }
@@ -877,8 +868,6 @@
 @media screen and (max-width: 767px) {
  .reports-mobile-workspace [role="tablist"] { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
  .reports-mobile-workspace [role="tab"] { min-width: 0; min-height: 44px; height: auto; white-space: normal; }
- .reports-mobile-workspace .academic-period-filter--dropdown > div { flex-direction: column; align-items: stretch; gap: .5rem; }
- .reports-mobile-workspace .academic-period-filter--dropdown > div > .grid { width: 100%; flex: auto; grid-template-columns: minmax(0,1fr); }
  .report-export-menu { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
  .request-mobile-report, .schedule-mobile-report, .equipment-mobile-report { display: block; min-width: 0 !important; width: 100%; }
  .request-mobile-report thead, .schedule-mobile-report thead, .equipment-mobile-report thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
@@ -1888,10 +1877,41 @@
   .mobile-schedule-ribbon .page-control-ribbon__content .schedule-ribbon-filters > * {
     margin-block: 0;
   }
-  .mobile-schedule-ribbon .academic-period-filter--dropdown > div {
-    row-gap: 4px;
-  }
   .mobile-schedule-ribbon .ribbon-filter-label {
     margin-bottom: 4px;
+  }
+}
+/* Academic period controls share the same typography and field treatment on mobile. */
+@media screen and (max-width: 767px) {
+  .page-control-ribbon .academic-period-filter--dropdown > div {
+    gap: 4px 8px;
+    min-height: 36px;
+  }
+  .page-control-ribbon .academic-period-filter--dropdown > div > span,
+  .page-control-ribbon .ribbon-control-group:has(.academic-period-filter--dropdown) > .ribbon-filter-label {
+    color: #6b6262;
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    line-height: .85rem;
+    text-transform: uppercase;
+  }
+  .page-control-ribbon .ribbon-control-group:has(.academic-period-filter--dropdown) > .ribbon-filter-label {
+    margin-bottom: 4px;
+  }
+  .page-control-ribbon .academic-period-filter--dropdown button[aria-haspopup="listbox"] {
+    border-color: #d8c7c3 !important;
+    border-radius: .5rem !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    padding-inline: .5rem !important;
+    font-size: .65rem !important;
+  }
+  .page-control-ribbon .academic-period-filter--dropdown button[aria-haspopup="listbox"]:disabled {
+    background: #f3f4f6 !important;
+    color: #9ca3af !important;
+  }
+  .page-control-ribbon .academic-period-filter--dropdown > div > button {
+    border-radius: .5rem !important;
   }
 }
