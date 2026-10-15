@@ -20,5 +20,5 @@ ENV NODE_ENV=production \
     PORT=10000
 USER node
 EXPOSE 10000
-# Migrations and administrator initialization are explicit operator actions.
+# Production startup applies tracked migrations before accepting traffic.
 CMD ["node", "backend/scripts/start-production.cjs"]
