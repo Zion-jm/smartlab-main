@@ -2038,3 +2038,12 @@
     grid-column: 1 / -1;
   }
 }
+@media screen and (max-width: 767px) {
+  .page-control-ribbon .compact-filter-panel > .audit-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 8px;
+  }
+  .page-control-ribbon .audit-filter-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+}

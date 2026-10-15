@@ -171,7 +171,7 @@ export default function AdminAuditLogs() {
 
   const filtersContent = (
     <div className="compact-filter-panel w-full space-y-3">
-      <div className="grid grid-cols-1 items-end gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]">
+      <div className="audit-filter-grid grid grid-cols-1 items-end gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]">
         <FilterItem label="Search" className="min-w-0">
           <InputField
             type="search"
