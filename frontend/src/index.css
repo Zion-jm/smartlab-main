@@ -903,6 +903,119 @@
  .equipment-range-report td:nth-child(7)::before { content: 'Unreturned'; }
 }
 
+/* Shared desktop content scale across administrator, faculty, and student views. */
+@media screen and (min-width: 1024px) {
+  .portal-content {
+    --desktop-content-width: 96rem;
+    --desktop-page-inset: clamp(1.5rem, 2.25vw, 2.25rem);
+    --desktop-section-gap: 1.5rem;
+    --desktop-card-radius: 1rem;
+    --desktop-card-border: #e5e7eb;
+    --desktop-card-header: #fffaf7;
+    padding: 0;
+  }
+
+  .portal-content > .admin-workspace,
+  .portal-content > :not(.admin-workspace) {
+    width: 100%;
+    max-width: var(--desktop-content-width);
+    min-width: 0;
+    margin-inline: auto;
+    padding: var(--desktop-page-inset);
+  }
+
+  .admin-workspace > .responsive-workspace,
+  .admin-workspace > .equipment-workspace > .responsive-workspace {
+    max-width: none;
+    padding: 0;
+  }
+
+  :is(
+    .student-records-page,
+    .dashboard-workspace,
+    .admin-requests-workspace,
+    .equipment-workspace > .responsive-workspace,
+    .reports-mobile-workspace,
+    .accounts-workspace,
+    .academic-directory-workspace,
+    .academic-period-workspace,
+    .audit-workspace,
+    .settings-workspace,
+    .profile-page--cards,
+    .portal-new-request,
+    .portal-my-requests,
+    .portal-content > .space-y-4
+  ) > * + * {
+    margin-top: var(--desktop-section-gap);
+  }
+
+  :is(
+    .student-records-overview,
+    .dashboard-sections,
+    .request-overview-grid,
+    .equipment-overview-grid,
+    .accounts-overview-grid,
+    .directory-overview-grid,
+    .audit-overview-grid,
+    .request-workflow-grid
+  ) {
+    gap: var(--desktop-section-gap);
+  }
+
+  :is(
+    .student-records-overview > section,
+    .student-records-list-section,
+    .dashboard-section,
+    .request-page-section,
+    .equipment-mobile-section,
+    .reports-mobile-section,
+    .accounts-mobile-section,
+    .directory-mobile-section,
+    .period-mobile-section,
+    .audit-mobile-section,
+    .profile-summary,
+    .profile-page--cards > .grid > section,
+    .settings-mobile-section,
+    .portal-new-request .request-workflow-grid > section,
+    .portal-new-request .request-equipment-catalog,
+    .portal-new-request .request-submit-summary,
+    .portal-my-requests > section
+  ) {
+    border-color: var(--desktop-card-border);
+    border-radius: var(--desktop-card-radius);
+  }
+
+  :is(
+    .student-records-overview > section > header,
+    .dashboard-section > div:first-child,
+    .request-page-section > header,
+    .equipment-mobile-section > header,
+    .reports-mobile-section > div:first-child,
+    .accounts-mobile-section > header,
+    .directory-mobile-section > header,
+    .period-mobile-section > :first-child,
+    .audit-mobile-section > :first-child,
+    .profile-section-heading,
+    .settings-mobile-section > div:first-child,
+    .portal-my-requests > section > header
+  ) {
+    background: var(--desktop-card-header);
+  }
+
+  .page-control-ribbon__bar {
+    min-height: 3rem;
+    padding: .625rem 1rem;
+  }
+
+  .page-control-ribbon__content {
+    padding: 1rem;
+  }
+
+  .table-pagination {
+    padding: .875rem 1rem;
+  }
+}
+
 /* Admin profile follows the full-width settings workspace. */
 .profile-page--cards { max-width: none; padding: 1rem 1.5rem; }
 .profile-page--cards > .grid { gap: 1rem; margin-top: 1rem; }
