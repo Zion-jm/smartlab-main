@@ -906,8 +906,8 @@
 /* Shared desktop content scale across administrator, faculty, and student views. */
 @media screen and (min-width: 1024px) {
   .portal-content {
-    --desktop-content-width: 96rem;
-    --desktop-page-inset: clamp(1.5rem, 2.25vw, 2.25rem);
+    --desktop-content-width: 120rem;
+    --desktop-page-inset: clamp(1rem, 1.25vw, 1.5rem);
     --desktop-section-gap: 1.5rem;
     --desktop-card-radius: 1rem;
     --desktop-card-border: #e5e7eb;
