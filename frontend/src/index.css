@@ -1915,3 +1915,22 @@
     border-radius: .5rem !important;
   }
 }
+@media screen and (max-width: 767px) {
+  .page-control-ribbon .page-control-ribbon__bar:has(.schedule-add-button) {
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+  }
+  .page-control-ribbon .page-control-ribbon__extra-actions:has(.schedule-add-button) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .page-control-ribbon .page-control-ribbon__bar:has(.schedule-add-button) .page-control-ribbon__toggle {
+    grid-column: 4;
+  }
+  .page-control-ribbon .page-control-ribbon__actions .schedule-add-button {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    gap: 0;
+  }
+}
