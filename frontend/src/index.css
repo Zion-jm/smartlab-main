@@ -2047,3 +2047,57 @@
     grid-column: 1 / -1;
   }
 }
+/* Compact only the expanded mobile controls; leave toolbar headers untouched. */
+@media screen and (max-width: 767px) {
+  .page-control-ribbon .page-control-ribbon__content {
+    --ribbon-target-size: 32px;
+    font-size: 10px;
+  }
+  .page-control-ribbon .page-control-ribbon__content .page-control-ribbon__groups,
+  .page-control-ribbon .page-control-ribbon__content .compact-filter-panel,
+  .page-control-ribbon .page-control-ribbon__content .grid {
+    gap: 8px;
+  }
+  .mobile-schedule-ribbon .page-control-ribbon__content .page-control-ribbon__groups {
+    padding: 8px;
+  }
+  .page-control-ribbon .page-control-ribbon__content .compact-filter-panel > * {
+    margin-block: 0;
+  }
+  .page-control-ribbon .page-control-ribbon__content label,
+  .page-control-ribbon .page-control-ribbon__content .ribbon-filter-label,
+  .page-control-ribbon .page-control-ribbon__content .academic-period-filter--dropdown > div > span {
+    font-size: 9px !important;
+    line-height: 12px;
+  }
+  .page-control-ribbon .page-control-ribbon__content input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not(.sr-only),
+  .page-control-ribbon .page-control-ribbon__content select:not(.sr-only),
+  .page-control-ribbon .page-control-ribbon__content button:not([role="option"]):not([role="menuitem"]) {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding-block: 2px !important;
+    font-size: 10px !important;
+  }
+  .page-control-ribbon .page-control-ribbon__content [id$="advanced-filters"] {
+    padding-top: 8px;
+  }
+  .page-control-ribbon .page-control-ribbon__content .academic-period-filter--compact,
+  .page-control-ribbon .page-control-ribbon__content .academic-period-filter--compact > div {
+    min-height: 32px;
+  }
+  .page-control-ribbon .page-control-ribbon__content .academic-period-filter--dropdown > div {
+    grid-template-columns: minmax(0, 1fr) 32px;
+    gap: 4px 8px;
+  }
+  .page-control-ribbon .page-control-ribbon__content .academic-period-filter--dropdown > div > button,
+  .page-control-ribbon .page-control-ribbon__content .date-range-preset-dropdown,
+  .page-control-ribbon .page-control-ribbon__content .date-range-preset-dropdown button[aria-haspopup="listbox"] {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 !important;
+  }
+  .page-control-ribbon .page-control-ribbon__content .date-range-fields.grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
+  }
+}
