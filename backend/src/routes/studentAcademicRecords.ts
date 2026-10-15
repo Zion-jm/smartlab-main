@@ -13,11 +13,8 @@ router.use(authenticateToken);
 router.get('/me', authorizeRoles(UserRole.STUDENT), async (req, res) => {
   try {
     const year = await prisma.academicYear.findFirst({ where: { isActive: true, ...allowedAcademicYearWhere() } });
-    const [record, count] = await Promise.all([
-      year ? prisma.studentAcademicRecord.findUnique({ where: { studentId_academicYearId: { studentId: req.user!.id, academicYearId: year.id } } }) : null,
-      prisma.studentAcademicRecord.count({ where: { studentId: req.user!.id } }),
-    ]);
-    res.json({ record, managed: count > 0 });
+    const record = year ? await prisma.studentAcademicRecord.findUnique({ where: { studentId_academicYearId: { studentId: req.user!.id, academicYearId: year.id } } }) : null;
+    res.json({ record, managed: true });
   } catch (error) { sendError(error, res); }
 });
 router.use(authorizeRoles(UserRole.ADMIN));
@@ -52,6 +49,7 @@ router.get('/', async (req, res) => {
     const pageSize = Math.max(10, Math.min(100, Number(req.query.pageSize) || 15));
     if (!Number.isInteger(page)) throw new ValidationError('Invalid page.');
     const where: Prisma.UserWhereInput = { AND: [
+      ...(req.query.studentId ? [{ id: String(req.query.studentId) }] : []),
       { OR: [{ role: UserRole.STUDENT }, { studentAcademicRecords: { some: { academicYearId } } }] },
       ...(search ? [{ OR: ['firstName', 'lastName', 'email'].map(field => ({ [field]: { contains: search, mode: 'insensitive' } })) }] : []),
     ] };

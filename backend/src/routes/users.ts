@@ -1,3 +1,6 @@
+import { currentStudentAcademic } from '../services/currentStudentAcademic';
+import { ValidationError } from '../services/domainError';
+import { allowedAcademicYearWhere } from '../services/academicYearPolicy';
 import { validNewPassword, passwordPolicyMessage } from '../utils/passwordPolicy';
 import { requestPasswordReset } from '../services/passwordResetService';
 import { accountStatusChanged } from '../services/accountReactivationService';
@@ -133,7 +136,15 @@ router.get(
         orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
       });
 
-      const formatted = users.map(mapUserToResponse);
+      const activeYear = await prisma.academicYear.findFirst({ where: { isActive: true, ...allowedAcademicYearWhere() } });
+      const records = activeYear ? await prisma.studentAcademicRecord.findMany({ where: { academicYearId: activeYear.id, studentId: { in: users.filter(user => user.role === 'STUDENT').map(user => user.id) } } }) : [];
+      const byStudent = new Map(records.map(record => [record.studentId, record]));
+      const formatted = users.map(user => {
+        const response = mapUserToResponse(user);
+        if (user.role !== 'STUDENT') return response;
+        const record = byStudent.get(user.id);
+        return { ...response, program_id: record?.programId ?? null, program_name: record?.programName ?? null, program_code: record?.programCode ?? null, program: record?.programName ?? null, year_level: record?.yearLevel ?? null };
+      });
 
       pageHeaders(res, paging, await prisma.user.count({ where }));
       res.json(formatted);
@@ -219,6 +230,13 @@ router.post(
             },
           });
         } else if (role === UserRole.STUDENT) {
+          const academicYear = await tx.academicYear.findFirst({ where: { isActive: true, ...allowedAcademicYearWhere() } });
+          if (!academicYear) throw new ValidationError('Activate an academic year before creating a student account.');
+          const program = await tx.program.findUnique({ where: { id: program_id } });
+          const level = Number(year ?? year_level);
+          if (!program || !Number.isInteger(level) || level < 1 || level > 4) throw new ValidationError('Select a valid program and year level (1–4).');
+          const initialRecord = await tx.studentAcademicRecord.create({ data: { studentId: user.id, academicYearId: academicYear.id, programId: program.id, programCode: program.code, programName: program.name, yearLevel: level, status: 'ENROLLED' } });
+          await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'CREATE', entityType: 'StudentAcademicRecord', entityId: initialRecord.id, details: { studentId: user.id, academicYearId: academicYear.id, yearLevel: level, reason: 'Initial record at account creation' } });
           await tx.studentProfile.create({
             data: {
               userId: user.id,
@@ -432,32 +450,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const departmentId = isAdmin
       ? normalizeStringOrNull(req.body.department_id ?? req.body.departmentId ?? existingUser.facultyProfile?.departmentId)
       : existingUser.facultyProfile?.departmentId ?? null;
-    const programId = isAdmin
-      ? normalizeStringOrNull(req.body.program_id ?? req.body.programId ?? existingUser.studentProfile?.programId)
-      : existingUser.studentProfile?.programId ?? null;
-    const rawYearLevel = isAdmin
-      ? req.body.year ?? req.body.year_level ?? req.body.yearLevel ?? existingUser.studentProfile?.yearLevel
-      : existingUser.studentProfile?.yearLevel ?? null;
-    const yearLevel =
-      rawYearLevel === undefined || rawYearLevel === null || rawYearLevel === ''
-        ? null
-        : Number(rawYearLevel);
-
-    if (yearLevel !== null && (Number.isNaN(yearLevel) || yearLevel < 1)) {
-      res.status(400).json({ error: 'Invalid year level provided.' });
-      return;
-    }
-
+    if (['program_id','programId','program','year','year_level','yearLevel','academicStatus','standing'].some(key => Object.prototype.hasOwnProperty.call(req.body,key))) throw new ValidationError('Edit academic details in Student Records for the relevant academic year.');
     if (isAdmin) {
       if (nextRole === UserRole.FACULTY && !departmentId) {
         res.status(400).json({ error: 'Department is required for faculty accounts.' });
         return;
       }
 
-      if (nextRole === UserRole.STUDENT && (!programId || !yearLevel)) {
-        res.status(400).json({ error: 'Program and year level are required for student accounts.' });
-        return;
-      }
+
     }
 
     const updatedUser = await prisma.$transaction(async (tx) => {
@@ -485,8 +485,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       } else if (nextRole === UserRole.STUDENT) {
         await tx.studentProfile.upsert({
           where: { userId: id },
-          update: { programId, yearLevel },
-          create: { userId: id, programId, yearLevel },
+          update: {},
+          create: { userId: id },
         });
         await tx.facultyProfile.deleteMany({ where: { userId: id } });
         await tx.adminProfile.deleteMany({ where: { userId: id } });
@@ -552,7 +552,10 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
     res.json({
       message: 'User updated successfully',
-      user: mapUserToResponse(updatedUser),
+      user: { ...mapUserToResponse(updatedUser), ...(updatedUser.role === 'STUDENT' ? await (async () => {
+        const current = await currentStudentAcademic(prisma, updatedUser.id);
+        return { program_id: current.programId, program_name: current.program, program: current.program, program_code: null, year_level: current.yearLevel };
+      })() : {}) },
     });
   } catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') { res.status(409).json({ error: 'Account changed. Refresh and try again.' }); return; } sendError(error, res); }
 });

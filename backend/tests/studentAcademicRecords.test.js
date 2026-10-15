@@ -19,7 +19,7 @@ beforeAll(async()=>{
  subject=await db.subject.create({data:{code:tag,name:'Test subject'}});
  item=await db.equipment.create({data:{name:tag,totalQuantity:2,availableQuantity:2}});
  request=await db.borrowRequest.create({data:{requestedBy:student.id,requestType:'EQUIPMENT',usageLocation:'Test venue',programId:program.id,subjectId:subject.id,yearLevel:3,academicYearId:years[0].id,termId:term.id,dateNeeded:new Date('2035-06-12T00:00:00+08:00'),items:{create:{equipmentId:item.id,quantity:1}}}});
- const app=express();app.use(errorResponseContract);app.use(express.json());app.use('/academic',require('../dist/routes/studentAcademicRecords').default);app.use('/requests',require('../dist/routes/borrowRequests').default);app.use(errorHandler);
+ const app=express();app.use(errorResponseContract);app.use(express.json());app.use('/users',require('../dist/routes/users').default);app.use('/academic',require('../dist/routes/studentAcademicRecords').default);app.use('/requests',require('../dist/routes/borrowRequests').default);app.use(errorHandler);
  server=await new Promise(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s));});base='http://127.0.0.1:'+server.address().port;
 });
 afterAll(async()=>{
@@ -27,7 +27,7 @@ afterAll(async()=>{
  if(db){await db.studentAcademicRecord.deleteMany({where:{studentId:student.id}});await db.auditLog.deleteMany({where:{actorUserId:{in:[student.id,admin.id]}}});await db.borrowRequest.deleteMany({where:{requestedBy:student.id}});await db.user.deleteMany({where:{id:{in:[student.id,admin.id]}}});await db.equipment.delete({where:{id:item.id}});await db.subject.delete({where:{id:subject.id}});await db.program.delete({where:{id:program.id}});await db.academicYear.deleteMany({where:{id:{in:years.map(y=>y.id)}}});await db.term.delete({where:{id:term.id}});await db.$disconnect();await require('../dist/db/prisma').prisma.$disconnect();}
 });
 async function save(academicYearId,body={}){mockActor=admin;const response=await fetch(base+'/academic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId:student.id,academicYearId,programId:program.id,yearLevel:3,status:'ENROLLED',reason:'Verified enrollment',expectedUpdatedAt:null,...body})});return {status:response.status,data:await response.json()};}
-test('unmigrated students retain profile access without invented historical rows',async()=>{expect(await studentStanding(db,student.id,years[0].id)).toEqual({programId:program.id,yearLevel:3});expect(await db.studentAcademicRecord.count({where:{studentId:student.id}})).toBe(0);});
+test('students without records cannot fall back to their original profile',async()=>{await expect(studentStanding(db,student.id,years[0].id)).rejects.toThrow(/not been configured/);expect(await db.studentAcademicRecord.count({where:{studentId:student.id}})).toBe(0);});
 test('confirmed years remain independent; duplicate/stale writes fail',async()=>{
  const first=await save(years[0].id);expect(first.status).toBe(200);
  expect((await save(years[0].id)).status).toBe(409);
@@ -98,3 +98,11 @@ test('bulk setup and promotion preview, exceptions, protection and rollback',asy
   await db.studentAcademicRecord.deleteMany({where:{academicYearId:{in:batchYears.map(year=>year.id)}}});await db.user.delete({where:{id:second.id}});await db.academicYear.deleteMany({where:{id:{in:batchYears.map(year=>year.id)}}});
  }
 });
+
+ test.each(['year','year_level','yearLevel','program_id','programId','standing'])('account edits reject academic field %s without changing the profile',async field=>{
+  mockActor={id:admin.id,role:'ADMIN'};
+  const before=await db.studentProfile.findUnique({where:{userId:student.id}});
+  const response=await fetch(base+'/users/'+student.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({[field]:field.includes('program')?program.id:2})});
+  expect(response.status).toBe(400);
+  expect(await db.studentProfile.findUnique({where:{userId:student.id}})).toEqual(before);
+ });

@@ -305,8 +305,8 @@ function RequestFormScaffold({
 }) {
   const selfFacultyProfileId = resources?.selfFacultyProfileId ?? null;
   const academic = resources?.studentAcademic;
-  const studentProgramId = academic?.managed ? academic.record?.programId ?? '' : student?.programId ?? '';
-  const recordedLevel = academic?.managed ? academic.record?.yearLevel : student?.yearLevel;
+  const studentProgramId = academic?.record?.programId ?? '';
+  const recordedLevel = academic?.record?.yearLevel;
   const studentYearLevel = recordedLevel != null ? String(recordedLevel) : '';
   const standingError = !editingRequest && academic?.managed && (!academic.record || !['ENROLLED', 'CONTINUING'].includes(academic.record.status)) ? 'Your enrollment for this academic year needs administrator review before you can submit a new request.' : null;
 

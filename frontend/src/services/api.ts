@@ -296,7 +296,7 @@ export const studentAcademicApi = {
   previewBatch: (data: JsonPayload) => api.post('/student-academic-records/batch/preview', data),
   promoteStandard: (data: JsonPayload) => api.post('/student-academic-records/batch/promote-standard', data),
   commitBatch: (data: JsonPayload) => api.post('/student-academic-records/batch/commit', data),
-  list: (params: { academicYearId: string; search?: string; page?: number; pageSize?: number }) => api.get('/student-academic-records', { params }),
+  list: (params: { academicYearId: string; studentId?: string; search?: string; page?: number; pageSize?: number }) => api.get('/student-academic-records', { params }),
   save: (data: JsonPayload) => api.post('/student-academic-records', data),
   me: () => api.get('/student-academic-records/me'),
 };

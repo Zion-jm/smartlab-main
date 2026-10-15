@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import Button from '../components/shared/Button';
 import InputField from '../components/shared/InputField';
 import { useAuthStore } from '../stores/authStore';
@@ -135,6 +135,14 @@ export default function ProfilePage({
   securitySuccess = null,
 }: ProfilePageProps) {
   const storeUser = useAuthStore((state) => state.user);
+  const refreshUser = useAuthStore((state) => state.refreshUser);
+  useEffect(() => {
+    if (userProp !== undefined) return;
+    void refreshUser();
+    const refresh = () => { void refreshUser(); };
+    window.addEventListener('focus', refresh);
+    return () => window.removeEventListener('focus', refresh);
+  }, [userProp, refreshUser]);
   const user = (userProp === undefined ? storeUser : userProp) as ProfileRecord | null;
   const role = user?.role ?? 'STUDENT';
   const displayName = displayNameFor(user);
@@ -224,7 +232,7 @@ export default function ProfilePage({
       ['Account type', roleLabels.STUDENT],
       ['Account status', user?.status === 'ACTIVE' ? 'Active' : 'Deactivated'],
       ['Program', user?.program || 'Not provided'],
-      ['Year level', user?.yearLevel ? `Year ${user.yearLevel}` : 'Not provided'],
+      ['Year level', user?.yearLevel ? `Year ${user.yearLevel}` : 'Not yet configured'],
     ];
   }, [role, user]);
 

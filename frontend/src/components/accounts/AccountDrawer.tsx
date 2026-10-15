@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { useMemo, useState } from 'react';
 import type { Account } from '../../types/account';
@@ -120,7 +121,7 @@ export default function AccountDrawer({
       return;
     }
 
-    if (isStudentRole && (!formValues.program || !formValues.yearLevel)) {
+    if (isCreate && isStudentRole && (!formValues.program || !formValues.yearLevel)) {
       setSubmitError('Select program and year level for student accounts.');
       return;
     }
@@ -160,6 +161,8 @@ export default function AccountDrawer({
         await userApi.create(payload);
         toast.success('Account created successfully.');
       } else if (account) {
+        delete payload.program_id;
+        delete payload.year;
         await userApi.update(account.id, payload);
         toast.success('Account updated successfully.');
       }
@@ -335,7 +338,7 @@ export default function AccountDrawer({
                   disabled={departmentOptions.length === 0}
                 />
               )}
-              {isStudentRole && (
+              {isStudentRole && isCreate && (
                 <div className="grid grid-cols-2 gap-3">
                   <DropdownField
                     label="Program"
@@ -354,6 +357,7 @@ export default function AccountDrawer({
                   />
                 </div>
               )}
+              {isStudentRole && !isCreate && <div className="rounded-xl border border-[#ead7d3] bg-[#fffaf8] p-3 text-sm"><p>Program: {account?.program ?? 'Not configured'}</p><p>Year level: {account?.yearLevel ?? 'Not configured'}</p><p className="mt-2 text-xs">Program and standing are managed in the active academic year's record.</p><Link className="mt-2 inline-block font-semibold text-[#800000] underline" to={'/admin/student-records?studentId='+encodeURIComponent(account?.id ?? '')}>Edit academic record</Link></div>}
               {submitError && <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{submitError}</p>}
             </form>
           )}

@@ -1,3 +1,4 @@
+import { currentStudentAcademic } from '../services/currentStudentAcademic';
 import { passwordChangeLimiter } from '../middleware/requestLimiter';
 import { validNewPassword, passwordPolicyMessage } from '../utils/passwordPolicy';
 import { requestPasswordReset, resetPassword } from '../services/passwordResetService';
@@ -91,9 +92,9 @@ router.post('/login', async (req, res) => {
         status: user.status,
         departmentId: user.facultyProfile?.departmentId ?? null,
         department: user.facultyProfile?.department?.name ?? null,
-        programId: user.studentProfile?.programId ?? null,
-        program: user.studentProfile?.program?.name ?? null,
-        yearLevel: user.studentProfile?.yearLevel ?? null,
+        ...(user.role === 'STUDENT' ? await currentStudentAcademic(prisma, user.id) : { programId: null, program: null, yearLevel: null }),
+
+
         createdAt: user.createdAt,
         lastLoginAt: user.lastLoginAt,
       },
@@ -199,10 +200,10 @@ router.get('/me', authenticateToken, async (req, res) => {
         ...user,
         departmentId: user.facultyProfile?.departmentId ?? null,
         department: user.facultyProfile?.department?.name ?? null,
-        programId: user.studentProfile?.programId ?? null,
-        program: user.studentProfile?.program?.name ?? null,
+        ...(user.role === 'STUDENT' ? await currentStudentAcademic(prisma, user.id) : { programId: null, program: null, yearLevel: null }),
+
         facultyProfile: undefined,
-        yearLevel: user.studentProfile?.yearLevel ?? null,
+
         studentProfile: undefined,
       },
     });
