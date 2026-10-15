@@ -273,7 +273,7 @@ describe('Borrow Requests', () => {
     });
 
     test('STEP 2: admin marks request as BORROWED', async () => {
-      const { status, data } = await apiRequest('PATCH', `/borrow-requests/${approvedRequestId}/borrow`, null, adminToken);
+      const { status, data } = await apiRequest('PATCH', `/borrow-requests/${approvedRequestId}/borrow`, {reason: 'Test early checkout'}, adminToken);
       expect(status).toBe(200);
       expect(data.request.status).toBe('BORROWED');
     });
@@ -296,7 +296,7 @@ describe('Borrow Requests', () => {
 
     test('cannot perform invalid state transitions on a returned request', async () => {
       // backend throws via ensureTransition — may return 400 or 500 depending on error handling
-      const { status } = await apiRequest('PATCH', `/borrow-requests/${approvedRequestId}/borrow`, null, adminToken);
+      const { status } = await apiRequest('PATCH', `/borrow-requests/${approvedRequestId}/borrow`, {reason: 'Test early checkout'}, adminToken);
       expect([400, 500]).toContain(status);
     });
   });
@@ -324,13 +324,13 @@ describe('Borrow Requests', () => {
       expect(status).toBe(400);
     });
 
-    test('admin can cancel a BORROWED request (restores equipment)', async () => {
+    test('admin cannot cancel a BORROWED request', async () => {
       const { data: newReq } = await apiRequest('POST', '/borrow-requests', makeRequestBody(), studentToken);
       await apiRequest('PATCH', `/borrow-requests/${newReq.request.id}/approve`, null, adminToken);
-      await apiRequest('PATCH', `/borrow-requests/${newReq.request.id}/borrow`, null, adminToken);
-      const { status, data } = await apiRequest('PATCH', `/borrow-requests/${newReq.request.id}/cancel`, null, adminToken);
-      expect(status).toBe(200);
-      expect(data.request.status).toBe('CANCELLED');
+      await apiRequest('PATCH', `/borrow-requests/${newReq.request.id}/borrow`, {reason: 'Test early checkout'}, adminToken);
+      const { status } = await apiRequest('PATCH', `/borrow-requests/${newReq.request.id}/cancel`, null, adminToken);
+      expect(status).toBe(409);
+      await apiRequest('PATCH', `/borrow-requests/${newReq.request.id}/return`, null, adminToken);
     });
 
     test('admin can cancel a PENDING request', async () => {

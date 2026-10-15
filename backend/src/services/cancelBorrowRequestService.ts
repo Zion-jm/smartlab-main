@@ -4,7 +4,6 @@ import { borrowRequestInclude, ensureTransition } from './borrowRequestService';
 
 import { RequestActionError } from './requestActionError';
 export { RequestActionError } from './requestActionError';
-import { moveInventory } from './inventoryMovementService';
 
 // The caller owns the transaction so related notification changes roll back too.
 export const cancelBorrowRequest = async (
@@ -20,11 +19,12 @@ export const cancelBorrowRequest = async (
     throw new RequestActionError(403, 'Access denied');
   }
   const wasBorrowed = request.status === RequestStatus.BORROWED;
+  if (wasBorrowed) throw new RequestActionError(409, 'Borrowed equipment must be returned, not cancelled.');
   const approvedRequest = request.status === RequestStatus.APPROVED;
-  const allowed = request.status === RequestStatus.PENDING || (!input.pendingOnly && (approvedRequest || (isAdmin && wasBorrowed)));
+  const allowed = request.status === RequestStatus.PENDING || (!input.pendingOnly && approvedRequest);
   if (!allowed) {
     throw new RequestActionError(409, input.pendingOnly ? 'Can only cancel pending requests' : isAdmin
-      ? 'Can only cancel pending, approved, or borrowed requests' : 'Can only cancel pending or approved requests');
+      ? 'Can only cancel pending or approved requests' : 'Can only cancel pending or approved requests');
   }
   if (!approvedRequest) ensureTransition(request.status, RequestStatus.CANCELLED);
   const claimed = await tx.borrowRequest.updateMany({
@@ -35,7 +35,6 @@ export const cancelBorrowRequest = async (
 
   const releasedSchedules = await tx.labSchedule.findMany({ where: { borrowRequestId: request.id } });
   await tx.labSchedule.deleteMany({ where: { borrowRequestId: request.id } });
-  if (wasBorrowed) await moveInventory(tx, request.items, 'restore');
   const cancelledRequest = await tx.borrowRequest.findUniqueOrThrow({
     where: { id: request.id }, include: borrowRequestInclude,
   });

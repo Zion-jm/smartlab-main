@@ -48,7 +48,7 @@ describe('inventory capacity API on local smartlab_test', () => {
   const input=()=>({academicYearId:year.id,termId:term.id,date:day,timeStart:'08:00',timeEnd:'10:00'});
   async function preview(e){const r=await apiRequest('POST','/equipment-conflicts/conflicts',{...input(),equipment:[{equipmentId:e.id,requestedQuantity:1}]},token);expect(r.status).toBe(200);return r.data.data.availability[e.id].available;}
   const edit=(e,body)=>apiRequest('PUT','/equipment/'+e.id,{expectedUpdatedAt:e.updatedAt.toISOString(),adjustmentReason:'Test inventory correction',...body},token);
-  const act=(r,action)=>apiRequest('PATCH','/borrow-requests/'+r.id+'/'+action,null,token);
+  const act=(r,action)=>apiRequest('PATCH','/borrow-requests/'+r.id+'/'+action,action==='borrow'?{reason:'Test early checkout'}:null,token);
   test.each([0,-1,1.5,'2',2147483648])('create and edit reject quantity %p without writing',async quantity=>{
     const e=await stock();const pending=await booking(e,1,'PENDING');
     const body=requestBody([{equipmentId:e.id,quantity}]);

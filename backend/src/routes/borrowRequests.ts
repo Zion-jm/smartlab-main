@@ -589,8 +589,8 @@ router.patch(
       const { id } = req.params;
 
       const request = await inventoryTransaction(prisma, async tx => {
-        const request = await changeLoanStatus(tx, id, 'borrow');
-        await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'BORROW', entityType: 'BorrowRequest', entityId: id });
+        const request = await changeLoanStatus(tx, id, 'borrow', { reason: req.body?.reason });
+        await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'BORROW', entityType: 'BorrowRequest', entityId: id, details: { reason: typeof req.body?.reason === 'string' ? req.body.reason.trim() : null, recordedAt: request.borrowedAt, scheduledDate: request.dateNeeded, scheduledStart: request.timeStart, scheduledEnd: request.timeEnd } });
         return request;
       });
 

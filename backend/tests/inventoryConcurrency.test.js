@@ -36,10 +36,10 @@ describe('Inventory concurrency on local smartlab_test', () => {
     equipment.push(e.id); return e;
   }
   async function request(items, status='APPROVED') {
-    const r = await prisma.borrowRequest.create({ data: {requestType:'EQUIPMENT',usageLocation:'Test venue', requestedBy: admin.id, academicYearId: year.id, termId: term.id, dateNeeded: new Date('2035-06-12T00:00:00+08:00'), timeStart: new Date('2035-06-12T08:00:00+08:00'), timeEnd: new Date('2035-06-12T09:00:00+08:00'), status, items: { create: items.map(e => ({ equipmentId: e.id, quantity: 1 })) } } });
+    const r = await prisma.borrowRequest.create({ data: {requestType:'EQUIPMENT',usageLocation:'Test venue', requestedBy: admin.id, academicYearId: year.id, termId: term.id, dateNeeded: new Date('2020-06-12T00:00:00+08:00'), timeStart: new Date('2020-06-12T08:00:00+08:00'), timeEnd: new Date('2020-06-12T09:00:00+08:00'), status, items: { create: items.map(e => ({ equipmentId: e.id, quantity: 1 })) } } });
     requests.push(r.id); return r;
   }
-  const act=(r,action)=>apiRequest('PATCH', '/borrow-requests/'+r.id+'/'+action, null, token);
+  const act=(r,action)=>apiRequest('PATCH', '/borrow-requests/'+r.id+'/'+action, action==='borrow'?{reason:'Test missed checkout'}:null, token);
   const stock=e=>prisma.equipment.findUnique({ where: { id: e.id } });
   const status=r=>prisma.borrowRequest.findUnique({ where: { id: r.id } });
   function oneWinner(results) {
@@ -63,7 +63,7 @@ describe('Inventory concurrency on local smartlab_test', () => {
     const e=await item(0,1), r=await request([e],'BORROWED');
     oneWinner(await Promise.all([act(r,'return'),act(r,'cancel')]));
     expect(await stock(e)).toMatchObject({availableQuantity:1,borrowedQuantity:0});
-    expect(['RETURNED','CANCELLED']).toContain((await status(r)).status);
+    expect((await status(r)).status).toBe('RETURNED');
   });
   test.each([1,2,3])('two requests competing for last unit round %s', async () => {
     const e=await item(), a=await request([e]), b=await request([e]);

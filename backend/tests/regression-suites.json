@@ -28,5 +28,6 @@
   "studentAcademicRecords.test.js",
   "immutableRoles.test.js",
   "adminAccessProtection.test.js",
-  "adminAccessConcurrency.test.js"
+  "adminAccessConcurrency.test.js",
+  "checkoutPolicy.test.js"
 ]

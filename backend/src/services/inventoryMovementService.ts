@@ -1,3 +1,4 @@
+import { validateCheckoutReason, assertCheckoutReservations } from './checkoutPolicy';
 import { effectiveStatus } from './equipmentLifecycle';
 import { BLOCKED_EQUIPMENT_STATUSES, MAX_QUANTITY } from './inventoryCapacityService';
 import { Prisma, RequestStatus } from '@prisma/client';
@@ -20,15 +21,20 @@ export async function moveInventory(tx: Prisma.TransactionClient, items: { equip
   }
 }
 
-export async function changeLoanStatus(tx: Prisma.TransactionClient, id: string, action: 'borrow' | 'return') {
+export async function changeLoanStatus(tx: Prisma.TransactionClient, id: string, action: 'borrow' | 'return', options: { reason?: unknown; now?: Date } = {}) {
   const request = await tx.borrowRequest.findUnique({ where: { id }, include: { items: true } });
   if (!request) throw new RequestActionError(404, 'Request not found');
   if (request.requestType === 'LABORATORY' && !request.items.length) throw new RequestActionError(400, 'Laboratory-only reservations do not have equipment to release or return.');
   const expected = action === 'borrow' ? RequestStatus.APPROVED : RequestStatus.BORROWED;
   if (request.status !== expected) throw new RequestActionError(409, 'Request status changed or this action was already completed. Refresh the request.');
+  const now = options.now ?? new Date();
+  if (action === 'borrow') {
+    validateCheckoutReason(request, options.reason, now);
+    await assertCheckoutReservations(tx, request, now);
+  }
   const claimed = await tx.borrowRequest.updateMany({
     where: { id, status: expected },
-    data: action === 'borrow' ? { status: RequestStatus.BORROWED, borrowedAt: new Date() } : { status: RequestStatus.RETURNED, returnedAt: new Date() },
+    data: action === 'borrow' ? { status: RequestStatus.BORROWED, borrowedAt: now } : { status: RequestStatus.RETURNED, returnedAt: now },
   });
   if (claimed.count !== 1) throw new RequestActionError(409, 'Request changed. Refresh and try again.');
   await moveInventory(tx, request.items, action === 'borrow' ? 'borrow' : 'restore');

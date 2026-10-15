@@ -175,7 +175,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
   const canApprove = request.status === 'PENDING';
   const canBorrow = request.status === 'APPROVED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length));
   const canReturn = request.status === 'BORROWED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length));
-  const canCancel = ['PENDING', 'APPROVED', 'BORROWED'].includes(request.status);
+  const canCancel = ['PENDING', 'APPROVED'].includes(request.status);
   const canDecline = request.status === 'PENDING' || request.status === 'APPROVED';
 
   const handleClose = () => {
@@ -242,7 +242,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
         className="px-4 py-2 rounded-full bg-[#4b5563] text-white text-xs font-semibold disabled:opacity-60"
         title="Cancel this request and release its reservations"
       >
-        {request.status === 'BORROWED' ? 'Cancel & restore stock' : 'Cancel request'}
+        Cancel request
       </button>
     ),
     canDecline && (
@@ -398,7 +398,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
       <ConfirmationModal
         isOpen={cancelConfirmationOpen}
         title="Cancel this request?"
-        message={request.status === 'BORROWED' ? 'This will cancel the loan and restore its equipment to inventory. Confirm that the equipment has been recovered.' : 'This will cancel the request and release its room and equipment reservations. This cannot be undone.'}
+        message={'This will cancel the request and release its room and equipment reservations. This cannot be undone.'}
         confirmLabel="Cancel request"
         isConfirming={mutating}
         confirmingLabel="Cancelling…"

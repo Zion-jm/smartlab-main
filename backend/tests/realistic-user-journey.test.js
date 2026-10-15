@@ -416,7 +416,7 @@ describe('Realistic SmartLab user journeys', () => {
     expect(approved.schedule).toBeDefined();
     created.schedules.push(approved.schedule.id);
 
-    expectStatus(await apiRequest('PATCH', `/borrow-requests/${mainRequestId}/borrow`, null, adminToken), 200, 'admin mark borrowed');
+    expectStatus(await apiRequest('PATCH', `/borrow-requests/${mainRequestId}/borrow`, {reason: 'Test early checkout'}, adminToken), 200, 'admin mark borrowed');
     const inUse = expectStatus(await apiRequest('GET', `/equipment/${equipmentId}`, null, facultyToken), 200, 'faculty verify borrowed stock');
     expect(inUse.borrowedQuantity).toBe(2);
     expect(inUse.availableQuantity).toBe(7);
@@ -487,14 +487,14 @@ describe('Realistic SmartLab user journeys', () => {
     expect(cancellation.request.status).toBe('CANCELLED');
   });
 
-  test('admin can cancel an actively borrowed request and restore inventory', async () => {
+  test('admin must return an actively borrowed request', async () => {
     const data = expectStatus(await apiRequest('POST', '/borrow-requests', requestBody(40, equipmentId, 1), studentToken), 201, 'create request for admin cancellation');
     const id = data.request.id;
     created.requests.push(id);
     expectStatus(await apiRequest('PATCH', `/borrow-requests/${id}/approve`, null, adminToken), 200, 'approve request for cancellation');
-    expectStatus(await apiRequest('PATCH', `/borrow-requests/${id}/borrow`, null, adminToken), 200, 'borrow request for cancellation');
-    const cancellation = expectStatus(await apiRequest('PATCH', `/borrow-requests/${id}/cancel`, null, adminToken), 200, 'admin cancel borrowed request');
-    expect(cancellation.request.status).toBe('CANCELLED');
+    expectStatus(await apiRequest('PATCH', `/borrow-requests/${id}/borrow`, {reason: 'Test early checkout'}, adminToken), 200, 'borrow request for cancellation');
+    expectStatus(await apiRequest('PATCH', `/borrow-requests/${id}/cancel`, null, adminToken), 409, 'reject borrowed cancellation');
+    expectStatus(await apiRequest('PATCH', `/borrow-requests/${id}/return`, null, adminToken), 200, 'return equipment');
   });
 
   test('admin adjusts scarce equipment and the student responds to the notification', async () => {

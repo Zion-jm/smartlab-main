@@ -242,6 +242,9 @@ export default function AdminRequests() {
   const [mutatingId, setMutatingId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [detailModalRequest, setDetailModalRequest] = useState<ApiBorrowRequest | null>(null);
+  const [checkoutWarning, setCheckoutWarning] = useState<{request: ApiBorrowRequest; message: string} | null>(null);
+  const [checkoutReason, setCheckoutReason] = useState('');
+  const [checkoutError, setCheckoutError] = useState('');
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [requestPage, setRequestPage] = useState(1);
   const [requestPageSize, setRequestPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
@@ -552,7 +555,10 @@ export default function AdminRequests() {
       if (action === 'approve') {
         await borrowRequestApi.approve(request.id);
       } else if (action === 'borrow') {
-        await borrowRequestApi.borrow(request.id);
+        await borrowRequestApi.borrow(request.id, { reason });
+        setCheckoutWarning(null);
+        setCheckoutReason('');
+        setSelectedRequest(null);
       } else if (action === 'return') {
         await borrowRequestApi.return(request.id);
       } else if (action === 'reject') {
@@ -565,7 +571,7 @@ export default function AdminRequests() {
         borrow: 'borrowed',
         return: 'returned',
         reject: 'rejected',
-        cancel: request.status === 'BORROWED' ? 'cancelled & stock restored' : 'cancelled',
+        cancel: 'cancelled',
       };
       toast.success(`Request ${actionLabels[action]} successfully.`);
       await fetchRequests();
@@ -577,7 +583,15 @@ export default function AdminRequests() {
       }
     } catch (err) {
       console.error('Failed to update request', err);
-      toast.error('Failed to update request. Please try again.');
+      const failure = (err as {response?:{data?:{code?:string;error?:string}}}).response?.data;
+      if(action === 'borrow' && failure?.code === 'CHECKOUT_REASON_REQUIRED') {
+        setCheckoutWarning({request,message:failure.error ?? 'Enter a reason for checkout outside the scheduled period.'});
+        setCheckoutError('');
+      } else {
+        const message=failure?.error ?? 'Failed to update request. Please try again.';
+        setCheckoutError(message);
+        toast.error(message);
+      }
     } finally {
       setMutatingId(null);
     }
@@ -797,6 +811,7 @@ export default function AdminRequests() {
           </div>
         </TableCellDetailModal>
       )}
+      {checkoutWarning && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"><section role="dialog" aria-modal="true" aria-labelledby="checkout-warning-title" className="w-full max-w-lg rounded-2xl border border-[#ead7d3] bg-white p-5 shadow-xl"><h2 id="checkout-warning-title" className="font-semibold text-[#800000]">Confirm equipment checkout</h2><p className="mt-3 text-sm">{checkoutWarning.message}</p><label className="mt-4 block text-sm">Reason<textarea autoFocus required maxLength={500} value={checkoutReason} onChange={event=>setCheckoutReason(event.target.value)} className="mt-2 w-full rounded-lg border border-[#d8c7c3] p-3" placeholder="For example: Already collected; recording late." /></label>{checkoutError && <p role="alert" className="mt-2 text-sm text-red-700">{checkoutError}</p>}<div className="mt-4 flex justify-end gap-3"><button disabled={Boolean(mutatingId)} onClick={()=>{setCheckoutWarning(null);setCheckoutReason('');setCheckoutError('');}} className="rounded-lg border px-4 py-2">Go back</button><button disabled={!checkoutReason.trim() || Boolean(mutatingId)} onClick={()=>void handleAction(checkoutWarning.request,'borrow',checkoutReason.trim())} className="rounded-lg bg-[#800000] px-4 py-2 text-white disabled:opacity-50">{mutatingId?'Saving…':'Record checkout'}</button></div></section></div>}
     </AdminLayout>
   );
 }

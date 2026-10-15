@@ -18,7 +18,7 @@ export const STATUS_TRANSITIONS: Record<RequestStatus, RequestStatus[]> = {
   [RequestStatus.REJECTED]: [],
   [RequestStatus.CANCELLED]: [],
   [RequestStatus.RETURNED]: [],
-  [RequestStatus.BORROWED]: [RequestStatus.RETURNED, RequestStatus.CANCELLED],
+  [RequestStatus.BORROWED]: [RequestStatus.RETURNED],
 };
 
 export const ensureTransition = (current: RequestStatus, target: RequestStatus): void => {
