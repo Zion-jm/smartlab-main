@@ -2155,3 +2155,42 @@
     font-size: 10px;
   }
 }
+/* Schedule-inspired mobile table navigator: warm surface and a clear current page. */
+@media screen and (max-width: 767px) {
+  .portal-content .table-pagination,
+  .portal-content .request-mobile-navigator .table-pagination {
+    background: linear-gradient(180deg, #fffaf7 0%, #fff 100%);
+    border-top: 1px solid #ead7d3;
+    border-radius: 0;
+  }
+  .portal-content .request-mobile-navigator {
+    box-shadow: 0 -4px 16px rgba(76, 37, 24, .08);
+  }
+  .portal-content .table-pagination > p { color: #74615e; }
+  .portal-content .table-pagination .table-pagination-navigation > button {
+    background: #fff;
+    border-color: #ead7d3;
+    color: #57322d;
+    font-weight: 600;
+    transition: background-color .15s, border-color .15s;
+  }
+  .portal-content .table-pagination .table-pagination-navigation > button:hover:not(:disabled) {
+    background: #fff0e9;
+    border-color: #c9a5a0;
+  }
+  .portal-content .table-pagination .table-pagination-navigation > button:disabled {
+    background: #f8f7f6;
+    color: #a8a09e;
+    opacity: .65;
+  }
+  .portal-content .table-pagination .table-pagination-current > .table-pagination-dropdown button[aria-haspopup="listbox"] {
+    background: #800000;
+    border-color: #800000;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(128, 0, 0, .12);
+  }
+  .portal-content .table-pagination .table-pagination-current > .table-pagination-dropdown button[aria-haspopup="listbox"] > span,
+  .portal-content .table-pagination .table-pagination-current > .table-pagination-dropdown button[aria-haspopup="listbox"] > svg {
+    color: #fff;
+  }
+}

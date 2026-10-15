@@ -52,7 +52,7 @@ export default function TablePagination({
           <span className="sm:hidden">Rows</span>
           <DropdownField portal className="table-pagination-dropdown" value={String(pageSize)} onChange={value => onPageSizeChange(Number(value))} placeholder="Rows per page" options={pageSizeOptions.map(value => ({ value: String(value), label: String(value) }))} />
         </div>
-        <div className="flex flex-wrap items-center gap-1">
+        <div className="table-pagination-navigation flex flex-wrap items-center gap-1">
           <button
             type="button"
             onClick={() => onPageChange(1)}
@@ -71,7 +71,7 @@ export default function TablePagination({
           >
             <span aria-hidden="true">&lt;</span>
           </button>
-          <div className="flex items-center gap-1.5 whitespace-nowrap font-semibold text-[#374151]">
+          <div className="table-pagination-current flex items-center gap-1.5 whitespace-nowrap font-semibold text-[#374151]">
             <span className="hidden sm:inline">Page</span>
             <DropdownField portal className="table-pagination-dropdown" value={String(safePage)} onChange={value => onPageChange(Number(value))} placeholder="Select page" options={Array.from({ length: totalPages }, (_, index) => ({ value: String(index + 1), label: String(index + 1) }))} />
             <span>of {totalPages}</span>
