@@ -657,7 +657,7 @@ export function ScheduleReportView({
             </div>
           </div><div className="p-4">
           <CompactFilterPanel
-            className="border-0 bg-transparent p-0 shadow-none"
+            className="report-demand-filter-panel border-0 bg-transparent p-0 shadow-none"
             alwaysShowAdvanced
             primary={
               <FilterItem label="Group by" className="min-w-0">

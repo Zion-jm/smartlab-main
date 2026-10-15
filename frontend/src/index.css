@@ -2426,6 +2426,26 @@
     border-radius: 9px;
     font-size: 11px;
   }
+
+  /* Demand controls use one two-column grid in all three report tabs. */
+  .reports-mobile-workspace .report-demand-filter-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    align-items: end;
+  }
+
+  .reports-mobile-workspace .report-demand-filter-panel > .grid:first-child,
+  .reports-mobile-workspace .report-demand-filter-panel > .grid:first-child > [role="group"],
+  .reports-mobile-workspace .report-demand-filter-panel > [id$="advanced-filters"],
+  .reports-mobile-workspace .report-demand-filter-panel > [id$="advanced-filters"] > .grid {
+    display: contents;
+  }
+
+  .reports-mobile-workspace .report-demand-filter-panel > .compact-filter-panel__active-filter-area {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+  }
 }
 /* Schedule-inspired mobile table navigator: warm surface and a clear current page. */
 @media screen and (max-width: 767px) {
