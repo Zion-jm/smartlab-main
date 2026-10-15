@@ -400,28 +400,25 @@ router.put('/:id', authenticateToken, async (req, res) => {
       }
     }
 
-    let nextRole = existingUser.role;
+    const nextRole = existingUser.role;
+    // Validate every supplied alias, including conflicting aliases, before any write.
+    for (const key of ['role_id', 'roleId', 'role']) {
+      if (!Object.prototype.hasOwnProperty.call(req.body, key)) continue;
+      const value = req.body[key];
+      const requestedRole = key === 'role'
+        ? (typeof value === 'string' ? value.toUpperCase() : undefined)
+        : (typeof value === 'number' || typeof value === 'string' ? ROLE_ID_TO_VALUE[Number(value)] : undefined);
+      if (!requestedRole || !Object.values(UserRole).includes(requestedRole as UserRole)) {
+        throw new ValidationError('Invalid role provided.');
+      }
+      if (requestedRole !== existingUser.role) {
+        throw new ValidationError('Account roles cannot be changed after creation.');
+      }
+    }
     let nextStatus = existingUser.status;
 
     if (isAdmin) {
-      const roleIdInput = req.body.role_id ?? req.body.roleId;
       const statusIdInput = req.body.status_id ?? req.body.statusId;
-
-      if (roleIdInput != null) {
-        const mappedRole = ROLE_ID_TO_VALUE[Number(roleIdInput)];
-        if (!mappedRole) {
-          res.status(400).json({ error: 'Invalid role provided.' });
-          return;
-        }
-        nextRole = mappedRole;
-      } else if (req.body.role) {
-        const requestedRole = String(req.body.role).toUpperCase();
-        if (!Object.values(UserRole).includes(requestedRole as UserRole)) {
-          res.status(400).json({ error: 'Invalid role provided.' });
-          return;
-        }
-        nextRole = requestedRole as UserRole;
-      }
 
       if (statusIdInput != null) {
         const mappedStatus = STATUS_ID_TO_VALUE[Number(statusIdInput)];
@@ -468,9 +465,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
           lastName,
           email,
           phone,
-          role: nextRole,
           status: nextStatus,
-          ...(nextRole !== existingUser.role || nextStatus !== existingUser.status || email !== existingUser.email ? { sessionVersion: { increment: 1 } } : {}),
+          ...(nextStatus !== existingUser.status || email !== existingUser.email ? { sessionVersion: { increment: 1 } } : {}),
         },
       });
 
@@ -480,24 +476,18 @@ router.put('/:id', authenticateToken, async (req, res) => {
           update: { departmentId },
           create: { userId: id, departmentId },
         });
-        await tx.studentProfile.deleteMany({ where: { userId: id } });
-        await tx.adminProfile.deleteMany({ where: { userId: id } });
       } else if (nextRole === UserRole.STUDENT) {
         await tx.studentProfile.upsert({
           where: { userId: id },
           update: {},
           create: { userId: id },
         });
-        await tx.facultyProfile.deleteMany({ where: { userId: id } });
-        await tx.adminProfile.deleteMany({ where: { userId: id } });
       } else if (nextRole === UserRole.ADMIN) {
         await tx.adminProfile.upsert({
           where: { userId: id },
           update: {},
           create: { userId: id },
         });
-        await tx.facultyProfile.deleteMany({ where: { userId: id } });
-        await tx.studentProfile.deleteMany({ where: { userId: id } });
       }
 
       const updatedUser = await tx.user.findUniqueOrThrow({
@@ -519,15 +509,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
             next: { role: updatedUser.role, status: updatedUser.status },
           },
         });
-        if (existingUser.role !== updatedUser.role) {
-          await recordRequiredAuditLog(tx, {
-            actorUserId: req.user!.id,
-            action: 'ROLE_CHANGED',
-            entityType: 'User',
-            entityId: updatedUser.id,
-            details: { label: `${updatedUser.firstName} ${updatedUser.lastName}`, previous: existingUser.role, next: updatedUser.role },
-          });
-        }
         if (existingUser.status !== updatedUser.status) {
           await recordRequiredAuditLog(tx, {
             actorUserId: req.user!.id,

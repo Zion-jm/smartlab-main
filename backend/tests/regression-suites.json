@@ -25,5 +25,6 @@
   "chromiumPdf.test.js",
   "testEnvironment.test.js",
   "scheduleYearLevel.test.js",
-  "studentAcademicRecords.test.js"
+  "studentAcademicRecords.test.js",
+  "immutableRoles.test.js"
 ]
