@@ -621,14 +621,14 @@ export function ScheduleReportView({
 
         <section className="reports-mobile-section overflow-hidden rounded-2xl border border-[#e5d9d5] bg-white shadow-sm">
           <div className="border-b border-[#f1e6e3] px-4 py-4 lg:px-5"><h2 className="text-sm font-semibold text-[#321d1d]">Schedule overview</h2><p className="mt-1 text-xs text-[#786565]">A current snapshot based on the reporting period and active schedule filters.</p></div>
-        <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
+        <div className="request-report-summary-grid grid grid-cols-2 gap-3 p-4 lg:grid-cols-4 lg:p-5">
           {[
             { label: 'Schedules shown', value: scheduleSummary.schedules, detail: 'Matching the period and filters', tone: 'maroon' },
             { label: 'Recurring schedules', value: scheduleSummary.recurring, detail: 'Weekly entries in the result', tone: 'blue' },
             { label: 'Rooms in use', value: scheduleSummary.rooms, detail: 'Distinct rooms in the result', tone: 'amber' },
             { label: 'Sections covered', value: scheduleSummary.sections, detail: 'Program and year combinations', tone: 'green' },
           ].map((metric) => (
-            <div key={metric.label} className={`rounded-xl border p-4 ${
+            <div key={metric.label} className={`request-report-summary-card rounded-xl border p-4 ${
               metric.tone === 'maroon'
                 ? 'border-[#f1d4d4] bg-[#fff8f8]'
                 : metric.tone === 'blue'
@@ -637,7 +637,7 @@ export function ScheduleReportView({
                     ? 'border-[#f6e8b1] bg-[#fffdf5]'
                     : 'border-[#d8f0df] bg-[#f7fdf9]'
             }`}>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6b7280]">{metric.label}</p>
+              <p className="request-report-summary-label text-[10px] font-semibold uppercase tracking-wide text-[#6b7280]">{metric.label}</p>
               <p className="mt-1 text-2xl font-bold text-[#111827]">{metric.value}</p>
               <p className="mt-1 text-xs text-[#6b7280]">{metric.detail}</p>
             </div>
