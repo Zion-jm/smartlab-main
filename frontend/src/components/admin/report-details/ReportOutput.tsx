@@ -1,3 +1,4 @@
+import { Printer } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import '../reportDocumentStyles.css';
@@ -213,10 +214,10 @@ export function RequestReportOutputMenu({
         }}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="inline-flex items-center gap-2 rounded-full bg-[#800000] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#680000] focus:outline-none focus:ring-2 focus:ring-[#800000]/30"
+        className="page-control-ribbon__print-button inline-flex items-center gap-2 rounded-full bg-[#800000] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#680000] focus:outline-none focus:ring-2 focus:ring-[#800000]/30"
       >
-        Print / Export
-        <span aria-hidden className="text-sm leading-none">
+        <Printer size={16} aria-hidden="true" className="md:hidden" /><span className="sr-only md:not-sr-only">Print / Export</span>
+        <span aria-hidden className="hidden text-sm leading-none md:inline">
           {open ? '▴' : '▾'}
         </span>
       </button>
@@ -518,10 +519,10 @@ export function EquipmentReportOutputMenu({
         }}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="inline-flex items-center gap-2 rounded-full bg-[#800000] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#680000] focus:outline-none focus:ring-2 focus:ring-[#800000]/30"
+        className="page-control-ribbon__print-button inline-flex items-center gap-2 rounded-full bg-[#800000] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#680000] focus:outline-none focus:ring-2 focus:ring-[#800000]/30"
       >
-        Print / Export
-        <span aria-hidden className="text-sm leading-none">
+        <Printer size={16} aria-hidden="true" className="md:hidden" /><span className="sr-only md:not-sr-only">Print / Export</span>
+        <span aria-hidden className="hidden text-sm leading-none md:inline">
           {open ? '▴' : '▾'}
         </span>
       </button>
@@ -768,10 +769,10 @@ export function ScheduleReportOutputMenu({
         }}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="inline-flex items-center gap-2 rounded-full bg-[#800000] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#680000] focus:outline-none focus:ring-2 focus:ring-[#800000]/30"
+        className="page-control-ribbon__print-button inline-flex items-center gap-2 rounded-full bg-[#800000] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#680000] focus:outline-none focus:ring-2 focus:ring-[#800000]/30"
       >
-        Print / Export
-        <span aria-hidden className="text-sm leading-none">
+        <Printer size={16} aria-hidden="true" className="md:hidden" /><span className="sr-only md:not-sr-only">Print / Export</span>
+        <span aria-hidden className="hidden text-sm leading-none md:inline">
           {open ? '▴' : '▾'}
         </span>
       </button>

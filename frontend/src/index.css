@@ -1916,14 +1916,14 @@
   }
 }
 @media screen and (max-width: 767px) {
-  .page-control-ribbon .page-control-ribbon__bar:has(.page-control-ribbon__add-button) {
+  .page-control-ribbon .page-control-ribbon__bar:has(.page-control-ribbon__add-button, .page-control-ribbon__print-button) {
     grid-template-columns: minmax(0, 1fr) auto auto auto;
   }
-  .page-control-ribbon .page-control-ribbon__extra-actions:has(.page-control-ribbon__add-button) {
+  .page-control-ribbon .page-control-ribbon__extra-actions:has(.page-control-ribbon__add-button, .page-control-ribbon__print-button) {
     grid-column: 3;
     grid-row: 1;
   }
-  .page-control-ribbon .page-control-ribbon__bar:has(.page-control-ribbon__add-button) .page-control-ribbon__toggle {
+  .page-control-ribbon .page-control-ribbon__bar:has(.page-control-ribbon__add-button, .page-control-ribbon__print-button) .page-control-ribbon__toggle {
     grid-column: 4;
   }
   .page-control-ribbon .page-control-ribbon__actions .page-control-ribbon__add-button {
@@ -1989,5 +1989,19 @@
     height: 100%;
     opacity: 0;
     cursor: pointer;
+  }
+}
+@media screen and (max-width: 767px) {
+  .page-control-ribbon .page-control-ribbon__actions .page-control-ribbon__print-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px !important;
+    min-width: 36px;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    gap: 0;
+    border-radius: .5rem;
   }
 }
