@@ -21,6 +21,7 @@ jobs:
       TEST_DATABASE_URL: postgresql://smartlab:ci-only-password@localhost:5432/smartlab_test
       DATABASE_URL: postgresql://smartlab:ci-only-password@localhost:5432/smartlab_test
       JWT_SECRET: isolated-ci-only-secret-not-used-for-deployment
+      SYSTEM_BASELINE_ACADEMIC_YEAR: 2025-2026
       SMARTLAB_EVIDENCE_DIR: ${{ github.workspace }}/artifacts
     steps:
       - uses: actions/checkout@v4
