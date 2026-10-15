@@ -2115,3 +2115,43 @@
     padding-inline: 4px;
   }
 }
+/* Compact mobile table navigation, including its row/page dropdowns. */
+@media screen and (max-width: 767px) {
+  .portal-content .table-pagination,
+  .portal-content .request-mobile-navigator .table-pagination {
+    padding: 8px;
+    gap: 8px;
+    font-size: 10px;
+  }
+  .portal-content .table-pagination > div > div:last-child {
+    gap: 6px;
+  }
+  .portal-content .table-pagination > div > div:last-child > button,
+  .portal-content .table-pagination .table-pagination-dropdown button[aria-haspopup="listbox"] {
+    height: 32px;
+    min-height: 32px;
+    border-radius: 8px;
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+  .portal-content .table-pagination .table-pagination-dropdown {
+    min-width: 40px;
+  }
+  .portal-content .table-pagination .table-pagination-dropdown button[aria-haspopup="listbox"] > svg {
+    width: 12px;
+    height: 12px;
+    margin-left: 4px;
+  }
+  .portal-content .my-requests-mobile-navigator {
+    padding: 8px;
+    gap: 8px;
+    font-size: 10px;
+  }
+  .portal-content .my-requests-mobile-navigator button {
+    height: 32px;
+    min-height: 32px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+  }
+}
