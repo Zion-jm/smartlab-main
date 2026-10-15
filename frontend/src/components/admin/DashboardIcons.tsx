@@ -1,3 +1,5 @@
+import { ContactRound } from 'lucide-react';
+
 type IconProps = { size?: number };
 
 const Icon = ({
@@ -37,11 +39,7 @@ export const GraduationCapIcon = ({ size = 24 }: IconProps) => (
 );
 
 export const TeacherIcon = ({ size = 24 }: IconProps) => (
-  <Icon size={size}>
-    <circle cx="12" cy="7" r="4" />
-    <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
-    <path d="M3 11h18" />
-  </Icon>
+  <ContactRound size={size} strokeWidth={1.8} aria-hidden="true" />
 );
 
 export const ClockIcon = ({ size = 24 }: IconProps) => (
