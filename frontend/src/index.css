@@ -2021,3 +2021,20 @@
     color: #fff !important;
   }
 }
+/* Pair mobile advanced filters without changing search or date-range layouts. */
+@media screen and (max-width: 767px) {
+  .page-control-ribbon .compact-filter-panel [id$="advanced-filters"].grid,
+  .page-control-ribbon .compact-filter-panel [id$="advanced-filters"] > .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 8px;
+    align-items: end;
+  }
+  .page-control-ribbon [id$="advanced-filters"].grid > *,
+  .page-control-ribbon [id$="advanced-filters"] > .grid > * {
+    min-width: 0;
+  }
+  .page-control-ribbon [id$="advanced-filters"] .ribbon-date-range-filter,
+  .page-control-ribbon [id$="advanced-filters"] .grid > :has(input[type="search"]) {
+    grid-column: 1 / -1;
+  }
+}
