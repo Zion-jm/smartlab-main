@@ -1378,7 +1378,9 @@
   }
   .dashboard-workspace .dashboard-section > div:last-child { padding: 1rem .75rem; }
   .dashboard-workspace .dashboard-stat { padding: .75rem; }
-  .dashboard-workspace .dashboard-stat > div:last-child { flex-wrap: wrap; gap: .5rem; }
+  .dashboard-workspace .dashboard-stat > div:last-child { flex-wrap: nowrap; gap: .5rem; }
+  .dashboard-workspace .dashboard-stat > div:last-child > div:first-child { flex: 1; min-width: 0; }
+  .dashboard-workspace .dashboard-stat h4 { overflow-wrap: anywhere; }
 }
 /* Requests mobile: aligned full-width section cards and scoped pagination. */
 @media screen and (max-width: 767px) {
