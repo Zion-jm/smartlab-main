@@ -2101,3 +2101,17 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
   }
 }
+@media screen and (max-width: 767px) {
+  .table-pagination > div > div:last-child > button:first-child,
+  .table-pagination > div > div:last-child > button:last-child {
+    display: inline-flex;
+  }
+  .table-pagination > div > div:last-child {
+    gap: 6px;
+  }
+  .table-pagination > div > div:last-child > button {
+    flex: 1;
+    min-width: 32px;
+    padding-inline: 4px;
+  }
+}

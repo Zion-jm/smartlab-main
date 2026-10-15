@@ -57,11 +57,10 @@ export default function TablePagination({
             type="button"
             onClick={() => onPageChange(1)}
             disabled={safePage <= 1}
-            className="hidden h-10 min-w-[3.25rem] items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-2.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex"
+            className="inline-flex h-10 min-w-[3.25rem] items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-2.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex"
             aria-label="First page"
           >
-            <span className="hidden sm:inline">First</span>
-            <span className="sm:hidden">«</span>
+            <span aria-hidden="true">&lt;&lt;</span>
           </button>
           <button
             type="button"
@@ -70,8 +69,7 @@ export default function TablePagination({
             className="inline-flex h-10 min-w-[4.75rem] items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-2.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Previous page"
           >
-            <span className="hidden sm:inline">Previous</span>
-            <span className="sm:hidden">‹ Previous</span>
+            <span aria-hidden="true">&lt;</span>
           </button>
           <div className="flex items-center gap-1.5 whitespace-nowrap font-semibold text-[#374151]">
             <span className="hidden sm:inline">Page</span>
@@ -85,18 +83,16 @@ export default function TablePagination({
             className="inline-flex h-10 min-w-[4.75rem] items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-2.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Next page"
           >
-            <span className="hidden sm:inline">Next</span>
-            <span className="sm:hidden">Next ›</span>
+            <span aria-hidden="true">&gt;</span>
           </button>
           <button
             type="button"
             onClick={() => onPageChange(totalPages)}
             disabled={safePage >= totalPages}
-            className="hidden h-10 min-w-[3.25rem] items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-2.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex"
+            className="inline-flex h-10 min-w-[3.25rem] items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-2.5 font-semibold text-[#374151] transition hover:border-[#800000] hover:text-[#800000] disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex"
             aria-label="Last page"
           >
-            <span className="hidden sm:inline">Last</span>
-            <span className="sm:hidden">»</span>
+            <span aria-hidden="true">&gt;&gt;</span>
           </button>
         </div>
       </div>
