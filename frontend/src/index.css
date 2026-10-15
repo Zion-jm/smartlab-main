@@ -1940,3 +1940,19 @@
     line-height: .875rem;
   }
 }
+/* Compact mobile Page Controls toolbar actions. */
+@media screen and (max-width: 767px) {
+  .page-control-ribbon > .page-control-ribbon__bar {
+    --ribbon-target-size: 36px;
+  }
+  .page-control-ribbon .page-control-ribbon__refresh > button,
+  .page-control-ribbon .page-control-ribbon__actions > .page-control-ribbon__toggle,
+  .page-control-ribbon .page-control-ribbon__actions .page-control-ribbon__add-button {
+    box-sizing: border-box;
+    width: 36px !important;
+    min-width: 36px;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+  }
+}
