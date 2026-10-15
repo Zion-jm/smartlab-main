@@ -1,3 +1,4 @@
+import DropdownField from './DropdownField';
 import { ListFilter } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -117,16 +118,18 @@ export default function DateRangeFilter({
           size="md"
         />}
         <div className={`date-range-preset-dropdown ${dateRangeActions.some(action => action.active) ? 'is-active' : ''}`}>
-          <ListFilter size={16} aria-hidden="true" />
-          <select
-            aria-label="Quick date filter"
+          <DropdownField
             value={dateRangeActions.find(action => action.active)?.id ?? ''}
-            onChange={event => dateRangeActions.find(action => action.id === event.target.value)?.onClick()}
+            options={dateRangeActions.filter(action => !action.disabled).map(action => ({ value: action.id, label: action.label }))}
+            onChange={id => dateRangeActions.find(action => action.id === id)?.onClick()}
+            placeholder="Quick date filter"
+            selectedLabel={<ListFilter size={16} aria-hidden="true" />}
             disabled={dateRangeActions.length === 0 || dateRangeActions.every(action => action.disabled)}
-          >
-            <option value="" disabled>Choose date filter</option>
-            {dateRangeActions.map(action => <option key={action.id} value={action.id} disabled={action.disabled}>{action.label}</option>)}
-          </select>
+            portal
+            menuMinWidth={160}
+            menuZIndex={1000}
+            className="w-full"
+          />
         </div>
         <div
           role="group"

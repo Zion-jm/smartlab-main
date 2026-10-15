@@ -1982,14 +1982,7 @@
     color: #fff;
   }
   .date-range-preset-dropdown:focus-within { outline: 2px solid #800000; outline-offset: 2px; }
-  .date-range-preset-dropdown > select {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-  }
+
 }
 @media screen and (max-width: 767px) {
   .page-control-ribbon .page-control-ribbon__actions .page-control-ribbon__print-button {
@@ -2003,5 +1996,28 @@
     padding: 0 !important;
     gap: 0;
     border-radius: .5rem;
+  }
+}
+@media screen and (max-width: 767px) {
+  .date-range-preset-dropdown { border: 0; }
+  .date-range-preset-dropdown button[aria-haspopup="listbox"] {
+    width: 36px;
+    min-width: 36px;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    justify-content: center;
+  }
+  .date-range-preset-dropdown button[aria-haspopup="listbox"] > span {
+    display: flex;
+    flex: none;
+    color: inherit;
+  }
+  .date-range-preset-dropdown button[aria-haspopup="listbox"] > svg { display: none; }
+  .date-range-preset-dropdown.is-active button[aria-haspopup="listbox"] {
+    background: #800000 !important;
+    border-color: #800000 !important;
+    color: #fff !important;
   }
 }

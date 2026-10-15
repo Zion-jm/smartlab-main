@@ -22,7 +22,7 @@ interface DropdownFieldProps<T extends string> {
   menuZIndex?: number;
   menuMinWidth?: number;
   nowrapOptions?: boolean;
-  selectedLabel?: string;
+  selectedLabel?: ReactNode;
 }
 
 export default function DropdownField<T extends string>({
