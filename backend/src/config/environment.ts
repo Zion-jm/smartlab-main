@@ -25,4 +25,10 @@ export function validateEnvironment(env: NodeJS.ProcessEnv): void {
   if (env.PORT !== undefined && (!/^\d+$/.test(env.PORT) || Number(env.PORT) < 1 || Number(env.PORT) > 65535)) {
     throw new Error('PORT must be an integer between 1 and 65535.');
   }
+  if (env.SYSTEM_BASELINE_ACADEMIC_YEAR !== undefined) {
+    const match = /^(\d{4})-(\d{4})$/.exec(env.SYSTEM_BASELINE_ACADEMIC_YEAR.trim());
+    if (!match || Number(match[2]) !== Number(match[1]) + 1) {
+      throw new Error('SYSTEM_BASELINE_ACADEMIC_YEAR must use the consecutive YYYY-YYYY format.');
+    }
+  }
 }

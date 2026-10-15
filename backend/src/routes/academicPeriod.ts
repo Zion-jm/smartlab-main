@@ -4,6 +4,7 @@ import { Router } from 'express';
 import { UserRole } from '@prisma/client';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { getActiveAcademicPeriod } from '../services/academicPeriodService';
+import { allowedAcademicYearWhere, assertAcademicYearAtOrAfterBaseline, getSystemBaselineAcademicYear } from '../services/academicYearPolicy';
 
 const router = Router();
 
@@ -41,7 +42,7 @@ router.get(
     try {
       const [activeAcademicYear, activeTerm, academicYears, terms, auditLogs] = await Promise.all([
         prisma.academicYear.findFirst({
-          where: { isActive: true },
+          where: { isActive: true, ...allowedAcademicYearWhere() },
           select: { id: true, year: true, isActive: true },
         }),
         prisma.term.findFirst({
@@ -49,6 +50,7 @@ router.get(
           select: { id: true, name: true, isActive: true },
         }),
         prisma.academicYear.findMany({
+          where: allowedAcademicYearWhere(),
           orderBy: { year: 'desc' },
           select: { id: true, year: true, isActive: true, createdAt: true, updatedAt: true },
         }),
@@ -73,6 +75,7 @@ router.get(
         academicYears,
         terms,
         suggestedTerms: DEFAULT_TERM_NAMES,
+        baselineAcademicYear: getSystemBaselineAcademicYear(),
         history: auditLogs.map((log) => ({
           id: log.id,
           action: log.action,
@@ -110,6 +113,7 @@ router.post(
     }
 
     try {
+      assertAcademicYearAtOrAfterBaseline(year);
       const result = await prisma.$transaction(async (tx) => {
         const previousYear = await tx.academicYear.findFirst({
           where: { isActive: true },

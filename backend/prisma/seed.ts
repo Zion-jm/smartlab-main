@@ -41,8 +41,7 @@ const facultySeeds = [
 ];
 
 const academicYearSeeds = [
-  { year: '2025-2026', isActive: true },
-  { year: '2024-2025', isActive: false },
+  { year: '2026-2027', isActive: true },
 ];
 
 const termSeeds = [
@@ -365,7 +364,7 @@ async function ensureReportFixtures() {
 
   const [activeAcademicYear, activeTerm, bsit, bsee, bsbio, comp001, comp002, comp006, comp016] =
     await Promise.all([
-      prisma.academicYear.findUnique({ where: { year: '2025-2026' } }),
+      prisma.academicYear.findUnique({ where: { year: '2026-2027' } }),
       prisma.term.findUnique({ where: { name: '1st Semester' } }),
       prisma.program.findUnique({ where: { code: 'BSIT' } }),
       prisma.program.findUnique({ where: { code: 'BSEE' } }),

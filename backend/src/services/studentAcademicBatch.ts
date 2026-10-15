@@ -3,13 +3,13 @@ import { Prisma, StudentAcademicStatus, UserStatus } from '@prisma/client';
 import { DomainError, ValidationError } from './domainError';
 import { recordRequiredAuditLog } from './auditLogService';
 import { accountStatusChanged } from './accountReactivationService';
+import { requireAllowedAcademicYear } from './academicYearPolicy';
 
 type BatchInput = { mode: 'SETUP' | 'PROMOTE'; academicYearId: string; sourceYearId?: string; studentIds: string[] };
 const yearStart = (year: string) => /^\d{4}-\d{4}$/.test(year) && Number(year.slice(5)) === Number(year.slice(0,4)) + 1 ? Number(year.slice(0,4)) : NaN;
 
 export async function getAcademicYearTransitionSummary(tx: Prisma.TransactionClient, academicYearId: string, sourceYearId?: string) {
-  const destination = await tx.academicYear.findUnique({ where: { id: academicYearId } });
-  if (!destination) throw new ValidationError('Select a valid academic year.');
+  const destination = await requireAllowedAcademicYear(tx, academicYearId);
   const activeStudents = await tx.user.findMany({
     where: { role: 'STUDENT', status: UserStatus.ACTIVE },
     select: {
@@ -21,7 +21,7 @@ export async function getAcademicYearTransitionSummary(tx: Prisma.TransactionCli
   const currentGraduationReview = activeStudents.filter(student => student.studentAcademicRecords.some(record => record.academicYearId === academicYearId && record.yearLevel === 4 && ['ENROLLED', 'CONTINUING'].includes(record.status))).length;
   if (!sourceYearId) return { destination, activeStudents: activeStudents.length, configured, missing: activeStudents.length - configured, graduationReview: currentGraduationReview };
 
-  const source = await tx.academicYear.findUnique({ where: { id: sourceYearId } });
+  const source = await requireAllowedAcademicYear(tx, sourceYearId);
   if (!source || yearStart(destination.year) !== yearStart(source.year) + 1) throw new ValidationError('Promotion requires consecutive academic years.');
   let continuing = 0, graduationReview = 0, protectedRecords = 0, manualReview = 0;
   for (const student of activeStudents) {
@@ -50,9 +50,8 @@ export async function promoteStandardStudents(tx: Prisma.TransactionClient, inpu
 }
 export async function previewAcademicBatch(tx: Prisma.TransactionClient, input: BatchInput) {
   if (!['SETUP', 'PROMOTE'].includes(input.mode) || typeof input.academicYearId !== 'string' || !Array.isArray(input.studentIds) || !input.studentIds.length || input.studentIds.length > 100 || input.studentIds.some(id => typeof id !== 'string') || new Set(input.studentIds).size !== input.studentIds.length) throw new ValidationError('Select 1–100 distinct students and a destination year.');
-  const destination = await tx.academicYear.findUnique({ where: { id: input.academicYearId } });
-  if (!destination) throw new ValidationError('Select a valid destination year.');
-  const source = input.mode === 'PROMOTE' && typeof input.sourceYearId === 'string' ? await tx.academicYear.findUnique({ where: { id: input.sourceYearId } }) : null;
+  const destination = await requireAllowedAcademicYear(tx, input.academicYearId, 'Select a valid destination year.');
+  const source = input.mode === 'PROMOTE' && typeof input.sourceYearId === 'string' ? await requireAllowedAcademicYear(tx, input.sourceYearId) : null;
   if (input.mode === 'PROMOTE') {
     if (!source || yearStart(destination.year) !== yearStart(source.year) + 1) throw new ValidationError('Promotion requires consecutive academic years, for example 2026-2027 to 2027-2028.');
   }

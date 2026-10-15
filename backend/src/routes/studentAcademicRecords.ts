@@ -6,12 +6,13 @@ import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { sendError } from '../middleware/errors';
 import { DomainError, ValidationError } from '../services/domainError';
 import { recordRequiredAuditLog } from '../services/auditLogService';
+import { allowedAcademicYearWhere, requireAllowedAcademicYear } from '../services/academicYearPolicy';
 
 const router = Router();
 router.use(authenticateToken);
 router.get('/me', authorizeRoles(UserRole.STUDENT), async (req, res) => {
   try {
-    const year = await prisma.academicYear.findFirst({ where: { isActive: true } });
+    const year = await prisma.academicYear.findFirst({ where: { isActive: true, ...allowedAcademicYearWhere() } });
     const [record, count] = await Promise.all([
       year ? prisma.studentAcademicRecord.findUnique({ where: { studentId_academicYearId: { studentId: req.user!.id, academicYearId: year.id } } }) : null,
       prisma.studentAcademicRecord.count({ where: { studentId: req.user!.id } }),
@@ -44,7 +45,8 @@ router.post('/batch/commit', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const academicYearId = String(req.query.academicYearId ?? '');
-    if (!academicYearId || !await prisma.academicYear.findUnique({ where: { id: academicYearId } })) throw new ValidationError('Select an existing academic year.');
+    if (!academicYearId) throw new ValidationError('Select an existing academic year.');
+    await requireAllowedAcademicYear(prisma, academicYearId, 'Select an existing academic year.');
     const search = String(req.query.search ?? '').trim().slice(0, 100);
     const page = Math.max(1, Math.min(100000, Number(req.query.page) || 1));
     const pageSize = Math.max(10, Math.min(100, Number(req.query.pageSize) || 15));
@@ -79,6 +81,7 @@ router.post('/', async (req, res) => {
         tx.studentAcademicRecord.findUnique({ where: { studentId_academicYearId: { studentId, academicYearId } } }),
       ]);
       if (!student || (!previous && student.role !== UserRole.STUDENT) || !year || !program) throw new ValidationError('Select a valid student, year and program.');
+      await requireAllowedAcademicYear(tx, academicYearId);
       if (previous ? expectedUpdatedAt !== previous.updatedAt.toISOString() : expectedUpdatedAt != null) throw new DomainError(409, 'This academic record changed. Reload before saving.');
       const data = { programId, yearLevel, status,
         programCode: previous && previous.programId === programId ? previous.programCode : program.code,

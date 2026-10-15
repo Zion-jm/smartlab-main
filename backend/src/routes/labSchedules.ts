@@ -25,6 +25,7 @@ import {
   getPeriodSelectionFromQuery,
   resolveAcademicPeriodSelection,
 } from '../services/academicPeriodService';
+import { allowedAcademicYearWhere } from '../services/academicYearPolicy';
 
 const router = Router();
 
@@ -171,6 +172,7 @@ router.get(
           },
         }),
         prisma.academicYear.findMany({
+          where: allowedAcademicYearWhere(),
           orderBy: { createdAt: 'desc' },
           select: { id: true, year: true, isActive: true },
         }),

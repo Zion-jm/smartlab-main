@@ -48,6 +48,7 @@ type AcademicPeriodPayload = {
   academicYears: AcademicYearRecord[];
   terms: TermRecord[];
   suggestedTerms: string[];
+  baselineAcademicYear: string;
   history: PeriodHistory[];
 };
 type AcademicSummary = { activeStudents:number; configured:number; missing:number; graduationReview:number; continuing?:number; protectedRecords?:number; manualReview?:number };
@@ -86,7 +87,7 @@ const getNextAcademicYearSuggestion = (academicYears: AcademicYearRecord[]) => {
   return `${startYear}-${startYear + 1}`;
 };
 
-const getAcademicYearValidationMessage = (value: string) => {
+const getAcademicYearValidationMessage = (value: string, baselineAcademicYear?: string) => {
   const normalizedValue = value.trim();
   if (!normalizedValue) return 'Enter an academic year.';
 
@@ -97,6 +98,11 @@ const getAcademicYearValidationMessage = (value: string) => {
   const endYear = Number(match[2]);
   if (endYear !== startYear + 1) {
     return `Academic years must cover one year. For a ${startYear} start, enter ${startYear}-${startYear + 1}.`;
+  }
+
+  const baselineStart = baselineAcademicYear ? getAcademicYearStart(baselineAcademicYear) : null;
+  if (baselineStart !== null && startYear < baselineStart) {
+    return `Academic years earlier than the system baseline (${baselineAcademicYear}) are not allowed.`;
   }
 
   return null;
@@ -170,7 +176,7 @@ export default function AdminAcademicPeriod() {
   );
   const academicYearFieldError =
     isAddingAcademicYear && yearTouched
-      ? getAcademicYearValidationMessage(year)
+      ? getAcademicYearValidationMessage(year, data?.baselineAcademicYear)
         ?? (data?.academicYears.some((academicYear) => academicYear.year === year.trim())
           ? 'That academic year already exists. Select it from the dropdown instead of adding it again.'
           : null)
@@ -195,7 +201,7 @@ export default function AdminAcademicPeriod() {
     event.preventDefault();
     const normalizedYear = year.trim();
     const normalizedTerm = termName.trim();
-    const academicYearError = getAcademicYearValidationMessage(normalizedYear);
+    const academicYearError = getAcademicYearValidationMessage(normalizedYear, data?.baselineAcademicYear);
 
     if (academicYearError) {
       setYearTouched(true);
@@ -441,7 +447,7 @@ export default function AdminAcademicPeriod() {
                         role={academicYearFieldError ? 'alert' : undefined}
                         className={`mt-1.5 block text-[11px] ${academicYearFieldError ? 'text-[#991b1b]' : 'text-[#9ca3af]'}`}
                       >
-                        {academicYearFieldError ?? `Suggested next year: ${nextAcademicYearSuggestion}. Use the format YYYY-YYYY.`}
+                        {academicYearFieldError ?? `Suggested next year: ${nextAcademicYearSuggestion}. The earliest allowed year is ${data?.baselineAcademicYear ?? 'the deployment baseline'}.`}
                       </span>
                     </>
                   ) : (

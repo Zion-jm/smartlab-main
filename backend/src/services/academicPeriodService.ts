@@ -1,4 +1,5 @@
 import { Prisma, UserRole } from '@prisma/client';
+import { allowedAcademicYearWhere, requireAllowedAcademicYear } from './academicYearPolicy';
 
 export type AcademicPeriodRecord = {
   academicYear: {
@@ -44,7 +45,7 @@ export const getActiveAcademicPeriod = async (
 ): Promise<AcademicPeriodRecord | null> => {
   const [academicYear, term] = await Promise.all([
     prisma.academicYear.findFirst({
-      where: { isActive: true },
+      where: { isActive: true, ...allowedAcademicYearWhere() },
       select: { id: true, year: true, isActive: true },
     }),
     prisma.term.findFirst({
@@ -72,6 +73,7 @@ export const resolveAcademicPeriodSelection = async (
   const requestedTermId = cleanQueryValue(input.termId);
 
   if (role === UserRole.ADMIN && (requestedYearId || requestedTermId)) {
+    if (requestedYearId) await requireAllowedAcademicYear(prisma, requestedYearId);
     return {
       ...(requestedYearId ? { academicYearId: requestedYearId } : {}),
       ...(requestedTermId ? { termId: requestedTermId } : {}),
@@ -98,4 +100,4 @@ export const academicPeriodWhere = (selection: AcademicPeriodSelection) => ({
 export const getPeriodSelectionFromQuery = (query: Record<string, unknown>): AcademicPeriodSelection => ({
   academicYearId: cleanQueryValue(query.academicYearId),
   termId: cleanQueryValue(query.termId),
-});
+}});
