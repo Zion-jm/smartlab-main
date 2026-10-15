@@ -1,3 +1,4 @@
+import { ListFilter } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { InputField } from './InputField';
@@ -96,7 +97,7 @@ export default function DateRangeFilter({
       <div className="ribbon-filter-label flex flex-wrap items-center gap-x-6 gap-y-1">
         <span>{label}</span>
       </div>
-      <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.35fr)]">
+      <div className="date-range-fields grid w-full grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.35fr)]">
         {styledDates ? dateControl('from') : <InputField
           {...fromInputProps}
           type="date"
@@ -115,6 +116,18 @@ export default function DateRangeFilter({
           onChange={(event) => onChange({ ...value, to: event.target.value })}
           size="md"
         />}
+        <div className={`date-range-preset-dropdown ${dateRangeActions.some(action => action.active) ? 'is-active' : ''}`}>
+          <ListFilter size={16} aria-hidden="true" />
+          <select
+            aria-label="Quick date filter"
+            value={dateRangeActions.find(action => action.active)?.id ?? ''}
+            onChange={event => dateRangeActions.find(action => action.id === event.target.value)?.onClick()}
+            disabled={dateRangeActions.length === 0 || dateRangeActions.every(action => action.disabled)}
+          >
+            <option value="" disabled>Choose date filter</option>
+            {dateRangeActions.map(action => <option key={action.id} value={action.id} disabled={action.disabled}>{action.label}</option>)}
+          </select>
+        </div>
         <div
           role="group"
           aria-label={actions ? 'Date range actions' : 'Quick date ranges'}
