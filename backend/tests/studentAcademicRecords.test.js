@@ -13,7 +13,7 @@ beforeAll(async()=>{
  student=await db.user.create({data:{email:tag+'-student@test.local',firstName:'Record',lastName:'Student',role:'STUDENT',passwordHash:'unused'}});
  program=await db.program.create({data:{code:tag,name:'Original program'}});
  await db.studentProfile.create({data:{userId:student.id,programId:program.id,yearLevel:3}});
- years=await Promise.all(['2025-2026','2026-2027','2028-2029'].map(year=>db.academicYear.create({data:{year:tag+year}})));
+ years=await Promise.all(['2080-2081','2081-2082','2083-2084'].map(year=>db.academicYear.create({data:{year}})));
  term=await db.term.create({data:{name:tag}});
  faculty=await db.facultyProfile.findFirstOrThrow();
  subject=await db.subject.create({data:{code:tag,name:'Test subject'}});

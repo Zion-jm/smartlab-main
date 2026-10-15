@@ -8,7 +8,7 @@ let db,server,base,year,term,equipment,borrower,loan;const tag='audit-rollback-'
 beforeAll(async()=>{const u=new URL(process.env.DATABASE_URL);if(!['localhost','127.0.0.1'].includes(u.hostname)||u.pathname!=='/smartlab_test')throw Error('Local smartlab_test required');db=new PrismaClient();
  mockActor=await db.user.create({data:{email:tag+'@test.local',firstName:'Audit',lastName:'Admin',role:'ADMIN',passwordHash:await bcrypt.hash(password,10)}});
  borrower=await db.user.create({data:{email:tag+'-borrower@test.local',firstName:'Audit',lastName:'Student',role:'STUDENT',passwordHash:'unused'}});
- year=await db.academicYear.create({data:{year:tag}});term=await db.term.create({data:{name:tag}});
+ year=await db.academicYear.create({data:{year:'2039-2040'}});term=await db.term.create({data:{name:tag}});
  equipment=await db.equipment.create({data:{name:tag,totalQuantity:3,availableQuantity:3}});
  loan=await db.borrowRequest.create({data:{requestType:'EQUIPMENT',usageLocation:'Test venue',requestedBy:borrower.id,academicYearId:year.id,termId:term.id,dateNeeded:new Date('2039-06-13T00:00:00+08:00'),timeStart:new Date('2039-06-13T08:00:00+08:00'),timeEnd:new Date('2039-06-13T09:00:00+08:00'),items:{create:{equipmentId:equipment.id,quantity:1}}}});
  const app=express();app.use(errorResponseContract);app.use(express.json());for(const n of ['equipment','users','borrowRequests','auth'])app.use('/'+n,require('../dist/routes/'+n).default);app.use(errorHandler);server=await new Promise(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s))});base='http://127.0.0.1:'+server.address().port;
