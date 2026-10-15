@@ -2484,10 +2484,50 @@
 
   .academic-period-workspace .academic-period-current-details > div {
     min-width: 0;
+    padding: 10px;
+    border: 1px solid #ead7d3;
+    border-top-width: 3px;
+    border-radius: 12px;
+    background: #fffaf7;
   }
 
   .academic-period-workspace .academic-period-current-details > div:last-child {
     grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .academic-period-workspace .academic-period-current-details > div:nth-child(1) {
+    border-top-color: #800000;
+    background: #fff8f8;
+  }
+
+  .academic-period-workspace .academic-period-current-details > div:nth-child(2) {
+    border-top-color: #9a7b4f;
+    background: #fffbf3;
+  }
+
+  .academic-period-workspace .academic-period-current-details > div:nth-child(3) {
+    border-top-color: #2563a5;
+    background: #f7faff;
+  }
+
+  .academic-period-workspace .academic-period-current-details > div > p:first-child {
+    color: #786565;
+    font-size: 9px;
+    letter-spacing: .06em;
+  }
+
+  .academic-period-workspace .academic-period-current-details > div > p:last-child {
+    margin-top: 6px;
+    overflow-wrap: anywhere;
+  }
+
+  .academic-period-workspace .academic-period-current-details > div:last-child > p:last-child {
+    margin-top: 0;
+    text-align: right;
   }
 }
 /* Schedule-inspired mobile table navigator: warm surface and a clear current page. */
