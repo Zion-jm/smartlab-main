@@ -2157,6 +2157,276 @@
     font-size: 10px;
   }
 }
+
+/* Shared mobile content scale across administrator, faculty, and student views. */
+@media screen and (max-width: 767px) {
+  .portal-content {
+    --mobile-section-gap: 24px;
+    --mobile-card-padding-x: 12px;
+    --mobile-card-padding-y: 12px;
+    --mobile-card-radius: 16px;
+    --mobile-inner-radius: 12px;
+    --mobile-card-border: #ead7d3;
+    --mobile-card-header: #fffaf7;
+    --mobile-card-shadow: 0 1px 2px rgba(76, 37, 24, .06);
+    --mobile-section-icon: 40px;
+    --mobile-metric-icon: 36px;
+  }
+
+  /* All page groups use the same vertical rhythm. */
+  :is(
+    .student-records-page,
+    .dashboard-workspace,
+    .admin-requests-workspace,
+    .equipment-workspace > .responsive-workspace,
+    .reports-mobile-workspace,
+    .accounts-workspace,
+    .academic-directory-workspace,
+    .academic-period-workspace,
+    .audit-workspace,
+    .settings-workspace,
+    .profile-page--cards,
+    .portal-new-request,
+    .portal-my-requests
+  ) {
+    row-gap: var(--mobile-section-gap);
+  }
+
+  :is(
+    .student-records-overview,
+    .dashboard-sections,
+    .request-overview-grid,
+    .equipment-overview-grid,
+    .accounts-overview-grid,
+    .directory-overview-grid,
+    .audit-overview-grid,
+    .request-workflow-grid
+  ) {
+    gap: var(--mobile-section-gap);
+  }
+
+  /* Normalize page-level cards without affecting nested status and metric cards. */
+  :is(
+    .student-records-overview > section,
+    .student-records-list-section,
+    .student-records-page section[aria-label="Bulk academic records"],
+    .dashboard-section,
+    .request-page-section,
+    .equipment-mobile-section,
+    .equipment-mobile-planner,
+    .equipment-mobile-calendar,
+    .reports-mobile-section,
+    .accounts-mobile-section,
+    .directory-mobile-section,
+    .period-mobile-section,
+    .audit-mobile-section,
+    .profile-summary,
+    .profile-page--cards > .grid > section,
+    .settings-mobile-section,
+    .settings-mobile-reset,
+    .portal-new-request .request-workflow-grid > section,
+    .portal-new-request .request-equipment-catalog,
+    .portal-new-request .request-submit-summary,
+    .portal-my-requests > section
+  ) {
+    border-color: var(--mobile-card-border);
+    border-radius: var(--mobile-card-radius);
+    background: #fff;
+    box-shadow: var(--mobile-card-shadow);
+  }
+
+  /* Card headers share one surface, inset, and title scale. */
+  :is(
+    .student-records-overview > section > header,
+    .student-records-list-section > div:first-child,
+    .dashboard-section > div:first-child,
+    .request-page-section > header,
+    .equipment-mobile-section > header,
+    .reports-mobile-section > div:first-child,
+    .accounts-mobile-section > header,
+    .directory-mobile-section > header,
+    .period-mobile-section > :first-child,
+    .audit-mobile-section > :first-child,
+    .profile-section-heading,
+    .settings-mobile-section > div:first-child,
+    .portal-new-request .request-workflow-grid > section > div:first-child,
+    .portal-new-request .request-equipment-header,
+    .portal-my-requests > section > header
+  ) {
+    padding: var(--mobile-card-padding-y) var(--mobile-card-padding-x);
+    background: var(--mobile-card-header);
+  }
+
+  :is(
+    .student-records-overview,
+    .dashboard-sections,
+    .admin-requests-workspace,
+    .equipment-workspace,
+    .reports-mobile-workspace,
+    .accounts-workspace,
+    .academic-directory-workspace,
+    .academic-period-workspace,
+    .audit-workspace,
+    .profile-page--cards,
+    .settings-workspace,
+    .portal-new-request,
+    .portal-my-requests
+  ) section > header h2,
+  :is(
+    .dashboard-section,
+    .request-page-section,
+    .equipment-mobile-section,
+    .reports-mobile-section,
+    .accounts-mobile-section,
+    .directory-mobile-section,
+    .period-mobile-section,
+    .audit-mobile-section,
+    .portal-my-requests
+  ) h3 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+  }
+
+  /* Repeated eyebrow, description, metric and status text use one scale. */
+  :is(
+    .student-records-page,
+    .dashboard-workspace,
+    .admin-requests-workspace,
+    .equipment-workspace,
+    .reports-mobile-workspace,
+    .accounts-workspace,
+    .academic-directory-workspace,
+    .academic-period-workspace,
+    .audit-workspace,
+    .profile-page--cards,
+    .settings-workspace,
+    .portal-new-request,
+    .portal-my-requests
+  ) :is(.text-\[10px\], .text-\[11px\]) {
+    line-height: 14px;
+  }
+
+  :is(
+    .student-records-page,
+    .dashboard-workspace,
+    .admin-requests-workspace,
+    .equipment-workspace,
+    .reports-mobile-workspace,
+    .accounts-workspace,
+    .academic-directory-workspace,
+    .academic-period-workspace,
+    .audit-workspace,
+    .profile-page--cards,
+    .settings-workspace,
+    .portal-new-request,
+    .portal-my-requests
+  ) .text-xs {
+    line-height: 18px;
+  }
+
+  /* Hero/section icons and compact metric icons retain distinct roles. */
+  :is(
+    .student-records-overview,
+    .request-page-section,
+    .equipment-mobile-section,
+    .accounts-mobile-section,
+    .directory-mobile-section,
+    .period-mobile-section,
+    .audit-mobile-section,
+    .profile-summary,
+    .settings-workspace,
+    .portal-my-requests
+  ) :is(header, .profile-section-heading) > div:first-child > :is(span, div):first-child {
+    width: var(--mobile-section-icon);
+    height: var(--mobile-section-icon);
+    min-width: var(--mobile-section-icon);
+    border-radius: 12px;
+  }
+
+  .dashboard-workspace .dashboard-stat > div:last-child > div:last-child {
+    width: var(--mobile-metric-icon);
+    height: var(--mobile-metric-icon);
+    min-width: var(--mobile-metric-icon);
+    border-radius: 12px;
+  }
+
+  /* Inner cards, notices and record cards line up to the same inset and radius. */
+  :is(
+    .student-records-page,
+    .dashboard-workspace,
+    .admin-requests-workspace,
+    .equipment-workspace,
+    .reports-mobile-workspace,
+    .accounts-workspace,
+    .academic-directory-workspace,
+    .academic-period-workspace,
+    .audit-workspace,
+    .profile-page--cards,
+    .settings-workspace,
+    .portal-new-request,
+    .portal-my-requests
+  ) :is(.rounded-xl, .rounded-2xl) {
+    border-radius: var(--mobile-inner-radius);
+  }
+
+  /* Content actions and fields remain comfortable touch targets. */
+  :is(.portal-new-request, .portal-my-requests, .profile-page--cards, .settings-workspace)
+  :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, button[aria-haspopup="listbox"]) {
+    min-height: 44px;
+    border-radius: 12px;
+  }
+
+  .table-action-button {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    border-radius: 10px;
+  }
+
+  /* The shared schedule explorer follows the same card and type scale. */
+  .mobile-schedule-explorer {
+    gap: var(--mobile-section-gap);
+  }
+
+  .mobile-schedule-explorer #mobile-schedule-panel > :is(.rounded-xl, .space-y-4 > section),
+  .mobile-schedule-explorer #mobile-schedule-panel .space-y-2 > button {
+    border-color: var(--mobile-card-border);
+    border-radius: var(--mobile-inner-radius);
+    background-color: #fff;
+    box-shadow: var(--mobile-card-shadow);
+  }
+
+  .mobile-schedule-explorer #mobile-schedule-panel .space-y-2 > button {
+    padding: var(--mobile-card-padding-y) var(--mobile-card-padding-x);
+  }
+
+  .mobile-schedule-explorer #mobile-schedule-panel h3 {
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .mobile-schedule-explorer #mobile-schedule-panel p,
+  .mobile-schedule-explorer #mobile-schedule-panel button {
+    line-height: 18px;
+  }
+
+  .mobile-schedule-explorer [role="tablist"] {
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--mobile-card-border);
+    border-radius: 12px;
+    background: #fffaf7;
+  }
+
+  .mobile-schedule-explorer [role="tab"] {
+    min-height: 40px;
+    border-radius: 9px;
+    font-size: 11px;
+  }
+}
 /* Schedule-inspired mobile table navigator: warm surface and a clear current page. */
 @media screen and (max-width: 767px) {
   .portal-content .table-pagination,
