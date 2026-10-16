@@ -100,11 +100,16 @@ export const summarizeRequest = (request: BorrowRequestWithRelations) => {
     declinedAt: toIso(request.declinedAt),
     academicYearId: request.academicYearId,
     termId: request.termId,
+    updatedAt: request.updatedAt.toISOString(),
+    returnEvents: request.returnEvents,
     items: request.items.map((item) => ({
       id: item.id,
       equipmentId: item.equipmentId,
       equipmentName: item.equipment?.name ?? 'Unknown equipment',
       quantity: item.quantity,
+      returnedGood: item.returnedGood,
+      returnedDamaged: item.returnedDamaged,
+      outstanding: item.quantity - item.returnedGood - item.returnedDamaged,
     })),
   };
 };

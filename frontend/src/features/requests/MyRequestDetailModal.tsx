@@ -1,3 +1,4 @@
+import ReturnHistory from '../../components/shared/ReturnHistory';
 import { useState } from 'react';
 import { CalendarDays, Clock, MapPin } from 'lucide-react';
 import TableCellDetailModal from '../../components/shared/TableCellDetailModal';
@@ -25,6 +26,7 @@ export default function MyRequestDetailModal({ request, onClose, onReview, reque
         {items.length ? <ul className="mt-2 divide-y divide-[#f1e8e4]">{(expanded ? items : items.slice(0, 3)).map(item => <li key={item.id} className="flex items-start justify-between gap-4 py-2.5"><span className="min-w-0 break-words">{item.equipment?.name || 'Equipment item'}</span><span className="shrink-0 font-semibold text-[#800000]">×{item.quantity}</span></li>)}</ul> : <p className="mt-2 text-[#786565]">No equipment requested</p>}
         {items.length > 3 && <button type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)} className="min-h-11 rounded-lg px-2 text-xs font-semibold text-[#800000] hover:bg-[#fff0ed]">{expanded ? 'Show fewer items' : `Show all ${items.length} items`}</button>}
       </section>
+      <ReturnHistory events={source.returnEvents} items={items}/>
       <section className="border-t border-[#ead7d3] pt-4">
         <h3 className="mb-3 font-semibold text-[#321d1d]">Class details</h3>
         <dl className="grid gap-4 sm:grid-cols-2">

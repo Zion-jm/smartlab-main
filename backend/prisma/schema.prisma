@@ -393,6 +393,7 @@ model BorrowRequest {
   declinedAt      DateTime?
   
   // Relations
+  returnEvents    EquipmentReturn[]
   items           BorrowRequestItem[]
   schedules       LabSchedule[]
   notifications   Notification[]
@@ -414,6 +415,8 @@ model BorrowRequestItem {
   borrowRequest    BorrowRequest @relation(fields: [borrowRequestId], references: [id], onDelete: Cascade)
   equipmentId      String
   equipment        Equipment @relation(fields: [equipmentId], references: [id])
+  returnedGood     Int @default(0)
+  returnedDamaged  Int @default(0)
   quantity         Int    @default(1)
   
   createdAt        DateTime @default(now())
@@ -547,4 +550,18 @@ model StudentAcademicRecord {
   @@unique([studentId, academicYearId])
   @@index([academicYearId, status])
   @@map("student_academic_records")
+}
+
+model EquipmentReturn {
+  id String @id @default(cuid())
+  submissionId String @unique
+  borrowRequestId String
+  borrowRequest BorrowRequest @relation(fields: [borrowRequestId], references: [id], onDelete: Cascade)
+  actorId String
+  actorName String
+  notes String
+  lines Json
+  createdAt DateTime @default(now())
+  @@index([borrowRequestId, createdAt], map: "equipment_returns_request_date")
+  @@map("equipment_returns")
 }

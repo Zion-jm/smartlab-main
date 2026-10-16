@@ -1,3 +1,5 @@
+import EquipmentReturnModal from '../components/admin/EquipmentReturnModal';
+import ReturnHistory from '../components/shared/ReturnHistory';
 import { ArrowRight, ClipboardList, CalendarDays, Clock, MapPin, UserRound } from 'lucide-react';
 import type { EquipmentAvailabilitySummary } from '../components/equipment/EquipmentConflictChecker';
 import { useRef } from 'react';
@@ -57,6 +59,8 @@ type ApiBorrowRequest = {
     equipmentId: string;
     equipmentName: string;
     quantity: number;
+    returnedGood?: number;
+    returnedDamaged?: number;
     equipment?: {
       id: string;
       name?: string | null;
@@ -66,6 +70,7 @@ type ApiBorrowRequest = {
   timeStart?: string | null;
   timeEnd?: string | null;
   purpose?: string | null;
+  returnEvents?: import('../types/equipmentReturns').ReturnEvent[];
   notes?: string | null;
   status: BorrowRequestStatus;
   rejectionNote?: string | null;
@@ -242,6 +247,7 @@ export default function AdminRequests() {
   const [mutatingId, setMutatingId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [detailModalRequest, setDetailModalRequest] = useState<ApiBorrowRequest | null>(null);
+  const [returnRequest,setReturnRequest]=useState<ApiBorrowRequest|null>(null);
   const [checkoutWarning, setCheckoutWarning] = useState<{request: ApiBorrowRequest; message: string} | null>(null);
   const [checkoutReason, setCheckoutReason] = useState('');
   const [checkoutError, setCheckoutError] = useState('');
@@ -550,6 +556,7 @@ export default function AdminRequests() {
     action: 'approve' | 'borrow' | 'return' | 'reject' | 'cancel',
     reason?: string
   ) => {
+    if(action==='return'){setReturnRequest(request);return;}
     try {
       setMutatingId(request.id);
       if (action === 'approve') {
@@ -559,8 +566,7 @@ export default function AdminRequests() {
         setCheckoutWarning(null);
         setCheckoutReason('');
         setSelectedRequest(null);
-      } else if (action === 'return') {
-        await borrowRequestApi.return(request.id);
+
       } else if (action === 'reject') {
         await borrowRequestApi.reject(request.id, { reason });
       } else if (action === 'cancel') {
@@ -569,7 +575,6 @@ export default function AdminRequests() {
       const actionLabels: Record<typeof action, string> = {
         approve: 'approved',
         borrow: 'borrowed',
-        return: 'returned',
         reject: 'rejected',
         cancel: 'cancelled',
       };
@@ -800,7 +805,7 @@ export default function AdminRequests() {
             </section>
             <section className="border-t border-[#ead7d3] pt-4"><h3 className="font-semibold text-[#321d1d]">Purpose</h3><p className="mt-2 whitespace-pre-wrap break-words">{detailModalRequest.purpose || 'Not specified'}</p></section>
             {(detailModalRequest.rejectionNote || detailModalRequest.notes) && <section className="rounded-xl bg-[#fff8f3] p-4"><h3 className="font-semibold text-[#321d1d]">{detailModalRequest.status === 'REJECTED' ? 'Decline reason' : 'Notes'}</h3><p className="mt-2 whitespace-pre-wrap break-words">{detailModalRequest.rejectionNote || detailModalRequest.notes}</p></section>}
-            <section className="border-t border-[#ead7d3] pt-4"><h3 className="font-semibold text-[#321d1d]">Request activity</h3><ol className="mt-3 grid gap-3 sm:grid-cols-2">{[
+            <ReturnHistory events={detailModalRequest.returnEvents} items={detailModalRequest.items}/><section className="border-t border-[#ead7d3] pt-4"><h3 className="font-semibold text-[#321d1d]">Request activity</h3><ol className="mt-3 grid gap-3 sm:grid-cols-2">{[
               { label: 'Submitted', date: detailModalRequest.createdAt },
               { label: 'Approved', date: detailModalRequest.approvedAt },
               { label: 'Borrowed', date: detailModalRequest.borrowedAt },
@@ -812,6 +817,7 @@ export default function AdminRequests() {
         </TableCellDetailModal>
       )}
       {checkoutWarning && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"><section role="dialog" aria-modal="true" aria-labelledby="checkout-warning-title" className="w-full max-w-lg rounded-2xl border border-[#ead7d3] bg-white p-5 shadow-xl"><h2 id="checkout-warning-title" className="font-semibold text-[#800000]">Confirm equipment checkout</h2><p className="mt-3 text-sm">{checkoutWarning.message}</p><label className="mt-4 block text-sm">Reason<textarea autoFocus required maxLength={500} value={checkoutReason} onChange={event=>setCheckoutReason(event.target.value)} className="mt-2 w-full rounded-lg border border-[#d8c7c3] p-3" placeholder="For example: Already collected; recording late." /></label>{checkoutError && <p role="alert" className="mt-2 text-sm text-red-700">{checkoutError}</p>}<div className="mt-4 flex justify-end gap-3"><button disabled={Boolean(mutatingId)} onClick={()=>{setCheckoutWarning(null);setCheckoutReason('');setCheckoutError('');}} className="rounded-lg border px-4 py-2">Go back</button><button disabled={!checkoutReason.trim() || Boolean(mutatingId)} onClick={()=>void handleAction(checkoutWarning.request,'borrow',checkoutReason.trim())} className="rounded-lg bg-[#800000] px-4 py-2 text-white disabled:opacity-50">{mutatingId?'Saving…':'Record checkout'}</button></div></section></div>}
+      {returnRequest&&<EquipmentReturnModal key={returnRequest.id} request={returnRequest} onClose={()=>setReturnRequest(null)} onSaved={async()=>{setReturnRequest(null);setSelectedRequest(null);toast.success('Return recorded.');await fetchRequests();}}/>}
     </AdminLayout>
   );
 }

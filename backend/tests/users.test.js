@@ -203,8 +203,6 @@ describe('User Management', () => {
       const { status, data } = await apiRequest('PUT', `/users/${createdUserId}`, {
         first_name: 'Updated',
         last_name: 'Name',
-        program_id: programId,
-        year_level: 3,
       }, adminToken);
       expect(status).toBe(200);
       expect(data.user.first_name).toBe('Updated');

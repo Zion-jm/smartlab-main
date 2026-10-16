@@ -5,6 +5,7 @@ export type BorrowRequestOrder =
   | Prisma.BorrowRequestOrderByWithRelationInput[];
 
 export const borrowRequestInclude = {
+  returnEvents: { orderBy: { createdAt: 'desc' as const } },
   requester: {
     select: {
       id: true,

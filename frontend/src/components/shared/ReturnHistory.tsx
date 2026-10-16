@@ -1,0 +1,6 @@
+import type { ReturnEvent, ReturnItem } from '../../types/equipmentReturns';
+export default function ReturnHistory({events=[],items=[]}:{events?:ReturnEvent[];items?:ReturnItem[]}) {
+ const total=items.reduce((sum,i)=>sum+i.quantity,0),returned=items.reduce((sum,i)=>sum+(i.returnedGood??0)+(i.returnedDamaged??0),0);
+ if(!total)return null;
+ return <section className="space-y-3 border-t border-[#ead7d3] pt-4" aria-label="Return history"><h3 className="font-semibold text-[#321d1d]">Return history</h3><p className="text-sm">{returned} of {total} returned · {total-returned} outstanding</p>{events.length?events.map(event=><article key={event.id} className="rounded-xl border border-[#ead7d3] bg-[#fffaf8] p-3 text-sm"><p className="font-semibold">{new Date(event.createdAt).toLocaleString('en-PH',{timeZone:'Asia/Manila'})}</p><p>Recorded by: {event.actorName}</p><ul className="mt-2 space-y-1">{event.lines.map(line=><li key={line.itemId}>{line.equipmentName}: {line.good} good · {line.damaged} damaged · {line.outstandingAfter} outstanding after this return</li>)}</ul>{event.notes&&<p className="mt-2 whitespace-pre-wrap break-words"><strong>Notes: </strong>{event.notes}</p>}</article>):<p className="text-xs text-[#786565]">{returned?'Returned before detailed return history was introduced.':'No returns recorded yet.'}</p>}</section>;
+}

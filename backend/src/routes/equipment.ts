@@ -208,8 +208,8 @@ router.put(
         if (req.body.retiredAt !== undefined || (req.body.status !== undefined && req.body.status !== previous.status))
           throw new RequestActionError(409, 'Use Archive or Restore to change equipment lifecycle. Stock status is automatic.');
         const status = effectiveStatus({ retiredAt: previous.retiredAt, availableQuantity: totalQuantity - borrowedQuantity - damagedQuantity, borrowedQuantity, damagedQuantity });
-        const activeLoans = await tx.borrowRequestItem.aggregate({ _sum: { quantity: true }, where: { equipmentId: id, borrowRequest: { status: RequestStatus.BORROWED } } });
-        if ((activeLoans._sum.quantity ?? 0) !== borrowedQuantity)
+        const activeLoans = await tx.borrowRequestItem.aggregate({ _sum: { quantity: true, returnedGood: true, returnedDamaged: true }, where: { equipmentId: id, borrowRequest: { status: RequestStatus.BORROWED } } });
+        if (((activeLoans._sum.quantity ?? 0) - (activeLoans._sum.returnedGood ?? 0) - (activeLoans._sum.returnedDamaged ?? 0)) !== borrowedQuantity)
           throw new RequestActionError(409, 'Inventory does not match outstanding loans. Inventory review is required.');
         const equipment = await tx.equipment.update({
           where: { id }, data: {
@@ -285,7 +285,7 @@ router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN),
       }),
       prisma.borrowRequestItem.aggregate({
         _count: { id: true },
-        _sum: { quantity: true },
+        _sum: { quantity: true, returnedGood: true, returnedDamaged: true },
         where: {
           borrowRequest: {
             ...periodFilter,
@@ -304,11 +304,11 @@ router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN),
           status: { in: activeStatuses },
           items: { some: {} },
         },
-        select: { items: { select: { quantity: true } } },
+        select: { items: { select: { quantity: true, returnedGood: true, returnedDamaged: true } } },
       }),
       prisma.borrowRequest.findMany({
         where: { ...periodFilter, dateNeeded: { lt: startOfToday }, status: RequestStatus.BORROWED },
-        select: { items: { select: { quantity: true } } },
+        select: { items: { select: { quantity: true, returnedGood: true, returnedDamaged: true } } },
       }),
     ]);
 
@@ -329,16 +329,16 @@ router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN),
       },
       today: {
         itemsReserved: todayReserved._count.id ?? 0,
-        quantityReserved: todayReserved._sum.quantity ?? 0,
+        quantityReserved: (todayReserved._sum.quantity ?? 0) - (todayReserved._sum.returnedGood ?? 0) - (todayReserved._sum.returnedDamaged ?? 0),
       },
       pendingRequests,
       upcoming: {
         requests: upcomingReservations.length,
-        quantity: upcomingReservations.reduce((total, request) => total + request.items.reduce((sum, item) => sum + item.quantity, 0), 0),
+        quantity: upcomingReservations.reduce((total, request) => total + request.items.reduce((sum, item) => sum + item.quantity - item.returnedGood - item.returnedDamaged, 0), 0),
       },
       overdue: {
         requests: overdueReservations.length,
-        quantity: overdueReservations.reduce((total, request) => total + request.items.reduce((sum, item) => sum + item.quantity, 0), 0),
+        quantity: overdueReservations.reduce((total, request) => total + request.items.reduce((sum, item) => sum + item.quantity - item.returnedGood - item.returnedDamaged, 0), 0),
       },
     });
   } catch (error) { sendError(error, res); }

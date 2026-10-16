@@ -26,10 +26,12 @@ describe('session invalidation on local smartlab_test',()=>{
   test('unknown revocation target returns 404',async()=>{expect((await apiRequest('POST','/users/missing-'+tag+'/revoke-sessions',{},adminToken)).status).toBe(404)});
   test('profile-only edits preserve sessions',async()=>{const u=await create(),t=await loginAs(u.email,password);expect((await apiRequest('PUT','/users/'+u.id,{firstName:'Updated'},t)).status).toBe(200);expect((await me(t)).status).toBe(200)});
   test('general user update deactivates and revokes',async()=>{const u=await create(),t=await loginAs(u.email,password);expect((await apiRequest('PUT','/users/'+u.id,{status:'DEACTIVATED'},adminToken)).status).toBe(200);expect((await me(t)).status).toBe(401)});
-  test('role change revokes old token and uses current database role',async()=>{
-    const u=await create('STUDENT'),t=await loginAs(u.email,password);expect((await apiRequest('PUT','/users/'+u.id,{role:'ADMIN'},adminToken)).status).toBe(200);expect((await me(t)).status).toBe(401);
-    const fresh=await loginAs(u.email,password);expect((await apiRequest('GET','/users',null,fresh)).status).toBe(200);
-    await db.user.update({where:{id:u.id},data:{role:'STUDENT'}});expect((await apiRequest('GET','/users',null,fresh)).status).toBe(403);
+  test('role changes are rejected without revoking the existing session',async()=>{
+    const u=await create('STUDENT'),t=await loginAs(u.email,password);
+    expect((await apiRequest('PUT','/users/'+u.id,{role:'ADMIN'},adminToken)).status).toBe(400);
+    expect((await me(t)).status).toBe(200);
+    expect(await db.user.findUnique({where:{id:u.id}})).toMatchObject({role:'STUDENT'});
+    expect((await apiRequest('GET','/users',null,t)).status).toBe(403);
   });
   test('email change revokes old sessions',async()=>{const u=await create(),t=await loginAs(u.email,password);expect((await apiRequest('PUT','/users/'+u.id,{email:'new-'+u.email},adminToken)).status).toBe(200);expect((await me(t)).status).toBe(401)});
   test('non-admin cannot change own status or role',async()=>{const u=await create('STUDENT'),t=await loginAs(u.email,password);await apiRequest('PUT','/users/'+u.id,{role:'ADMIN',status:'DEACTIVATED'},t);expect(await db.user.findUnique({where:{id:u.id}})).toMatchObject({role:'STUDENT',status:'ACTIVE'});expect((await apiRequest('GET','/users',null,t)).status).toBe(403)});

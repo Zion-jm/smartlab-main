@@ -165,11 +165,13 @@ describe('Equipment adjustment authorization and cancellation', () => {
     expect(after.availableQuantity).toBe(before.availableQuantity);
     expect(after.borrowedQuantity).toBe(before.borrowedQuantity);
   });
-  test('normal cancellation rejects borrowed owners; concurrent admin cancellation restores stock once', async () => {
+  test('borrowed cancellation is rejected; concurrent admin returns restore stock once', async () => {
     const f = await fixture({ status: 'BORROWED' });
     expect((await apiRequest('PATCH', `/borrow-requests/${f.request.id}/cancel`, null, ownerToken)).status).toBe(409);
     await unchanged(f);
-    const results = await Promise.all([1, 2].map(() => apiRequest('PATCH', `/borrow-requests/${f.request.id}/cancel`, null, adminToken)));
+    expect((await apiRequest('PATCH', `/borrow-requests/${f.request.id}/cancel`, null, adminToken)).status).toBe(409);
+    await unchanged(f);
+    const results = await Promise.all([1, 2].map(() => apiRequest('PATCH', `/borrow-requests/${f.request.id}/return`, null, adminToken)));
     expect(results.filter(r => r.status === 200)).toHaveLength(1);
     expect(results.every(r => [200, 400, 409].includes(r.status))).toBe(true);
     expect(await prisma.equipment.findUnique({ where: { id: f.item.id } })).toMatchObject({ availableQuantity: 10, borrowedQuantity: 0 });

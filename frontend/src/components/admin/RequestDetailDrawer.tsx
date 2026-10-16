@@ -1,3 +1,4 @@
+import ReturnHistory from '../shared/ReturnHistory';
 import ConfirmationModal from '../shared/ConfirmationModal';
 import { UserRound, FileText, MapPin, CalendarDays, Clock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -33,6 +34,8 @@ type ApiBorrowRequest = {
     equipmentId: string;
     equipmentName: string;
     quantity: number;
+    returnedGood?: number;
+    returnedDamaged?: number;
     equipment?: {
       id: string;
       name?: string | null;
@@ -42,6 +45,7 @@ type ApiBorrowRequest = {
   timeStart?: string | null;
   timeEnd?: string | null;
   purpose?: string | null;
+  returnEvents?: import('../../types/equipmentReturns').ReturnEvent[];
   notes?: string | null;
   status: BorrowRequestStatus;
   rejectionNote?: string | null;
@@ -354,7 +358,8 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
           </section>
 
           <section className="space-y-3 text-xs text-[#786565]">
-            <h4 className="text-sm font-semibold text-[#321d1d]">Request activity</h4>
+            <ReturnHistory events={request.returnEvents} items={request.items}/>
+            <h4 className="mt-4 text-sm font-semibold text-[#321d1d]">Request activity</h4>
             {[
               { label: 'Submitted', value: formatDate(request.createdAt) },
               { label: 'Approved', value: formatDate(request.approvedAt) },

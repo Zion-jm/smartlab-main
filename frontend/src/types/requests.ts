@@ -11,6 +11,8 @@ export interface BorrowRequestItemSummary {
   equipmentId: string;
   equipmentName: string;
   quantity: number;
+  returnedGood?: number;
+  returnedDamaged?: number;
 }
 
 export interface BorrowRequest {
@@ -40,6 +42,7 @@ export interface BorrowRequest {
   timeStart?: string | null;
   timeEnd?: string | null;
   purpose?: string | null;
+  returnEvents?: import('../types/equipmentReturns').ReturnEvent[];
   notes?: string | null;
   status: BorrowRequestStatus;
   rejectionNote?: string | null;

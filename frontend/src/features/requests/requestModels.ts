@@ -71,6 +71,8 @@ export type ApiBorrowRequestItem = {
   id: string;
   equipmentId: string;
   quantity: number;
+  returnedGood?: number;
+  returnedDamaged?: number;
   equipment?: {
     id: string;
     name?: string | null;
@@ -100,6 +102,7 @@ export type ApiBorrowRequest = {
     } | null;
   } | null;
   purpose?: string | null;
+  returnEvents?: import('../../types/equipmentReturns').ReturnEvent[];
   notes?: string | null;
   rejectionNote?: string | null;
   room?: {

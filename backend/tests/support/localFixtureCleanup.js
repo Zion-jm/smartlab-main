@@ -12,6 +12,7 @@ async function cleanupFixtures({userIds=[],equipmentIds=[]}){
   try{
     await db.$transaction(async tx=>{
       await tx.auditLog.deleteMany({where:{OR:[{entityType:'User',entityId:{in:userIds}},{entityType:'Equipment',entityId:{in:equipmentIds}}]}});
+      await tx.studentAcademicRecord.deleteMany({where:{studentId:{in:userIds}}});
       await tx.user.deleteMany({where:{id:{in:userIds}}});
       await tx.equipment.deleteMany({where:{id:{in:equipmentIds}}});
     });

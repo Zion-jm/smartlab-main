@@ -29,5 +29,7 @@
   "immutableRoles.test.js",
   "adminAccessProtection.test.js",
   "adminAccessConcurrency.test.js",
-  "checkoutPolicy.test.js"
+  "checkoutPolicy.test.js",
+  "equipmentReturns.test.js",
+  "equipmentReturnValidation.test.js"
 ]

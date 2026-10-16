@@ -1,0 +1,9 @@
+const {recordEquipmentReturn}=require('../dist/services/equipmentReturnService');
+const request={id:'r',status:'BORROWED',updatedAt:new Date('2026-10-16T00:00:00Z'),items:[{id:'i',equipmentId:'e',quantity:4,returnedGood:1,returnedDamaged:0,equipment:{name:'Keyboard'}}]};
+const payload=(good,damaged,notes='')=>({submissionId:'12345678-1234-1234-1234-123456789012',expectedUpdatedAt:request.updatedAt.toISOString(),items:[{itemId:'i',good,damaged}],notes});
+function client(){return {equipmentReturn:{findUnique:jest.fn().mockResolvedValue(null)},borrowRequest:{findUnique:jest.fn().mockResolvedValue(request),updateMany:jest.fn()}};}
+test.each([[4,0,''],[-1,0,''],[0.5,0,''],[0,0,''],[0,1,'']])('invalid return %s good %s damaged does not write',async(good,damaged,notes)=>{const tx=client();await expect(recordEquipmentReturn(tx,'r','a',payload(good,damaged,notes))).rejects.toThrow();expect(tx.borrowRequest.updateMany).not.toHaveBeenCalled();});
+test('stale screen rejected before inventory changes',async()=>{const tx=client();await expect(recordEquipmentReturn(tx,'r','a',{...payload(1,0),expectedUpdatedAt:'old'})).rejects.toThrow('changed');expect(tx.borrowRequest.updateMany).not.toHaveBeenCalled();});
+test('replayed submission rejected before writes',async()=>{const tx=client();tx.equipmentReturn.findUnique.mockResolvedValue({id:'previous'});await expect(recordEquipmentReturn(tx,'r','a',payload(1,0))).rejects.toThrow('already recorded');expect(tx.borrowRequest.updateMany).not.toHaveBeenCalled();});
+test('legacy full return cannot silently finish a partial loan',async()=>{await expect(recordEquipmentReturn(client(),'r','a',{})).rejects.toThrow('return form');});
+test('duplicate item lines rejected',async()=>{const tx=client();const input=payload(1,0);input.items.push(input.items[0]);await expect(recordEquipmentReturn(tx,'r','a',input)).rejects.toThrow('each requested');});

@@ -1,3 +1,4 @@
+import { recordEquipmentReturn } from '../services/equipmentReturnService';
 import { assertBookingHours } from '../utils/manilaTime';
 import { studentStanding } from '../services/studentStanding';
 import { resolveRequestIntent } from '../services/requestTypePolicy';
@@ -146,10 +147,13 @@ router.get('/my-requests', authenticateToken, async (req, res) => {
         : null,
       academicYearId: request.academicYearId,
       termId: request.termId,
+      returnEvents: request.returnEvents,
       items: request.items.map((item) => ({
         id: item.id,
         equipmentId: item.equipmentId,
         quantity: item.quantity,
+        returnedGood: item.returnedGood,
+        returnedDamaged: item.returnedDamaged,
         equipment: item.equipment,
       })),
     }));
@@ -620,22 +624,21 @@ router.patch(
       const { id } = req.params;
 
       const request = await inventoryTransaction(prisma, async tx => {
-        const request = await changeLoanStatus(tx, id, 'return');
-        await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'RETURN', entityType: 'BorrowRequest', entityId: id });
+        const request = await recordEquipmentReturn(tx, id, req.user!.id, req.body ?? {});
         return request;
       });
 
       const returnedSummary = summarizeRequest(request as BorrowRequestWithRelations);
-      await sendEquipmentReturnedEmail(request.requester.email, buildEmailDetails(returnedSummary))
+      if (request.status === 'RETURNED') await sendEquipmentReturnedEmail(request.requester.email, buildEmailDetails(returnedSummary))
         .catch((err) => console.error('Email (returned) failed:', err));
 
       notifyUser(request.requestedBy, {
         type: NotificationType.SYSTEM_ANNOUNCEMENT,
         title: 'Return Confirmed ✓',
-        message: 'Your equipment return has been confirmed. Thank you!',
+        message: request.status === 'RETURNED' ? 'All equipment has been returned. View return history for condition and notes.' : 'A partial return was recorded. Some equipment remains outstanding. View return history for details.',
         borrowRequestId: request.id,
       });
-      res.json({ message: 'Request marked as returned', request: returnedSummary });
+      res.json({ message: request.status === 'RETURNED' ? 'All equipment returned' : 'Partial return recorded', request: returnedSummary });
     } catch (error) { sendError(error, res); }
   }
 );

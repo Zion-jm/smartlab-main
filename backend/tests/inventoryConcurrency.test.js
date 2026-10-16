@@ -103,6 +103,7 @@ describe('Inventory concurrency on local smartlab_test', () => {
   });
   test('simultaneous approvals cannot reset a completed borrow', async () => {
     const e=await item(),r=await request([e],'PENDING');
+    await prisma.borrowRequest.update({where:{id:r.id},data:{dateNeeded:new Date('2035-06-12T00:00:00+08:00'),timeStart:new Date('2035-06-12T08:00:00+08:00'),timeEnd:new Date('2035-06-12T09:00:00+08:00')}});
     oneWinner(await Promise.all([act(r,'approve'),act(r,'approve')]));
     expect((await act(r,'borrow')).status).toBe(200);
     expect((await act(r,'approve')).status).not.toBe(200);
