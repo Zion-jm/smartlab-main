@@ -65,6 +65,7 @@ export default function Toaster() {
             <div className={`min-w-0 flex-1 [overflow-wrap:anywhere] text-sm ${style.text}`}>
               {t.title && <p className="font-semibold">{t.title}</p>}
               <p>{t.message}</p>
+              {t.action && <button type="button" className="mt-2 min-h-10 rounded-lg border border-current px-3 font-semibold" onClick={t.action.onClick}>{t.action.label}</button>}
             </div>
             <button
               type="button"

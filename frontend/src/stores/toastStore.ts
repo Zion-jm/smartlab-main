@@ -8,11 +8,12 @@ export interface ToastItem {
   title?: string;
   message: string;
   duration: number;
+  action?: { label: string; onClick: () => void };
 }
 
 interface ToastState {
   toasts: ToastItem[];
-  show: (variant: ToastVariant, message: string, options?: { title?: string; duration?: number }) => string;
+  show: (variant: ToastVariant, message: string, options?: { title?: string; duration?: number; action?: {label: string; onClick: () => void} }) => string;
   dismiss: (id: string) => void;
 }
 
@@ -30,7 +31,7 @@ export const useToastStore = create<ToastState>((set, get) => ({
   show: (variant, message, options) => {
     const id = nextId();
     const duration = options?.duration ?? DEFAULT_DURATION;
-    const toast: ToastItem = { id, variant, message, title: options?.title, duration };
+    const toast: ToastItem = { id, variant, message, title: options?.title, action: options?.action, duration };
     set((state) => ({ toasts: [...state.toasts, toast] }));
 
     if (duration > 0) {
@@ -58,13 +59,13 @@ export const useToastStore = create<ToastState>((set, get) => ({
  *   toast.info('Heads up: two conflicting schedules found.')
  */
 export const toast = {
-  success: (message: string, options?: { title?: string; duration?: number }) =>
+  success: (message: string, options?: { title?: string; duration?: number; action?: {label: string; onClick: () => void} }) =>
     useToastStore.getState().show('success', message, options),
-  error: (message: string, options?: { title?: string; duration?: number }) =>
+  error: (message: string, options?: { title?: string; duration?: number; action?: {label: string; onClick: () => void} }) =>
     useToastStore.getState().show('error', message, options),
-  info: (message: string, options?: { title?: string; duration?: number }) =>
+  info: (message: string, options?: { title?: string; duration?: number; action?: {label: string; onClick: () => void} }) =>
     useToastStore.getState().show('info', message, options),
-  warning: (message: string, options?: { title?: string; duration?: number }) =>
+  warning: (message: string, options?: { title?: string; duration?: number; action?: {label: string; onClick: () => void} }) =>
     useToastStore.getState().show('warning', message, options),
   dismiss: (id: string) => useToastStore.getState().dismiss(id),
 };

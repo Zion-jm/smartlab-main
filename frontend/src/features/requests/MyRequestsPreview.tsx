@@ -10,7 +10,7 @@ import { type ApiBorrowRequest, type RequestRow } from './requestModels';
 import { type RequestsHookState } from './useRequestData';
 
 export function MyRequestsPreview({
-  pageSize, setPageSize, page, setPage, total, requestSearch, setRequestSearch, requestStatus, setRequestStatus,
+  history, setHistory, pageSize, setPageSize, page, setPage, total, requestSearch, setRequestSearch, requestStatus, setRequestStatus,
   rows,
   loading,
   error,
@@ -52,6 +52,7 @@ export function MyRequestsPreview({
           </button>
         </header>
         <div className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-end lg:px-5">
+        <label className="flex min-h-11 items-center gap-2 text-xs"><input type="checkbox" checked={history} onChange={event => setHistory(event.target.checked)} />Include completed requests from previous periods</label>
         <label className="min-w-0 flex-1 text-xs font-semibold text-[#57322d] sm:min-w-[240px] lg:max-w-[480px]">
           Search requests
           <input
@@ -107,7 +108,7 @@ export function MyRequestsPreview({
           const items = request.source.items ?? [];
           return <article key={request.id} className="overflow-hidden rounded-xl border border-[#ead7d3] bg-white">
             <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f1e6e3] bg-[#fffaf7] px-3 py-3">
-              <h3 className="text-sm font-semibold text-[#57322d]">{request.reference}</h3>
+              <h3 className="text-sm font-semibold text-[#57322d]">{request.reference}</h3><p className="text-xs text-[#786565]">{request.source.academicYear?.year}  /  {request.source.term?.name}</p>
               <span className={'whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ' + statusStyles[request.status]}>{statusLabel(request.status)}</span>
             </header>
             <div className="space-y-3 p-3 text-sm">
@@ -128,7 +129,7 @@ export function MyRequestsPreview({
       <DataTable embedded label="My requests" rows={filteredRows} rowKey={request => request.id}
         loading={loading} error={error} onRetry={reload} emptyMessage="No requests match the selected filters."
         columns={[{ id: '0', header: 'Reference', cell: request => <>
-                    <p className="font-semibold text-[#111827]">{request.reference}</p>
+                    <p className="font-semibold text-[#111827]">{request.reference}</p><p className="text-xs text-[#786565]">{request.source.academicYear?.year} / {request.source.term?.name}</p>
                     <p className="text-xs text-[#6b7280]">Filed {request.filed}</p>
                   </> },
 { id: '1', header: 'Location', cell: request => <>{request.room}</> },

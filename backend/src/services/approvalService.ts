@@ -1,3 +1,4 @@
+import { assertBorrowerEligible, assertNonemptyEquipment, assertRequestVersion } from './requestGuards';
 import { recordRequestCommunications } from './requestCommunications';
 import { recordRequiredAuditLog } from './auditLogService';
 import { assertEquipmentCapacity } from './inventoryCapacityService';
@@ -27,12 +28,15 @@ export async function assertRoomAvailable(tx: Prisma.TransactionClient, input: C
   }
 }
 
-export async function approveRequest(prisma: PrismaClient, input: { id: string; actorId: string; actorRole: UserRole; requireSchedule?: boolean }) {
+export async function approveRequest(prisma: PrismaClient, input: { id: string; actorId: string; actorRole: UserRole; requireSchedule?: boolean; expectedUpdatedAt?: string }) {
   if (input.actorRole !== UserRole.ADMIN) throw new RequestActionError(403, 'Administrator access required.');
   return inventoryTransaction(prisma, async tx => {
     const request = await tx.borrowRequest.findUnique({ where: { id: input.id }, include: borrowRequestInclude });
     if (!request) throw new RequestActionError(404, 'Request not found');
     if (request.status !== RequestStatus.PENDING) throw new RequestActionError(409, 'Only pending requests can be approved.');
+    if (input.expectedUpdatedAt !== undefined) assertRequestVersion(input.expectedUpdatedAt, request.updatedAt);
+    assertNonemptyEquipment(request);
+    await assertBorrowerEligible(tx, request);
     if (!request.timeStart) throw new RequestActionError(400, 'The request does not have a valid start time.');
     try { assertFutureManilaRequestWindow(request.dateNeeded, request.timeStart); }
     catch { throw new RequestActionError(409, 'This request can no longer be approved because its start time has passed or its date is unavailable.'); }

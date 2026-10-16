@@ -32,5 +32,6 @@
   "checkoutPolicy.test.js",
   "equipmentReturns.test.js",
   "equipmentReturnValidation.test.js",
-  "requestReliability.test.js"
+  "requestReliability.test.js",
+  "requestSafeguards.test.js"
 ]

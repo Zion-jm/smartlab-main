@@ -1,3 +1,4 @@
+import { assertBorrowerEligible, assertNonemptyEquipment, assertRequestVersion } from './requestGuards';
 import { validateCheckoutReason, assertCheckoutReservations } from './checkoutPolicy';
 import { effectiveStatus } from './equipmentLifecycle';
 import { BLOCKED_EQUIPMENT_STATUSES, MAX_QUANTITY } from './inventoryCapacityService';
@@ -21,7 +22,7 @@ export async function moveInventory(tx: Prisma.TransactionClient, items: { equip
   }
 }
 
-export async function changeLoanStatus(tx: Prisma.TransactionClient, id: string, action: 'borrow' | 'return', options: { reason?: unknown; now?: Date } = {}) {
+export async function changeLoanStatus(tx: Prisma.TransactionClient, id: string, action: 'borrow' | 'return', options: { reason?: unknown; now?: Date; expectedUpdatedAt?: string } = {}) {
   const request = await tx.borrowRequest.findUnique({ where: { id }, include: { items: true } });
   if (!request) throw new RequestActionError(404, 'Request not found');
   if (request.requestType === 'LABORATORY' && !request.items.length) throw new RequestActionError(400, 'Laboratory-only reservations do not have equipment to release or return.');
@@ -29,6 +30,9 @@ export async function changeLoanStatus(tx: Prisma.TransactionClient, id: string,
   if (request.status !== expected) throw new RequestActionError(409, 'Request status changed or this action was already completed. Refresh the request.');
   const now = options.now ?? new Date();
   if (action === 'borrow') {
+    if (options.expectedUpdatedAt !== undefined) assertRequestVersion(options.expectedUpdatedAt, request.updatedAt);
+    assertNonemptyEquipment(request);
+    await assertBorrowerEligible(tx, request);
     validateCheckoutReason(request, options.reason, now);
     await assertCheckoutReservations(tx, request, now);
   }

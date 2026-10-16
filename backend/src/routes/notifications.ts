@@ -1,3 +1,4 @@
+import { dataRevision } from '../services/dataUpdates';
 import { prisma } from '../db/prisma';
 import { sendError } from '../middleware/errors';
 import { Router } from 'express';
@@ -5,6 +6,10 @@ import { Router } from 'express';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+router.get('/data-revision', authenticateToken, async (req, res) => {
+  try { res.json({ revision: await dataRevision(prisma, req.user!) }); }
+  catch (error) { sendError(error, res); }
+});
 
 
 // GET /api/notifications — current user's notifications (latest 30)

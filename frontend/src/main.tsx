@@ -1,3 +1,4 @@
+import DataRefreshNotice from './components/DataRefreshNotice'
 import NotFoundPage from './pages/NotFoundPage'
 import PasswordRecoveryPage from './pages/PasswordRecoveryPage'
 import RequestLinkPage from './pages/RequestLinkPage'
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <Toaster />
+      <DataRefreshNotice />
       <Routes>
         <Route path="/forgot-password" element={<PasswordRecoveryPage key="forgot" />} />
         <Route path="/reset-password" element={<PasswordRecoveryPage key="reset" reset />} />

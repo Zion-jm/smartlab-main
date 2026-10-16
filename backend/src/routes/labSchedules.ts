@@ -1,3 +1,4 @@
+import { requireRequestVersion } from '../services/requestGuards';
 import { assertBookingHours } from '../utils/manilaTime';
 import { resolveRequestIntent } from '../services/requestTypePolicy';
 import { validateRequestItems } from '../services/inventoryCapacityService';
@@ -505,7 +506,8 @@ router.patch(
     try {
       const { requestId } = req.params;
 
-      const { request: updatedRequest, schedule } = await approveRequest(prisma, { id: requestId, actorId: req.user!.id, actorRole: req.user!.role, requireSchedule: true });
+      requireRequestVersion(req.body?.expectedUpdatedAt);
+      const { request: updatedRequest, schedule } = await approveRequest(prisma, { id: requestId, actorId: req.user!.id, actorRole: req.user!.role, requireSchedule: true, expectedUpdatedAt: req.body.expectedUpdatedAt });
 
       res.json({
         message: 'Schedule request approved and schedule created',

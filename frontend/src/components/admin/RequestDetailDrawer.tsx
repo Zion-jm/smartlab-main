@@ -177,7 +177,8 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
 
   const statusChip = statusMeta[request.status];
   const canApprove = request.status === 'PENDING';
-  const canBorrow = request.status === 'APPROVED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length));
+  const emptyEquipment = request.requestType === 'EQUIPMENT' && !request.items?.some(item => item.quantity > 0);
+  const canBorrow = !emptyEquipment && request.status === 'APPROVED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length));
   const canReturn = request.status === 'BORROWED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length));
   const canCancel = ['PENDING', 'APPROVED'].includes(request.status);
   const canDecline = request.status === 'PENDING' || request.status === 'APPROVED';
@@ -202,11 +203,11 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
     canApprove && (
       <button
         key="approve"
-        disabled={mutating || conflictBlocked || hasEquipmentShortages || equipmentAvailabilityLoading}
+        disabled={mutating || emptyEquipment || conflictBlocked || hasEquipmentShortages || equipmentAvailabilityLoading}
         onClick={() => onAction('approve')}
         className="px-4 py-2 rounded-full bg-[#065f46] text-white text-xs font-semibold disabled:opacity-60"
         title={
-          hasEquipmentShortages
+          emptyEquipment ? 'No equipment remains available. Modify this request or cancel it.' : hasEquipmentShortages
             ? 'Cannot approve: insufficient equipment availability'
             : conflictBlocked
             ? 'Cannot approve: schedule conflicts detected'
@@ -345,7 +346,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
                   </div>
                 ))
               ) : (
-                <p className="text-[#6b7280]">No equipment included</p>
+                <p className="text-[#6b7280]">{emptyEquipment ? 'No equipment remains. Ask the requester to modify this request or cancel it.' : 'No equipment included'}</p>
               )}
             </div>
           </section>

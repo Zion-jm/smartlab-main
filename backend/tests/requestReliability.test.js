@@ -39,6 +39,7 @@ async function payload() {
   return { submissionKey: randomUUID(), requestType: 'EQUIPMENT', usageLocation: 'Test room', facultyId: profile.id, purpose: 'Test', academicYearId: year.id, termId: term.id, dateNeeded: '2035-06-12', timeStart: '2035-06-12T09:00:00+08:00', timeEnd: '2035-06-12T10:00:00+08:00', items: [{ equipmentId: e.id, quantity: 2 }] };
 }
 async function call(body, path = '', role = 'FACULTY') {
+  if (/\/(approve|borrow|reject)$/.test(path) && !body.expectedUpdatedAt) { const current=await db.borrowRequest.findUnique({where:{id:path.split('/')[1]}}); body={...body,expectedUpdatedAt:current.updatedAt.toISOString()}; }
   const r = await fetch(base + path, { method: path ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json', 'x-test-role': role }, body: JSON.stringify(body) });
   return { status: r.status, data: await r.json() };
 }

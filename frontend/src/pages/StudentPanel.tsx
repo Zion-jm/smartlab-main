@@ -566,7 +566,7 @@ function RequestFormScaffold({
       submittingRef.current = true;
       setSubmitting(true);
       if (editingRequest) {
-        await borrowRequestApi.update(editingRequest.id, payload);
+        await borrowRequestApi.update(editingRequest.id, { ...payload, expectedUpdatedAt: editingRequest.updatedAt });
         setSubmitSuccess('Request updated successfully. The administrator will review the revised request.');
         toast.success('Request updated successfully.');
         await onUpdated?.();

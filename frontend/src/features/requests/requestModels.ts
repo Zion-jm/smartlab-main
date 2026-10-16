@@ -80,6 +80,9 @@ export type ApiBorrowRequestItem = {
 };
 
 export type ApiBorrowRequest = {
+  updatedAt?: string;
+  academicYear?: { year: string };
+  term?: { name: string };
   requestType?: 'LABORATORY' | 'EQUIPMENT';
   usageRoomId?: string | null;
   usageRoom?: { id: string; name?: string | null; roomNumber?: string | null } | null;

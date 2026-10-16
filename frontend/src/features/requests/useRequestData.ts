@@ -10,6 +10,7 @@ import type { BorrowRequestStatus } from '../../types/requests';
 import { type ApiBorrowRequest, type FacultySelectOption, normalizeBorrowRequest, type RequestResources, type RequestRow, type SelectOption } from './requestModels';
 
 export type RequestsHookState = {
+  history: boolean; setHistory: (value: boolean) => void;
   pageSize: number; setPageSize: (size: number) => void; page: number; setPage: (page: number) => void; total: number; requestSearch: string; setRequestSearch: (value: string) => void; requestStatus: BorrowRequestStatus | 'ALL'; setRequestStatus: (value: BorrowRequestStatus | 'ALL') => void;
   rows: RequestRow[];
   loading: boolean;
@@ -20,9 +21,10 @@ export type RequestsHookState = {
 export const useMyBorrowRequests = (): RequestsHookState => {
   const [page, setPage] = useState(1), [total, setTotal] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
+  const [history, setHistory] = useState(false);
   const [requestSearch, setRequestSearch] = useState('');
   const [requestStatus, setRequestStatus] = useState<BorrowRequestStatus | 'ALL'>('ALL');
-  const pageReset1Inputs = [requestSearch, requestStatus, pageSize];
+  const pageReset1Inputs = [requestSearch, requestStatus, pageSize, history];
   const [pageReset1Previous, setpageReset1Previous] = useState<unknown[] | null>(null);
   if (!pageReset1Previous || pageReset1Inputs.some((value, index) => !Object.is(value, pageReset1Previous[index]))) {
     setpageReset1Previous(pageReset1Inputs);
@@ -36,7 +38,7 @@ export const useMyBorrowRequests = (): RequestsHookState => {
   const performLoadRequests = useCallback(async () => {
     const version = ++requestVersion.current;
     
-      return borrowRequestApi.getMyPage({ page, pageSize, search: requestSearch, status: requestStatus }).then((response) => {
+      return borrowRequestApi.getMyPage({ page, pageSize, search: requestSearch, status: requestStatus, history }).then((response) => {
       if (version !== requestVersion.current) return;
       setTotal(response.data.total);
       if (page > 1 && response.data.total <= (page - 1) * pageSize) setPage(Math.max(1, Math.ceil(response.data.total / pageSize)));
@@ -51,10 +53,10 @@ export const useMyBorrowRequests = (): RequestsHookState => {
     }).finally(() => {
       if (version === requestVersion.current) setLoading(false);
     });
-  }, [page, pageSize, requestSearch, requestStatus]);
+  }, [page, pageSize, requestSearch, requestStatus, history]);
 
   // Automatic loads reset pending state when their query changes; refreshes reset it in the event.
-  const loadRequestsInputs = [page, pageSize, requestSearch, requestStatus];
+  const loadRequestsInputs = [page, pageSize, requestSearch, requestStatus, history];
   const [loadRequestsSource, setloadRequestsSource] = useState(loadRequestsInputs);
   if (loadRequestsInputs.some((value, index) => !Object.is(value, loadRequestsSource[index]))) {
     setloadRequestsSource(loadRequestsInputs);
@@ -70,7 +72,7 @@ export const useMyBorrowRequests = (): RequestsHookState => {
   useEffect(() => { void performLoadRequests(); }, [performLoadRequests]);
 
   return {
-    pageSize, setPageSize, page, setPage, total, requestSearch, setRequestSearch, requestStatus, setRequestStatus,
+    history, setHistory, pageSize, setPageSize, page, setPage, total, requestSearch, setRequestSearch, requestStatus, setRequestStatus,
     rows,
     loading,
     error,

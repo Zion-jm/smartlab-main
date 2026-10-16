@@ -16,6 +16,9 @@ export interface BorrowRequestItemSummary {
 }
 
 export interface BorrowRequest {
+  updatedAt?: string;
+  academicYear?: { year: string };
+  term?: { name: string };
   requestType?: 'LABORATORY' | 'EQUIPMENT';
   usageLocation?: string | null;
   usageRoom?: { id: string; name?: string | null; roomNumber?: string | null } | null;

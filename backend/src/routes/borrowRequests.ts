@@ -1,3 +1,4 @@
+import { assertRequestVersion, requireRequestVersion } from '../services/requestGuards';
 import { submissionIdentity, findSubmission, DuplicateRequestError } from '../services/requestSubmission';
 import { recordRequestCommunications } from '../services/requestCommunications';
 import { recordEquipmentReturn } from '../services/equipmentReturnService';
@@ -92,16 +93,12 @@ router.get(
 router.get('/my-requests', authenticateToken, async (req, res) => {
   try {
     const paging = pagination(req.query);
+    const activePeriod = await resolveAcademicPeriodSelection(prisma, {}, req.user!.role);
+    const history = req.query.history === 'true';
     const where: Prisma.BorrowRequestWhereInput = {
-        requestedBy: req.user!.id,
-        ...academicPeriodWhere(
-          await resolveAcademicPeriodSelection(
-            prisma,
-            getPeriodSelectionFromQuery(req.query as Record<string, unknown>),
-            req.user!.role
-          )
-        ),
-      };
+      requestedBy: req.user!.id,
+      ...(history ? {} : { OR: [academicPeriodWhere(activePeriod), {status: {in: [RequestStatus.PENDING, RequestStatus.APPROVED, RequestStatus.BORROWED]}}] }),
+    };
     const personalFilters = buildBaseFilters({ search: typeof req.query.search === 'string' ? req.query.search : undefined });
     if (req.query.status && req.query.status !== 'ALL') where.status = req.query.status as RequestStatus;
     where.AND = personalFilters;
@@ -119,6 +116,9 @@ router.get('/my-requests', authenticateToken, async (req, res) => {
       usageLocation: request.usageLocation,
       id: request.id,
       createdAt: request.createdAt.toISOString(),
+      updatedAt: request.updatedAt.toISOString(),
+      academicYear: request.academicYear,
+      term: request.term,
       dateNeeded: request.dateNeeded.toISOString(),
       timeStart: request.timeStart?.toISOString() || null,
       timeEnd: request.timeEnd?.toISOString() || null,
@@ -171,7 +171,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
       where: {
         id,
         AND: [requestVisibility(req.user!)],
-        ...academicPeriodWhere(periodSelection),
+        OR: [{requestedBy: req.user!.id}, academicPeriodWhere(periodSelection)],
       },
       include: { ...borrowRequestInclude, reviewer: { select: { firstName: true, lastName: true } } },
     });
@@ -365,6 +365,8 @@ router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.
     const requestYearLevel = req.user!.role === UserRole.STUDENT ? existingRequest.yearLevel : yearLevel;
 
     const updatedRequest = await inventoryTransaction(prisma, async tx => {
+    const current = await tx.borrowRequest.findUniqueOrThrow({where:{id}});
+    assertRequestVersion(req.body.expectedUpdatedAt, current.updatedAt);
     const requestedEquipmentIds: string[] = items.map(item => item.equipmentId);
     if (requestedEquipmentIds.length > 0) {
       const { start: dateStart, end: dateEnd } = manilaDayBounds(dateNeeded);
@@ -385,7 +387,7 @@ router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.
     }
 
     const saved = await tx.borrowRequest.update({
-      where: { id, status: RequestStatus.PENDING },
+      where: { id, status: RequestStatus.PENDING, updatedAt: current.updatedAt },
       data: {
         facultyId: facultyId || null,
         programId: requestProgramId,
@@ -442,8 +444,9 @@ router.patch(
     try {
       const { id } = req.params;
       const adminId = req.user!.id;
+      requireRequestVersion(req.body?.expectedUpdatedAt);
 
-      const { request: updatedRequest, schedule } = await approveRequest(prisma, { id, actorId: adminId, actorRole: req.user!.role });
+      const { request: updatedRequest, schedule } = await approveRequest(prisma, { id, actorId: adminId, actorRole: req.user!.role, expectedUpdatedAt: req.body.expectedUpdatedAt });
       if (schedule) {
         const approvedSummary = summarizeRequest(updatedRequest);
         res.json({
@@ -503,13 +506,14 @@ router.patch(
       const request = await inventoryTransaction(prisma, async tx => {
         const existing = await tx.borrowRequest.findUnique({
           where: { id },
-          select: { status: true, requestType: true },
+          select: { status: true, requestType: true, updatedAt: true },
         });
 
         if (!existing) {
           throw new RequestActionError(404, 'Request not found');
         }
 
+        assertRequestVersion(req.body?.expectedUpdatedAt, existing.updatedAt);
         ensureTransition(existing.status, RequestStatus.REJECTED);
 
         const request = await tx.borrowRequest.update({
@@ -548,7 +552,8 @@ router.patch(
       const { id } = req.params;
 
       const request = await inventoryTransaction(prisma, async tx => {
-        const request = await changeLoanStatus(tx, id, 'borrow', { reason: req.body?.reason });
+        requireRequestVersion(req.body?.expectedUpdatedAt);
+        const request = await changeLoanStatus(tx, id, 'borrow', { reason: req.body?.reason, expectedUpdatedAt: req.body.expectedUpdatedAt });
         await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'BORROW', entityType: 'BorrowRequest', entityId: id, details: { reason: typeof req.body?.reason === 'string' ? req.body.reason.trim() : null, recordedAt: request.borrowedAt, scheduledDate: request.dateNeeded, scheduledStart: request.timeStart, scheduledEnd: request.timeEnd } });
         await recordRequestCommunications(tx, request, 'borrowed');
         return request;

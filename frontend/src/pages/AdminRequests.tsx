@@ -140,9 +140,10 @@ function RequestTableRow({ request, onOpen, onSelect, onAction }: {
   onAction: (request: ApiBorrowRequest, action: 'approve' | 'borrow' | 'return') => Promise<void>;
 }) {
               const badge = statusMeta[request.status];
+              const emptyEquipment = request.requestType === 'EQUIPMENT' && !request.items?.length;
               const inlineActions = [
-                { label: 'Approve', action: 'approve' as const, show: request.status === 'PENDING' },
-                { label: 'Borrowed', action: 'borrow' as const, show: request.status === 'APPROVED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length)) },
+                { label: 'Approve', action: 'approve' as const, show: !emptyEquipment && request.status === 'PENDING' },
+                { label: 'Borrowed', action: 'borrow' as const, show: !emptyEquipment && request.status === 'APPROVED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length)) },
                 { label: 'Returned', action: 'return' as const, show: request.status === 'BORROWED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length)) },
               ].filter((item) => item.show);
 
@@ -165,7 +166,7 @@ function RequestTableRow({ request, onOpen, onSelect, onAction }: {
                         {request.items.map((item) => `${item.equipmentName} (x${item.quantity})`).join(', ')}
                       </span>
                     ) : (
-                      <span className="text-[#6b7280]">—</span>
+                      <span className="text-[#6b7280]">{emptyEquipment ? "No equipment remains. Modify or cancel." : "No equipment requested"}</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -560,15 +561,15 @@ export default function AdminRequests() {
     try {
       setMutatingId(request.id);
       if (action === 'approve') {
-        await borrowRequestApi.approve(request.id);
+        await borrowRequestApi.approve(request.id, { expectedUpdatedAt: request.updatedAt });
       } else if (action === 'borrow') {
-        await borrowRequestApi.borrow(request.id, { reason });
+        await borrowRequestApi.borrow(request.id, { reason, expectedUpdatedAt: request.updatedAt });
         setCheckoutWarning(null);
         setCheckoutReason('');
         setSelectedRequest(null);
 
       } else if (action === 'reject') {
-        await borrowRequestApi.reject(request.id, { reason });
+        await borrowRequestApi.reject(request.id, { reason, expectedUpdatedAt: request.updatedAt });
       } else if (action === 'cancel') {
         await borrowRequestApi.cancel(request.id);
       }

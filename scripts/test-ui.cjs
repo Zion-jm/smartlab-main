@@ -13,7 +13,7 @@ async function main(){
  await run(path.join(root,'backend/scripts/verify-consolidation.cjs'),env);
  const vite=path.join(path.dirname(require.resolve('vite/package.json',{paths:[path.join(root,'frontend')]})),'bin/vite.js');
  const server=spawn(process.execPath,[vite,'--host','127.0.0.1','--port','5174','--strictPort'],{cwd:path.join(root,'frontend'),env:{...env,NODE_ENV:'development'},stdio:'ignore',windowsHide:true});
- try {let ready=false;for(let i=0;i<300;i++){if(server.exitCode!==null)throw Error('Vite fixture server exited');try{if((await fetch('http://127.0.0.1:5174/tests/table-harness.html')).ok){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,100))}if(!ready)throw Error('Vite readiness timed out');await run(path.join(root,'backend/scripts/verify-table-component.cjs'),env)}
+ try {let ready=false;for(let i=0;i<300;i++){if(server.exitCode!==null)throw Error('Vite fixture server exited');try{if((await fetch('http://127.0.0.1:5174/tests/table-harness.html')).ok){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,100))}if(!ready)throw Error('Vite readiness timed out');await run(path.join(root,'backend/scripts/verify-table-component.cjs'),env);await run(path.join(root,'backend/scripts/verify-refresh-notice.cjs'),env)}
  finally {server.kill();await Promise.race([new Promise(r=>server.once('exit',r)),new Promise(r=>setTimeout(r,5000))]);if(server.exitCode===null)server.kill('SIGKILL')}
 }
 main().catch(error=>{console.error(error.message);process.exitCode=1});
