@@ -1,3 +1,5 @@
+import { submissionIdentity, findSubmission, DuplicateRequestError } from '../services/requestSubmission';
+import { recordRequestCommunications } from '../services/requestCommunications';
 import { recordEquipmentReturn } from '../services/equipmentReturnService';
 import { assertBookingHours } from '../utils/manilaTime';
 import { studentStanding } from '../services/studentStanding';
@@ -13,27 +15,17 @@ import { inventoryTransaction } from '../services/inventoryTransaction';
 import { changeLoanStatus } from '../services/inventoryMovementService';
 import { Router } from 'express';
 import { cancelBorrowRequest, RequestActionError } from '../services/cancelBorrowRequestService';
-import { Prisma, RequestStatus, UserRole, NotificationType, ScheduleType } from '@prisma/client';
+import { Prisma, RequestStatus, UserRole, ScheduleType } from '@prisma/client';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
-import {
-  sendRequestCancelledEmail,
-  sendAdminRequestEmail,
-  sendRequestSubmittedEmail,
-  sendRequestApprovedEmail,
-  sendRequestRejectedEmail,
-  sendEquipmentBorrowedEmail,
-  sendEquipmentReturnedEmail,
-} from '../services/email';
+
 import {
   borrowRequestInclude,
   summarizeRequest,
-  buildEmailDetails,
   buildBaseFilters,
   ensureTransition,
   sortMapping,
   type BorrowRequestWithRelations,
 } from '../services/borrowRequestService';
-import { notifyUser, notifyAdmins } from '../services/notificationService';
 import { recordRequiredAuditLog } from '../services/auditLogService';
 import {
   academicPeriodWhere,
@@ -206,6 +198,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
 router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FACULTY), async (req, res) => {
   try {
+    const identity = submissionIdentity(req.body);
+    const replay = await findSubmission(prisma, req.user!.id, identity);
+    if (replay) { res.status(200).json({ message: 'Request already submitted', request: replay }); return; }
     const {
       facultyId, programId, subjectId, yearLevel,
       dateNeeded, timeStart, timeEnd,
@@ -225,33 +220,6 @@ router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FA
       return;
     }
 
-    // ── Duplicate detection ───────────────────────────────────────────────────
-    // Reject if the same requester already has a PENDING request that includes
-    // any of the same equipment items on the same calendar date.
-    if (items && items.length > 0) {
-      const requestedEquipmentIds: string[] = items.map((i: any) => i.equipmentId);
-      const { start: dateStart, end: dateEnd } = manilaDayBounds(dateNeeded);
-
-      const existingDuplicate = await prisma.borrowRequest.findFirst({
-        where: {
-          requestedBy: req.user!.id,
-          status: RequestStatus.PENDING,
-          dateNeeded: { gte: dateStart, lt: dateEnd },
-          items: { some: { equipmentId: { in: requestedEquipmentIds } } },
-          ...academicPeriodWhere(periodSelection),
-        },
-      });
-
-      if (existingDuplicate) {
-        res.status(409).json({
-          error: 'You already have a pending request for one or more of these equipment items on the same date.',
-          existingRequestId: existingDuplicate.id,
-        });
-        return;
-      }
-    }
-    // ─────────────────────────────────────────────────────────────────────────
-
     assertBookingHours(timeStart, timeEnd);
     let requestProgramId = programId;
     let requestYearLevel = yearLevel;
@@ -262,6 +230,7 @@ router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FA
     }
 
     const requestData: any = {
+      ...identity,
       requestedBy: req.user!.id,
       facultyId, programId: requestProgramId, subjectId, yearLevel: requestYearLevel,
       dateNeeded: manilaDayBounds(dateNeeded).start,
@@ -284,6 +253,29 @@ router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FA
     }
 
     const request = await inventoryTransaction(prisma, async tx => {
+    // Serializable retries make the duplicate read and creation one atomic decision.
+    const replay = await findSubmission(tx, req.user!.id, identity);
+    if (replay) return replay;
+    if (items && items.length > 0) {
+      const requestedEquipmentIds: string[] = items.map((i: any) => i.equipmentId);
+      const { start: dateStart, end: dateEnd } = manilaDayBounds(dateNeeded);
+
+      const existingDuplicate = await tx.borrowRequest.findFirst({
+        where: {
+          requestedBy: req.user!.id,
+          status: RequestStatus.PENDING,
+          dateNeeded: { gte: dateStart, lt: dateEnd },
+          items: { some: { equipmentId: { in: requestedEquipmentIds } } },
+          ...academicPeriodWhere(periodSelection),
+        },
+      });
+
+      if (existingDuplicate) {
+        throw new DuplicateRequestError(existingDuplicate.id);
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     if (req.user!.role === UserRole.STUDENT) Object.assign(requestData, await studentStanding(tx, req.user!.id, resolvedAcademicYearId));
     const saved = await tx.borrowRequest.create({
       data: requestData,
@@ -303,22 +295,21 @@ router.post('/', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.FA
     }
 
     await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'CREATE', entityType: 'BorrowRequest', entityId: saved.id, details: { requestType: intent.requestType, roomId: intent.roomId, usageRoomId: intent.usageRoomId, usageLocation: intent.usageLocation } });
+    await recordRequestCommunications(tx, saved, 'submitted');
     return saved;
     });
 
-    const submittedDetails = buildEmailDetails(summarizeRequest(request as BorrowRequestWithRelations));
-    await Promise.all([sendRequestSubmittedEmail(req.user!.email, submittedDetails), sendAdminRequestEmail(submittedDetails, 'submitted')])
-      .catch(() => console.error('Email enqueue failed after request submission.'));
-
-    notifyAdmins({
-      type: NotificationType.REQUEST_PENDING,
-      title: 'New Borrow Request',
-      message: `${req.user!.firstName} ${req.user!.lastName} submitted a new borrow request.`,
-      borrowRequestId: request.id,
-    });
-
     res.status(201).json({ message: 'Borrow request created successfully', request });
-  } catch (error) { sendError(error, res); }
+  } catch (error) {
+    if (error instanceof DuplicateRequestError) { res.status(409).json({ error: error.message, code: error.code, existingRequestId: error.existingRequestId }); return; }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      try {
+        const replay = await findSubmission(prisma, req.user!.id, submissionIdentity(req.body));
+        if (replay) { res.status(200).json({ message: 'Request already submitted', request: replay }); return; }
+      } catch (replayError) { sendError(replayError, res); return; }
+    }
+    sendError(error, res);
+  }
 });
 
 // ─── PUT /:id — Owner edits a pending request ────────────────────────────────
@@ -369,10 +360,15 @@ router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.
       return;
     }
 
+    // Editing a request must not replace its saved academic standing with today's profile.
+    const requestProgramId = req.user!.role === UserRole.STUDENT ? existingRequest.programId : programId;
+    const requestYearLevel = req.user!.role === UserRole.STUDENT ? existingRequest.yearLevel : yearLevel;
+
+    const updatedRequest = await inventoryTransaction(prisma, async tx => {
     const requestedEquipmentIds: string[] = items.map(item => item.equipmentId);
     if (requestedEquipmentIds.length > 0) {
       const { start: dateStart, end: dateEnd } = manilaDayBounds(dateNeeded);
-      const duplicateRequest = await prisma.borrowRequest.findFirst({
+      const duplicateRequest = await tx.borrowRequest.findFirst({
         where: {
           requestedBy: req.user!.id,
           id: { not: id },
@@ -384,19 +380,10 @@ router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.
       });
 
       if (duplicateRequest) {
-        res.status(409).json({
-          error: 'You already have another pending request for one or more of these equipment items on the same date.',
-          existingRequestId: duplicateRequest.id,
-        });
-        return;
+        throw new DuplicateRequestError(duplicateRequest.id);
       }
     }
 
-    // Editing a request must not replace its saved academic standing with today's profile.
-    const requestProgramId = req.user!.role === UserRole.STUDENT ? existingRequest.programId : programId;
-    const requestYearLevel = req.user!.role === UserRole.STUDENT ? existingRequest.yearLevel : yearLevel;
-
-    const updatedRequest = await inventoryTransaction(prisma, async tx => {
     const saved = await tx.borrowRequest.update({
       where: { id, status: RequestStatus.PENDING },
       data: {
@@ -433,22 +420,16 @@ router.put('/:id', authenticateToken, authorizeRoles(UserRole.STUDENT, UserRole.
     }
 
     await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'UPDATE', entityType: 'BorrowRequest', entityId: saved.id, details: { requestType: intent.requestType, previousRequestType: existingRequest.requestType, roomId: intent.roomId, usageRoomId: intent.usageRoomId, usageLocation: intent.usageLocation } });
+    await recordRequestCommunications(tx, saved, 'updated');
     return saved;
-    });
-
-    await sendAdminRequestEmail(buildEmailDetails(summarizeRequest(updatedRequest as BorrowRequestWithRelations)), 'updated', updatedRequest.updatedAt.toISOString()).catch(() => console.error('Email enqueue failed after request edit.'));
-    notifyAdmins({
-      type: NotificationType.REQUEST_PENDING,
-      title: 'Borrow Request Updated',
-      message: `${req.user!.firstName} ${req.user!.lastName} updated a pending borrow request.`,
-      borrowRequestId: updatedRequest.id,
     });
 
     res.json({
       message: 'Borrow request updated successfully',
       request: summarizeRequest(updatedRequest as BorrowRequestWithRelations),
     });
-  } catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') { res.status(409).json({ error: 'Request changed. Refresh and try again.' }); return; } sendError(error, res); }
+  } catch (error) {
+    if (error instanceof DuplicateRequestError) { res.status(409).json({ error: error.message, code: error.code, existingRequestId: error.existingRequestId }); return; } if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') { res.status(409).json({ error: 'Request changed. Refresh and try again.' }); return; } sendError(error, res); }
 });
 
 // ─── PATCH /:id/approve — Approve (Admin only) ────────────────────────────────
@@ -465,15 +446,6 @@ router.patch(
       const { request: updatedRequest, schedule } = await approveRequest(prisma, { id, actorId: adminId, actorRole: req.user!.role });
       if (schedule) {
         const approvedSummary = summarizeRequest(updatedRequest);
-        await sendRequestApprovedEmail(updatedRequest.requester.email, buildEmailDetails(approvedSummary))
-          .catch((err) => console.error('Email (approved) failed:', err));
-
-        notifyUser(updatedRequest.requestedBy, {
-          type: NotificationType.REQUEST_APPROVED,
-          title: 'Request Approved ✓',
-          message: 'Your request has been approved. Open it to review the reservation and any equipment collection details.',
-          borrowRequestId: updatedRequest.id,
-        });
         res.json({
           message: 'Request approved and lab schedule created successfully',
           request: approvedSummary,
@@ -506,15 +478,6 @@ router.patch(
         const request = updatedRequest;
 
         const regularApprovedSummary = summarizeRequest(request);
-        await sendRequestApprovedEmail(request.requester.email, buildEmailDetails(regularApprovedSummary))
-          .catch((err) => console.error('Email (approved) failed:', err));
-
-        notifyUser(request.requestedBy, {
-          type: NotificationType.REQUEST_APPROVED,
-          title: 'Request Approved ✓',
-          message: 'Your borrow request has been approved. Please proceed to collect the equipment.',
-          borrowRequestId: request.id,
-        });
         res.json({ message: 'Request approved successfully', request: regularApprovedSummary });
       }
     } catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') { res.status(409).json({ error: 'Request changed. Refresh and try again.' }); return; } sendError(error, res); }
@@ -564,19 +527,11 @@ router.patch(
         const releasedSchedules = await tx.labSchedule.findMany({ where: { borrowRequestId: id } });
         await tx.labSchedule.deleteMany({ where: { borrowRequestId: id } });
         await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'REJECT', entityType: 'BorrowRequest', entityId: id, details: { reason, releasedSchedules: JSON.parse(JSON.stringify(releasedSchedules)) } });
+        await recordRequestCommunications(tx, request, 'rejected');
         return request;
       });
 
       const rejectedSummary = summarizeRequest(request);
-      await sendRequestRejectedEmail(request.requester.email, buildEmailDetails(rejectedSummary), reason)
-        .catch((err) => console.error('Email (rejected) failed:', err));
-
-      notifyUser(request.requestedBy, {
-        type: NotificationType.REQUEST_REJECTED,
-        title: 'Request Declined',
-        message: `Your borrow request was declined. Reason: ${reason}`,
-        borrowRequestId: request.id,
-      });
       res.json({ message: 'Request declined successfully', request: rejectedSummary });
     } catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') { res.status(409).json({ error: 'Request changed. Refresh and try again.' }); return; } sendError(error, res); }
   }
@@ -595,19 +550,11 @@ router.patch(
       const request = await inventoryTransaction(prisma, async tx => {
         const request = await changeLoanStatus(tx, id, 'borrow', { reason: req.body?.reason });
         await recordRequiredAuditLog(tx, { actorUserId: req.user!.id, action: 'BORROW', entityType: 'BorrowRequest', entityId: id, details: { reason: typeof req.body?.reason === 'string' ? req.body.reason.trim() : null, recordedAt: request.borrowedAt, scheduledDate: request.dateNeeded, scheduledStart: request.timeStart, scheduledEnd: request.timeEnd } });
+        await recordRequestCommunications(tx, request, 'borrowed');
         return request;
       });
 
       const borrowedSummary = summarizeRequest(request as BorrowRequestWithRelations);
-      await sendEquipmentBorrowedEmail(request.requester.email, buildEmailDetails(borrowedSummary))
-        .catch((err) => console.error('Email (borrowed) failed:', err));
-
-      notifyUser(request.requestedBy, {
-        type: NotificationType.EQUIPMENT_DUE,
-        title: 'Equipment Borrowed',
-        message: 'Your equipment has been marked as borrowed. Please return it in good condition.',
-        borrowRequestId: request.id,
-      });
       res.json({ message: 'Request marked as borrowed', request: borrowedSummary });
     } catch (error) { sendError(error, res); }
   }
@@ -625,19 +572,11 @@ router.patch(
 
       const request = await inventoryTransaction(prisma, async tx => {
         const request = await recordEquipmentReturn(tx, id, req.user!.id, req.body ?? {});
+        await recordRequestCommunications(tx, request, 'returned');
         return request;
       });
 
       const returnedSummary = summarizeRequest(request as BorrowRequestWithRelations);
-      if (request.status === 'RETURNED') await sendEquipmentReturnedEmail(request.requester.email, buildEmailDetails(returnedSummary))
-        .catch((err) => console.error('Email (returned) failed:', err));
-
-      notifyUser(request.requestedBy, {
-        type: NotificationType.SYSTEM_ANNOUNCEMENT,
-        title: 'Return Confirmed ✓',
-        message: request.status === 'RETURNED' ? 'All equipment has been returned. View return history for condition and notes.' : 'A partial return was recorded. Some equipment remains outstanding. View return history for details.',
-        borrowRequestId: request.id,
-      });
       res.json({ message: request.status === 'RETURNED' ? 'All equipment returned' : 'Partial return recorded', request: returnedSummary });
     } catch (error) { sendError(error, res); }
   }
@@ -649,26 +588,10 @@ router.patch('/:id/cancel', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { cancelledRequest, wasBorrowed: isBorrowed } = await inventoryTransaction(prisma, (tx) =>
-      cancelBorrowRequest(tx, { id, actorId: req.user!.id, actorRole: req.user!.role })
-    );
-
-    const cancelledDetails = buildEmailDetails(summarizeRequest(cancelledRequest as BorrowRequestWithRelations));
-    await sendRequestCancelledEmail(cancelledRequest.requester.email, cancelledDetails).catch(() => console.error('Cancellation email enqueue failed.'));
-    if (req.user!.role !== 'ADMIN') {
-      await sendAdminRequestEmail(cancelledDetails, 'cancelled').catch(() => console.error('Admin cancellation email enqueue failed.'));
-      void notifyAdmins({ type: NotificationType.SYSTEM_ANNOUNCEMENT, title: 'Borrow Request Cancelled',
-        message: 'A requester cancelled their borrow request. No further approval is needed.', borrowRequestId: cancelledRequest.id });
-    }
-    notifyUser(cancelledRequest.requestedBy, {
-      type: NotificationType.SYSTEM_ANNOUNCEMENT,
-      title: 'Request Cancelled',
-      message: isBorrowed
-        ? 'Your borrowed request has been cancelled by an admin. Equipment has been returned to inventory.'
-        : 'Your borrow request has been cancelled.',
-      borrowRequestId: cancelledRequest.id,
+    const { cancelledRequest } = await inventoryTransaction(prisma, async tx => {
+      const result = await cancelBorrowRequest(tx, { id, actorId: req.user!.id, actorRole: req.user!.role });
+      return result;
     });
-
 
     res.json({ message: 'Request cancelled successfully', request: summarizeRequest(cancelledRequest as BorrowRequestWithRelations) });
   } catch (error) { sendError(error, res); }

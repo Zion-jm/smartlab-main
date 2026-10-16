@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../db/prisma';
 import { NotificationType, UserRole, UserStatus } from '@prisma/client';
 
@@ -26,4 +27,13 @@ export const notifyAdmins = (data: Notice): Promise<void> => track(async () => {
 // Stop accepting HTTP requests and await active handlers before draining.
 export async function drainNotifications(): Promise<void> {
   while (pending.size) await Promise.all([...pending]);
+}
+
+// Required writes: failures propagate so the domain transaction rolls back.
+export async function notifyUserInTransaction(tx: Prisma.TransactionClient, userId: string, data: Notice) {
+  await tx.notification.create({ data: { userId, ...data } });
+}
+export async function notifyAdminsInTransaction(tx: Prisma.TransactionClient, data: Notice) {
+  const admins = await tx.user.findMany({ where: { role: UserRole.ADMIN, status: UserStatus.ACTIVE }, select: { id: true } });
+  if (admins.length) await tx.notification.createMany({ data: admins.map(({ id }) => ({ userId: id, ...data })) });
 }

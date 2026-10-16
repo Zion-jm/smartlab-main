@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import ReadOnlyScheduleExplorer from '../features/requests/ReadOnlyScheduleExplorer';
 import UsageLocationField from '../features/requests/UsageLocationField';
 import RequestSubmittedDialog from '../features/requests/RequestSubmittedDialog';
@@ -288,6 +289,8 @@ function RequestFormScaffold({
     purpose: editingRequest?.purpose ?? '',
   }));
   const [submitting, setSubmitting] = useState(false);
+  const submission = useRef<{ payload: string; key: string } | null>(null);
+  const submittingRef = useRef(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [locationReset, setLocationReset] = useState(0);
@@ -439,6 +442,7 @@ function RequestFormScaffold({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (submittingRef.current) return;
     if (!academicContext) {
       setSubmitError('Academic context is unavailable. Please refresh and try again.');
       return;
@@ -494,6 +498,7 @@ function RequestFormScaffold({
     try {
       setSubmitError(null);
       setSubmitSuccess(null);
+      submittingRef.current = true;
       setSubmitting(true);
       if (editingRequest) {
         await borrowRequestApi.update(editingRequest.id, payload);
@@ -501,7 +506,10 @@ function RequestFormScaffold({
         toast.success('Request updated successfully.');
         await onUpdated?.();
       } else {
-        const response = await borrowRequestApi.create(payload);
+        const fingerprint = JSON.stringify(payload);
+        if (!submission.current || submission.current.payload !== fingerprint) submission.current = { payload: fingerprint, key: crypto.randomUUID() };
+        const response = await borrowRequestApi.create({ ...payload, submissionKey: submission.current.key });
+        submission.current = null;
         resetForm();
         setSubmittedId(response.data.request.id);
         onSubmitted?.();
@@ -515,6 +523,7 @@ function RequestFormScaffold({
       setSubmitError(message);
       toast.error(message);
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };

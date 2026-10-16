@@ -1,3 +1,4 @@
+import { recordRequestCommunications } from './requestCommunications';
 import { recordRequiredAuditLog } from './auditLogService';
 import { Prisma, RequestStatus, UserRole } from '@prisma/client';
 import { borrowRequestInclude, ensureTransition } from './borrowRequestService';
@@ -39,5 +40,6 @@ export const cancelBorrowRequest = async (
     where: { id: request.id }, include: borrowRequestInclude,
   });
   await recordRequiredAuditLog(tx, { actorUserId: input.actorId, action: 'CANCEL', entityType: 'BorrowRequest', entityId: request.id, details: { wasBorrowed, releasedSchedules: JSON.parse(JSON.stringify(releasedSchedules)) } });
+  await recordRequestCommunications(tx, cancelledRequest, 'cancelled', input.actorRole);
   return { cancelledRequest, wasBorrowed };
 };

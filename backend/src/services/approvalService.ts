@@ -1,3 +1,4 @@
+import { recordRequestCommunications } from './requestCommunications';
 import { recordRequiredAuditLog } from './auditLogService';
 import { assertEquipmentCapacity } from './inventoryCapacityService';
 export { assertEquipmentCapacity } from './inventoryCapacityService';
@@ -56,6 +57,7 @@ export async function approveRequest(prisma: PrismaClient, input: { id: string; 
     }) : null;
     const updatedRequest = await tx.borrowRequest.findUniqueOrThrow({ where: { id: request.id }, include: borrowRequestInclude });
     await recordRequiredAuditLog(tx, { actorUserId: input.actorId, action: 'APPROVE', entityType: 'BorrowRequest', entityId: request.id, details: { status: 'APPROVED', scheduleId: schedule?.id } });
+    await recordRequestCommunications(tx, updatedRequest, 'approved');
     return { request: updatedRequest, schedule };
   });
 }

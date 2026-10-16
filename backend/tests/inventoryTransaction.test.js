@@ -18,3 +18,16 @@ test('does not retry unknown failures or business errors', async () => {
   await expect(inventoryTransaction({ $transaction: tx }, async () => {})).rejects.toBe(failure);
   expect(tx).toHaveBeenCalledTimes(1);
 });
+
+test.each(['40001', '40P01'])('retries rolled-back raw SQL conflicts %s', async code => {
+  const failure = new Prisma.PrismaClientKnownRequestError('Raw SQL conflict', { code: 'P2010', clientVersion: 'test', meta: { code } });
+  const tx = jest.fn().mockRejectedValueOnce(failure).mockResolvedValue('committed');
+  await expect(inventoryTransaction({ $transaction: tx }, async () => {})).resolves.toBe('committed');
+  expect(tx).toHaveBeenCalledTimes(2);
+});
+test('does not retry arbitrary raw SQL errors', async () => {
+  const failure = new Prisma.PrismaClientKnownRequestError('SQL failure', { code: 'P2010', clientVersion: 'test', meta: { code: '23503' } });
+  const tx = jest.fn().mockRejectedValue(failure);
+  await expect(inventoryTransaction({ $transaction: tx }, async () => {})).rejects.toBe(failure);
+  expect(tx).toHaveBeenCalledTimes(1);
+});

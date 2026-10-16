@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { prisma } from '../../db/prisma';
 import { sendQueuedEmail, emailDeliveryConfigured, EmailDeliveryError } from './transporter';
@@ -7,8 +8,8 @@ type Mail = { eventKey: string; to: string; subject: string; html: string; text:
 type Job = { id: string; recipient: string; subject: string; html: string; text: string; attempts: number };
 let timer: ReturnType<typeof setInterval> | undefined;
 let active: Promise<void> | undefined;
-export async function enqueueEmail(mail: Mail): Promise<void> {
-  await prisma.$executeRaw`INSERT INTO "EmailOutbox" ("id", "eventKey", "recipient", "subject", "html", "text")
+export async function enqueueEmail(mail: Mail, db: Prisma.TransactionClient = prisma): Promise<void> {
+  await db.$executeRaw`INSERT INTO "EmailOutbox" ("id", "eventKey", "recipient", "subject", "html", "text")
     VALUES (${randomUUID()}, ${mail.eventKey}, ${mail.to}, ${mail.subject}, ${mail.html}, ${mail.text}) ON CONFLICT ("eventKey") DO NOTHING`;
 }
 export async function deliverEmailBatch(): Promise<void> {
