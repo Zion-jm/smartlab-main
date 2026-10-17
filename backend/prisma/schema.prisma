@@ -568,3 +568,11 @@ model EquipmentReturn {
   @@index([borrowRequestId, createdAt], map: "equipment_returns_request_date")
   @@map("equipment_returns")
 }
+
+model BorrowingPolicy {
+  id String @id @default("default")
+  content String
+  revision Int @default(1)
+  updatedAt DateTime @default(now()) @updatedAt
+  @@map("borrowing_policy")
+}

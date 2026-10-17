@@ -77,6 +77,7 @@ const AuditLogIcon = ({ size = 18 }: IconProps) => (
 );
 
 const baseAdminNavItems: PortalNavItem[] = [
+  {id:'borrowing-policy',to:'/admin/borrowing-policy',icon:FileTextIcon,label:'Borrowing Policy',description:'Edit the borrowing guidelines shared with students and faculty.'},
   {
     id: 'dashboard',
     to: '/admin/dashboard',
@@ -158,7 +159,7 @@ const adminNavGroups: PortalNavGroup[] = [
   {
     id: 'system-administration',
     label: 'System Administration',
-    items: baseAdminNavItems.filter((item) => ['users', 'directory', 'academic-period', 'student-records', 'audit-logs'].includes(item.id)),
+    items: baseAdminNavItems.filter((item) => ['borrowing-policy', 'users', 'directory', 'academic-period', 'student-records', 'audit-logs'].includes(item.id)),
   },
 ];
 

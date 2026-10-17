@@ -1,3 +1,5 @@
+import BorrowingPolicy, { BorrowingPolicyLink } from '../components/BorrowingPolicy';
+import { BookOpen } from 'lucide-react';
 import { useRef } from 'react';
 import ReadOnlyScheduleExplorer from '../features/requests/ReadOnlyScheduleExplorer';
 import UsageLocationField from '../features/requests/UsageLocationField';
@@ -51,6 +53,7 @@ import { YEAR_LEVELS } from '../constants/yearLevels';
 
 
 const tabs = [
+  { id: 'policy', label: 'Borrowing Policy', description: 'Read the laboratory and equipment borrowing guidelines.' },
   {
     id: 'request',
     label: 'New Request',
@@ -197,7 +200,7 @@ export default function StudentPanel() {
       tabs.map((tab) => ({
         id: tab.id,
         label: tab.label,
-        icon: tab.id === 'request' ? ClipboardIcon : tab.id === 'requests' ? ListIcon : CalendarIcon,
+        icon: tab.id === 'policy' ? BookOpen : tab.id === 'request' ? ClipboardIcon : tab.id === 'requests' ? ListIcon : CalendarIcon,
         description: tab.description,
         onClick: () => setActiveTab(tab.id),
         isActive: tab.id === activeTab,
@@ -256,6 +259,7 @@ export default function StudentPanel() {
             cancellingRequestId={cancellingRequestId}
           />
         ) : null}
+        {activeTab === 'policy' && <BorrowingPolicy/>}
         {activeTab === 'schedule' && (
           <ReadOnlyScheduleExplorer {...scheduleState} computerLabNames={computerLabNames} />
         )}
@@ -595,6 +599,7 @@ function RequestFormScaffold({
 
   return (
     <>
+      <BorrowingPolicyLink/>
       <form className="portal-new-request space-y-4" onSubmit={handleSubmit} aria-disabled={Boolean(standingError)}>
         {standingError && <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><strong>Request submission is unavailable</strong><p className="mt-1">{standingError} You may review existing requests while an administrator confirms your record.</p></div>}
       <fieldset disabled={Boolean(standingError)} className="contents">

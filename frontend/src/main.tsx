@@ -1,3 +1,4 @@
+import AdminBorrowingPolicy from './pages/AdminBorrowingPolicy'
 import DataRefreshNotice from './components/DataRefreshNotice'
 import NotFoundPage from './pages/NotFoundPage'
 import PasswordRecoveryPage from './pages/PasswordRecoveryPage'
@@ -30,6 +31,7 @@ createRoot(document.getElementById('root')!).render(
       <Toaster />
       <DataRefreshNotice />
       <Routes>
+        <Route path="/admin/borrowing-policy" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdminBorrowingPolicy/></ProtectedRoute>}/>
         <Route path="/forgot-password" element={<PasswordRecoveryPage key="forgot" />} />
         <Route path="/reset-password" element={<PasswordRecoveryPage key="reset" reset />} />
         <Route path="/requests/:id" element={<RequestLinkPage />} />

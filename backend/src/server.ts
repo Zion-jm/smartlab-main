@@ -1,3 +1,4 @@
+import borrowingPolicyRoutes from './routes/borrowingPolicy';
 import studentAcademicRecordRoutes from './routes/studentAcademicRecords';
 import './config/loadEnvironment';
 import { startEmailWorker, stopEmailWorker } from './services/email/outbox';
@@ -62,6 +63,7 @@ app.get('/ready', async (_req, res) => {
 });
 
 // API routes
+app.use('/api/borrowing-policy', borrowingPolicyRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/equipment', equipmentRoutes);
 app.use('/api/users', userRoutes);

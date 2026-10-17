@@ -33,5 +33,6 @@
   "equipmentReturns.test.js",
   "equipmentReturnValidation.test.js",
   "requestReliability.test.js",
-  "requestSafeguards.test.js"
+  "requestSafeguards.test.js",
+  "borrowingPolicy.test.js"
 ]

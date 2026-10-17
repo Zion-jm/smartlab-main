@@ -1,3 +1,5 @@
+import BorrowingPolicy, { BorrowingPolicyLink } from '../components/BorrowingPolicy';
+import { BookOpen } from 'lucide-react';
 import { useRef } from 'react';
 import ReadOnlyScheduleExplorer from '../features/requests/ReadOnlyScheduleExplorer';
 import UsageLocationField from '../features/requests/UsageLocationField';
@@ -24,6 +26,7 @@ import type { AcademicContextSelection } from '../types/labSchedule';
 import { combineManilaDateTime as combineDateTime } from '../utils/dateTime';
 
 const tabs = [
+  { id: 'policy', label: 'Borrowing Policy', description: 'Read the laboratory and equipment borrowing guidelines.' },
   {
     id: 'request',
     label: 'New Request',
@@ -163,7 +166,7 @@ export default function FacultyPanel() {
       tabs.map((tab) => ({
         id: tab.id,
         label: tab.label,
-        icon: tab.id === 'request' ? ClipboardIcon : tab.id === 'requests' ? ListIcon : CalendarIcon,
+        icon: tab.id === 'policy' ? BookOpen : tab.id === 'request' ? ClipboardIcon : tab.id === 'requests' ? ListIcon : CalendarIcon,
         description: tab.description,
         onClick: () => setActiveTab(tab.id),
         isActive: tab.id === activeTab,
@@ -220,6 +223,7 @@ export default function FacultyPanel() {
             cancellingRequestId={cancellingRequestId}
           />
         ) : null}
+        {activeTab === 'policy' && <BorrowingPolicy/>}
         {activeTab === 'schedule' && (
           <ReadOnlyScheduleExplorer {...scheduleState} computerLabNames={computerLabNames} />
         )}
@@ -530,6 +534,7 @@ function RequestFormScaffold({
 
   return (
     <>
+      <BorrowingPolicyLink/>
       <form className="portal-new-request space-y-4" onSubmit={handleSubmit}>
       {(loading || error) && (
         <div
