@@ -599,7 +599,6 @@ function RequestFormScaffold({
 
   return (
     <>
-      <BorrowingPolicyLink/>
       <form className="portal-new-request space-y-4" onSubmit={handleSubmit} aria-disabled={Boolean(standingError)}>
         {standingError && <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><strong>Request submission is unavailable</strong><p className="mt-1">{standingError} You may review existing requests while an administrator confirms your record.</p></div>}
       <fieldset disabled={Boolean(standingError)} className="contents">
@@ -628,6 +627,7 @@ function RequestFormScaffold({
       )}
 
       <PanelSection
+        action={<BorrowingPolicyLink/>}
         title={editingRequest ? `Edit ${formatReference(editingRequest.id)}` : 'Student equipment request'}
         helper={editingRequest
           ? 'Edit your request below. Your changes will be sent to the administrator for review.'

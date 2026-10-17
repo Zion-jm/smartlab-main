@@ -534,7 +534,6 @@ function RequestFormScaffold({
 
   return (
     <>
-      <BorrowingPolicyLink/>
       <form className="portal-new-request space-y-4" onSubmit={handleSubmit}>
       {(loading || error) && (
         <div
@@ -561,6 +560,7 @@ function RequestFormScaffold({
       )}
 
       <PanelSection
+        action={<BorrowingPolicyLink/>}
         title={editingRequest ? `Edit ${formatReference(editingRequest.id)}` : 'Faculty reservation / borrowing request'}
         helper={editingRequest
           ? 'Edit your request below. Your changes will be sent to the administrator for review.'
