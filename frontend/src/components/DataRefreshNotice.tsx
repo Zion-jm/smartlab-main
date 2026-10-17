@@ -28,7 +28,7 @@ export default function DataRefreshNotice() {
       finally { running = false; }
     };
     void check();
-    const interval = window.setInterval(() => void check(), 30000);
+    const interval = window.setInterval(() => void check(), 5000);
     const resume = () => void check();
     document.addEventListener('visibilitychange', resume); window.addEventListener('focus',resume); window.addEventListener('online',resume);
     return () => { stopped=true; controller.abort(); window.clearInterval(interval); document.removeEventListener('visibilitychange',resume); window.removeEventListener('focus',resume); window.removeEventListener('online',resume); if(notice) useToastStore.getState().dismiss(notice); };
