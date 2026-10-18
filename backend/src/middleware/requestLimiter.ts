@@ -31,3 +31,7 @@ export const accountApiLimiter = createRequestLimiter(300, 60000);
 export const writeLimiter = createRequestLimiter(60, 60000);
 export const passwordChangeLimiter = createRequestLimiter(5, 15 * 60000);
 export const reportLimiter = createRequestLimiter(10, 60000);
+
+// Runs before parsing/authentication. Broad allowance accommodates shared campus IPs.
+export const apiIngressLimiter = createRequestLimiter(3000, 60000);
+export const readinessLimiter = createRequestLimiter(120, 60000);

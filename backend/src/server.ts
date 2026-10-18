@@ -5,6 +5,7 @@ import { startEmailWorker, stopEmailWorker } from './services/email/outbox';
 import { createShutdown } from './services/shutdown';
 import { drainNotifications } from './services/notificationService';
 import { prisma } from './db/prisma';
+import { apiIngressLimiter, readinessLimiter } from './middleware/requestLimiter';
 import { corsOptions } from './config/cors';
 import { errorHandler, errorResponseContract } from './middleware/errors';
 import path from 'node:path';
@@ -43,6 +44,7 @@ app.use(cors(corsOptions(process.env)));
 // Never trust client-supplied forwarding headers by default.
 if (process.env.TRUSTED_PROXIES) app.set('trust proxy', process.env.TRUSTED_PROXIES.split(',').map(value => value.trim()));
 app.use(errorResponseContract);
+app.use('/api', apiIngressLimiter);
 app.use(express.json({ limit: '100kb' }));
 app.use('/api', (_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
 
@@ -57,7 +59,7 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // Readiness reveals no data or driver diagnostics.
-app.get('/ready', async (_req, res) => {
+app.get('/ready', readinessLimiter, async (_req, res) => {
   if (stopping) { res.status(503).json({ status: 'unavailable' }); return; }
   try { await prisma.$queryRaw`SELECT 1`; res.json({ status: 'ready' }); }
   catch { res.status(503).json({ status: 'unavailable' }); }
@@ -112,6 +114,9 @@ async function start() {
     verifyEmailTransport();
     startEmailWorker();
   });
+  server.headersTimeout = 15000;
+  server.requestTimeout = 30000;
+  server.keepAliveTimeout = 5000;
 }
 const started = start().catch(async () => {
   console.error('SmartLab startup failed. Check environment, migrations and built assets.');

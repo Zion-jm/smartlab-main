@@ -10,3 +10,11 @@ test('database outage remains 503 and does not invalidate token',async()=>{mockF
 test('unexpected auth lookup failure remains 500',async()=>{mockFind.mockRejectedValue(new Error('PRIVATE'));expect(await call(valid())).toMatchObject({status:500,body:{code:'INTERNAL_ERROR'}})});
 test('current database role governs 403',async()=>{mockFind.mockResolvedValue({id:'test',role:'STUDENT',status:'ACTIVE',sessionVersion:0});expect(await call(valid())).toMatchObject({status:403,body:{code:'FORBIDDEN'}})});
 test('inactive and revoked sessions return 401',async()=>{for(const user of [{status:'DEACTIVATED',sessionVersion:0},{status:'ACTIVE',sessionVersion:1}]){mockFind.mockResolvedValue({id:'test',role:'ADMIN',...user});expect(await call(valid())).toMatchObject({status:401,body:{code:'SESSION_INVALID'}})}});
+
+test('rejects malformed authorization schemes before database access',async()=>{
+  for(const header of ['Basic '+valid(),'Bearer '+valid()+' extra','Bearer','Bearer  '+valid()]) {
+    const r=await fetch(base,{headers:{Authorization:header}});
+    expect(r.status).toBe(401);
+  }
+  expect(mockFind).not.toHaveBeenCalled();
+});

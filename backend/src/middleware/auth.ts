@@ -30,7 +30,8 @@ export const authenticateToken = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = typeof authHeader === 'string' && authHeader.length <= 8192
+      ? /^Bearer ([^\s]+)$/i.exec(authHeader)?.[1] : undefined;
 
     if (!token) {
       res.status(401).json({ error: 'Access token required' });

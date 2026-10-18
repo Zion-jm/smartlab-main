@@ -1,6 +1,7 @@
 [
   "retirement.test.js",
   "sessionSecurity.test.js",
+  "securityHardening.test.js",
   "inventoryCapacity.test.js",
   "manilaApi.test.js",
   "manilaTime.test.js",
