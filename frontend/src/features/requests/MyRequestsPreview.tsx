@@ -1,3 +1,4 @@
+import Toggle from '../../components/shared/Toggle';
 import TablePagination from '../../components/shared/TablePagination';
 import { useState } from 'react';
 import { CalendarDays, MapPin, Package, ClipboardList, RefreshCw, Info } from 'lucide-react';
@@ -52,7 +53,6 @@ export function MyRequestsPreview({
           </button>
         </header>
         <div className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-end lg:px-5">
-        <label className="flex min-h-11 items-center gap-2 text-xs"><input type="checkbox" checked={history} onChange={event => setHistory(event.target.checked)} />Include completed requests from previous periods</label>
         <label className="min-w-0 flex-1 text-xs font-semibold text-[#57322d] sm:min-w-[240px] lg:max-w-[480px]">
           Search requests
           <input
@@ -63,7 +63,8 @@ export function MyRequestsPreview({
             className="mt-1 min-h-11 w-full rounded-xl border border-[#d8c7c2] bg-white px-3 py-2 text-sm font-normal text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#800000]"
           />
         </label>
-        <div className="w-full text-xs font-semibold text-[#57322d] sm:w-52">
+        <div className="grid w-full grid-cols-2 items-start gap-3 sm:w-auto sm:min-w-[360px]">
+        <div className="min-w-0 text-xs font-semibold text-[#57322d]">
           <DropdownField
             label="Status"
             value={requestStatus}
@@ -79,6 +80,15 @@ export function MyRequestsPreview({
             onChange={(value) => setRequestStatus(value as BorrowRequestStatus | 'ALL')}
             placeholder="All statuses"
           />
+        </div>
+        <div className="min-w-0 text-xs text-[#57322d]">
+          <p className="font-semibold">Previous periods</p>
+          <div className="flex min-h-11 items-center gap-2">
+            <Toggle checked={history} onChange={setHistory} label="Include completed requests from previous periods" />
+            <span className="text-xs font-semibold">{history ? 'On' : 'Off'}</span>
+          </div>
+          <p className="text-[11px] leading-snug text-[#786565]">Include completed requests</p>
+        </div>
         </div>
         {(requestSearch || requestStatus !== 'ALL') && (
           <button
