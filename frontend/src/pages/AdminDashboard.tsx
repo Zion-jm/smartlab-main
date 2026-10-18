@@ -1,3 +1,4 @@
+import DashboardLoading from '../components/DashboardLoading';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
@@ -416,12 +417,7 @@ export default function AdminDashboard() {
   if (!stats) {
     return (
       <AdminLayout>
-        <div className="mx-auto flex min-h-[400px] responsive-workspace items-center justify-center p-2 lg:p-3">
-          <div className="text-center">
-            <RefreshIcon spinning={true} />
-            <p className="mt-4 text-sm text-[#6b7280]">Loading dashboard…</p>
-          </div>
-        </div>
+        <DashboardLoading />
       </AdminLayout>
     );
   }
