@@ -8,7 +8,7 @@ jobs:
     timeout-minutes: 25
     services:
       postgres:
-        image: public.ecr.aws/docker/library/postgres:16
+        image: postgres:16
         env:
           POSTGRES_USER: smartlab
           POSTGRES_PASSWORD: ci-only-password
@@ -43,7 +43,7 @@ jobs:
       - name: Fresh and upgrade migrations with production smoke
         run: node scripts/test-ui.cjs --deployment
       - name: Build staging container
-        run: docker build --build-arg NODE_IMAGE=public.ecr.aws/docker/library/node:22.13.0-bookworm-slim --tag smartlab-staging:ci .
+        run: docker build --build-arg NODE_IMAGE=node:22.13.0-bookworm-slim --tag smartlab-staging:ci .
       - name: Verify container migrations, startup, administrator and PDF
         run: >-
           docker run --rm --network host
