@@ -82,12 +82,11 @@ export function MyRequestsPreview({
           />
         </div>
         <div className="min-w-0 text-xs text-[#57322d]">
-          <p className="font-semibold">Previous periods</p>
-          <div className="flex min-h-11 items-center gap-2">
+          <p className="font-semibold text-[#4b5563]">Previous periods</p>
+          <div className="mt-1 flex h-11 items-center justify-between gap-1 rounded-xl border border-[#d8c7c2] bg-white px-2">
+            <span className="text-xs font-semibold">Include</span>
             <Toggle checked={history} onChange={setHistory} label="Include completed requests from previous periods" />
-            <span className="text-xs font-semibold">{history ? 'On' : 'Off'}</span>
           </div>
-          <p className="text-[11px] leading-snug text-[#786565]">Include completed requests</p>
         </div>
         </div>
         {(requestSearch || requestStatus !== 'ALL') && (
