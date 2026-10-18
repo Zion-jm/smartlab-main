@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { BorrowingPolicyLink } from '../components/BorrowingPolicy';
 import { useRef } from 'react';
 import ReadOnlyScheduleExplorer from '../features/requests/ReadOnlyScheduleExplorer';
@@ -117,7 +118,16 @@ const CalendarIcon = ({ size = 18 }: { size?: number }) => (
 );
 
 export default function FacultyPanel() {
-  const [activeTab, setActiveTab] = useState<TabId>('request');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const activeTab: TabId = tabs.find(tab => tab.id === requestedTab)?.id ?? 'request';
+  const setActiveTab = useCallback((tab: TabId) => {
+    setSearchParams(previous => {
+      const next = new URLSearchParams(previous);
+      next.set('tab', tab);
+      return next;
+    });
+  }, [setSearchParams]);
   const [editingRequest, setEditingRequest] = useState<ApiBorrowRequest | null>(null);
   const [requestToCancel, setRequestToCancel] = useState<RequestRow | null>(null);
   const [cancellingRequestId, setCancellingRequestId] = useState<string | null>(null);
@@ -169,7 +179,7 @@ export default function FacultyPanel() {
         onClick: () => setActiveTab(tab.id),
         isActive: tab.id === activeTab,
       })),
-    [activeTab]
+    [activeTab, setActiveTab]
   );
 
   const sidebarExtras = (
