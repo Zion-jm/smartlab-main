@@ -63,7 +63,7 @@ export default function BorrowingPolicy({editable=false}:{editable?:boolean}) {
 export function BorrowingPolicyLink() {
   const [open,setOpen]=useState(false);
   return <>
-    <button type="button" onClick={()=>setOpen(true)} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-[#800000] hover:bg-[#fff0ed]"><BookOpen size={18} aria-hidden="true"/>View borrowing policy</button>
+    <button type="button" aria-label="View borrowing policy" onClick={()=>setOpen(true)} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-[#800000] hover:bg-[#fff0ed]"><BookOpen size={18} aria-hidden="true"/><span className="sm:hidden">Policy</span><span className="hidden sm:inline">View borrowing policy</span></button>
     {open && <TableCellDetailModal isOpen title="Borrowing Policy" onClose={()=>setOpen(false)} data={{}} fields={[]}><BorrowingPolicy/></TableCellDetailModal>}
   </>;
 }
