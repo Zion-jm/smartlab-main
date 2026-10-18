@@ -39,11 +39,10 @@ export function MyRequestsPreview({
   return (
     <div className="portal-my-requests space-y-4">
       <section aria-labelledby="my-requests-heading" className="rounded-2xl border border-[#ead7d3] bg-white shadow-sm">
-        <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 rounded-t-2xl border-b border-[#ead7d3] bg-[#fffaf7] p-4 lg:px-5">
-          <span className="col-start-1 row-start-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f4e9e5] text-[#800000]"><ClipboardList size={20} aria-hidden="true" /></span>
-          <p className="col-start-2 col-span-2 text-[10px] font-semibold uppercase tracking-[.16em] text-[#9a7b4f]">Request tracking</p>
-          <h2 id="my-requests-heading" className="col-start-2 row-start-2 min-w-0 text-lg font-semibold text-[#57322d]">My requests</h2>
-          <button type="button" onClick={() => void reload()} disabled={loading} aria-label={loading ? 'Refreshing requests' : 'Refresh requests'} title="Refresh requests" aria-busy={loading} className="col-start-3 row-start-2 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#d8c7c2] bg-white text-[#800000] hover:bg-[#fff0ed] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000] disabled:opacity-50">
+        <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 rounded-t-2xl border-b border-[#ead7d3] bg-[#fffaf7] p-4 lg:px-5">
+          <span className="col-start-1 row-start-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#f4e9e5] text-[#800000]"><ClipboardList size={18} aria-hidden="true" /></span>
+          <h2 id="my-requests-heading" className="col-start-2 row-start-1 min-w-0 text-lg font-semibold text-[#57322d]">My requests</h2>
+          <button type="button" onClick={() => void reload()} disabled={loading} aria-label={loading ? 'Refreshing requests' : 'Refresh requests'} title="Refresh requests" aria-busy={loading} className="col-start-3 row-start-1 inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#800000] transition-colors hover:bg-[#fff0ed] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000] disabled:opacity-50">
             <RefreshCw size={18} aria-hidden="true" className={loading ? 'animate-spin' : ''} />
           </button>
           <p className="col-start-2 col-span-2 mt-1 text-xs text-[#786565]">Track your submissions, check approval status, and review request details.</p>
