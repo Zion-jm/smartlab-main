@@ -1,5 +1,4 @@
-import BorrowingPolicy, { BorrowingPolicyLink } from '../components/BorrowingPolicy';
-import { BookOpen } from 'lucide-react';
+import { BorrowingPolicyLink } from '../components/BorrowingPolicy';
 import { useRef } from 'react';
 import ReadOnlyScheduleExplorer from '../features/requests/ReadOnlyScheduleExplorer';
 import UsageLocationField from '../features/requests/UsageLocationField';
@@ -53,7 +52,6 @@ import { YEAR_LEVELS } from '../constants/yearLevels';
 
 
 const tabs = [
-  { id: 'policy', label: 'Borrowing Policy', description: 'Read the laboratory and equipment borrowing guidelines.' },
   {
     id: 'request',
     label: 'New Request',
@@ -200,7 +198,7 @@ export default function StudentPanel() {
       tabs.map((tab) => ({
         id: tab.id,
         label: tab.label,
-        icon: tab.id === 'policy' ? BookOpen : tab.id === 'request' ? ClipboardIcon : tab.id === 'requests' ? ListIcon : CalendarIcon,
+        icon: tab.id === 'request' ? ClipboardIcon : tab.id === 'requests' ? ListIcon : CalendarIcon,
         description: tab.description,
         onClick: () => setActiveTab(tab.id),
         isActive: tab.id === activeTab,
@@ -259,7 +257,6 @@ export default function StudentPanel() {
             cancellingRequestId={cancellingRequestId}
           />
         ) : null}
-        {activeTab === 'policy' && <BorrowingPolicy/>}
         {activeTab === 'schedule' && (
           <ReadOnlyScheduleExplorer {...scheduleState} computerLabNames={computerLabNames} />
         )}

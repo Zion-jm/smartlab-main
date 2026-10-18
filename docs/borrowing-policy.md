@@ -2,8 +2,7 @@
 
 ## Where to find it
 - Admin: System Administration > Borrowing Policy (`/admin/borrowing-policy`).
-- Faculty and student: Borrowing Policy in the portal menu.
-- Request forms: View borrowing policy opens a read-only modal without leaving the form.
+- Faculty and student request forms: View borrowing policy in the card header opens a read-only modal without leaving the form. The policy has no separate borrower sidebar tab.
 
 ## Editing
 Choose Edit policy, change the plain text, then Save policy and confirm. Saving publishes the text immediately. Discard changes restores the saved text. Last updated is shown in Philippine time. Empty policies and content over 20,000 characters are rejected. If another administrator saves first, the older draft cannot overwrite their changes; copy the draft before reloading and comparing.
