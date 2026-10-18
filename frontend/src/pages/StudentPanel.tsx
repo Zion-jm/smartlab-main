@@ -625,8 +625,6 @@ function RequestFormScaffold({
 
       <PanelSection
         action={<BorrowingPolicyLink/>}
-        mobileTitle={editingRequest ? 'Edit request' : 'New request'}
-        mobileHelper={editingRequest ? 'Update the details and save your changes.' : 'Choose equipment and complete the details.'}
         title={editingRequest ? `Edit ${formatReference(editingRequest.id)}` : 'Student equipment request'}
         helper={editingRequest
           ? 'Edit your request below. Your changes will be sent to the administrator for review.'
@@ -637,7 +635,6 @@ function RequestFormScaffold({
             <div>
               <h4 className="request-section-heading text-sm font-semibold text-[#111827]"><RequestCalendarIcon size={18} aria-hidden="true" className="shrink-0" />1. Location & schedule</h4>
               <p className="text-xs text-[#6b7280]">Choose where you will use the equipment. This does not reserve a room.</p>
-              <p className="mt-1 text-xs text-[#6b7280] sm:hidden">Same-day requests are allowed while the selected time is still available.</p>
             </div>
             <div className="flex flex-col gap-3">
               <p className="rounded-xl bg-[#fff8f3] p-3 text-sm font-semibold text-[#800000]">Equipment borrowing</p>
