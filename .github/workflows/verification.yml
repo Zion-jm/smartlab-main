@@ -36,6 +36,7 @@ jobs:
       - run: npm run db:generate
       - run: npm run build
       - run: npm run lint:ci
+      - run: npm run test:setup
       - run: npm run test:regression
       - run: npx playwright install --with-deps chromium
       - name: Browser contracts

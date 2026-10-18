@@ -17,6 +17,7 @@ import helmet from 'helmet';
 
 // Import routes
 import authRoutes from './routes/auth';
+import setupRoutes from './routes/setup';
 import equipmentRoutes from './routes/equipment';
 import userRoutes from './routes/users';
 import borrowRequestRoutes from './routes/borrowRequests';
@@ -65,6 +66,7 @@ app.get('/ready', async (_req, res) => {
 // API routes
 app.use('/api/borrowing-policy', borrowingPolicyRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/setup', setupRoutes);
 app.use('/api/equipment', equipmentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/borrow-requests', borrowRequestRoutes);

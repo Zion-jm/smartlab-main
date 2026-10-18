@@ -25,6 +25,7 @@ import SettingsRoute from './pages/SettingsRoute'
 import ProtectedRoute from './components/ProtectedRoute'
 import Toaster from './components/shared/Toaster'
 import SetupPreview from './pages/SetupPreview'
+import SetupVerification from './pages/SetupVerification'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -32,11 +33,14 @@ createRoot(document.getElementById('root')!).render(
       <Toaster />
       <Routes>
         {import.meta.env.DEV && <Route path="/setup-preview" element={null} />}
+        <Route path="/setup/*" element={null} />
         <Route path="*" element={<DataRefreshNotice />} />
       </Routes>
       <Routes>
-        {import.meta.env.DEV && <Route path="/setup-preview" element={<SetupPreview />} />}
+        {import.meta.env.DEV && <Route path="/setup-preview" element={<SetupPreview key="preview" />} />}
         <Route path="/admin/borrowing-policy" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdminBorrowingPolicy/></ProtectedRoute>}/>
+        <Route path="/setup" element={<SetupPreview key="live" live />} />
+        <Route path="/setup/verify" element={<SetupVerification />} />
         <Route path="/forgot-password" element={<PasswordRecoveryPage key="forgot" />} />
         <Route path="/reset-password" element={<PasswordRecoveryPage key="reset" reset />} />
         <Route path="/requests/:id" element={<RequestLinkPage />} />

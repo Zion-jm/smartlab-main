@@ -26,6 +26,7 @@
     "start:production": "node backend/scripts/start-production.cjs",
     "test:regression": "node backend/scripts/test-regression.cjs",
     "lint:ci": "node scripts/lint-strict.cjs",
+    "test:setup": "node backend/scripts/test-setup.cjs",
     "test:ui": "node scripts/test-ui.cjs"
   },
   "keywords": [

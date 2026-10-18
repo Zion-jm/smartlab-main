@@ -576,3 +576,20 @@ model BorrowingPolicy {
   updatedAt DateTime @default(now()) @updatedAt
   @@map("borrowing_policy")
 }
+
+// Singleton setup state. Migration closes setup permanently on existing installations.
+model InstallationSetup {
+  id                    String @id @default("installation")
+  completedAt           DateTime?
+  sessionHash           String?
+  sessionExpiresAt      DateTime?
+  email                 String?
+  name                  String?
+  passwordHash          String?
+  verificationHash      String?
+  verificationExpiresAt DateTime?
+  verifiedAt            DateTime?
+  lastSentAt            DateTime?
+  windowStartedAt       DateTime?
+  sendCount             Int @default(0)
+}
