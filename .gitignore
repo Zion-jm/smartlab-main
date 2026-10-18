@@ -40,3 +40,8 @@ public/uploads/
 
 # Reproducible verification output
 artifacts/
+
+# Database backup archives and one-off cleanup snapshots
+**/directory-cleanup-backup-*.json
+**/*.dump
+**/*.dump.gpg

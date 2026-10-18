@@ -13,3 +13,13 @@ outputs
 **/*.sqlite
 **/*.sqlite3
 **/uploads
+
+# Database backup archives and one-off cleanup snapshots
+**/directory-cleanup-backup-*.json
+**/*.dump
+**/*.dump.gpg
+
+# Historical local maintenance tools are not application runtime files
+backend/scripts/cleanup-directory-duplicates.cjs
+backend/scripts/cleanup-staging-test-data.cjs
+backend/scripts/reset-staging-for-qa.cjs

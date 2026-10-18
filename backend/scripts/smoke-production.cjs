@@ -14,7 +14,15 @@ async function main(){
   const chrome=process.env.CHROMIUM_PATH || ['C:/Program Files/Google/Chrome/Application/chrome.exe','/usr/bin/chromium'].find(p=>fs.existsSync(p));
   if(!chrome)throw Error('Configure CHROMIUM_PATH for the PDF smoke test');env.CHROMIUM_PATH=chrome;
   let db,server;let stage='initialization';
-  const run=args=>{const r=spawnSync(process.execPath,[require.resolve('prisma/build/index.js'),...args],{cwd:backend,env,encoding:'utf8',windowsHide:true,timeout:60000});if(r.status!==0)throw Error('Prisma command failed at '+stage);return r.stdout};
+  const run=args=>{const r=spawnSync(process.execPath,[require.resolve('prisma/build/index.js'),...args],{cwd:backend,env,encoding:'utf8',windowsHide:true,timeout:60000});if(r.status!==0){
+      console.error('Prisma command status:',r.status,'process error:',r.error?.code||'none');
+      if(args[0]==='migrate'&&args[1]==='diff') {
+        const diagnostic=(r.stdout+'\n'+r.stderr).replace(/postgres(?:ql)?:\/\/[^\s'"]+/gi,'[REDACTED DATABASE URL]');
+        console.error(diagnostic.slice(0,12000));
+        console.error(r.status===2?'Schema drift detected; comparison remains a required failure.':'Schema comparison could not complete.');
+      }
+      throw Error('Prisma command failed at '+stage);
+    }return r.stdout};
   try{
     stage='fresh migration deploy';run(['migrate','deploy']);console.log('PASS: migrations deploy to a fresh isolated schema');
     stage='repeat migration deploy';run(['migrate','deploy']);run(['migrate','status']);console.log('PASS: repeated deploy and migration status');

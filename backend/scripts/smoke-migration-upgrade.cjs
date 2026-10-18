@@ -5,7 +5,7 @@ async function main(){
  if(!['localhost','127.0.0.1'].includes(url.hostname)||url.pathname!=='/smartlab_test')throw Error('Local smartlab_test required');
  const schema='smartlab_upgrade_'+Date.now()+'_'+crypto.randomBytes(4).toString('hex');if(!/^smartlab_upgrade_[0-9]+_[a-f0-9]{8}$/.test(schema))throw Error('Invalid schema');
  const control=new PrismaClient();url.searchParams.set('schema',schema);const env={...process.env,DATABASE_URL:url.toString()};const backend=path.resolve(__dirname,'..');const db=new PrismaClient({datasources:{db:{url:url.toString()}}});
- const run=args=>{const result=spawnSync(process.execPath,[require.resolve('prisma/build/index.js'),...args],{cwd:backend,env,stdio:'ignore',windowsHide:true,timeout:60000});assert.equal(result.status,0,'Migration command failed')};
+ const run=args=>{const result=spawnSync(process.execPath,[require.resolve('prisma/build/index.js'),...args],{cwd:backend,env,encoding:'utf8',windowsHide:true,timeout:60000});if(result.status!==0&&args[0]==='migrate'&&args[1]==='diff'){console.error('Schema comparison exit code:',result.status);console.error((result.stdout+'\n'+result.stderr).replace(/postgres(?:ql)?:\/\/[^\s'"]+/gi,'[REDACTED DATABASE URL]').slice(0,12000));}assert.equal(result.status,0,'Migration command failed')};
  try{
   await control.$executeRawUnsafe('CREATE SCHEMA "'+schema+'"');
   run(['db','execute','--file','prisma/migrations/0001_baseline/migration.sql','--schema','prisma/schema.prisma']);

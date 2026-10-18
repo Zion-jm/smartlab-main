@@ -3,10 +3,11 @@ const { spawnSync } = require('node:child_process');
 
 process.env.NODE_ENV = 'production';
 
-const workspaceRoot = path.resolve(__dirname, '../..');
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const migration = spawnSync(npmCommand, ['run', 'db:deploy'], {
-  cwd: workspaceRoot,
+const backendRoot = path.resolve(__dirname, '..');
+// Launch the JS entry point directly: npm.cmd cannot be spawned without a shell on Windows.
+const prismaCli = require.resolve('prisma/build/index.js');
+const migration = spawnSync(process.execPath, [prismaCli, 'migrate', 'deploy'], {
+  cwd: backendRoot,
   env: process.env,
   stdio: 'inherit',
 });
