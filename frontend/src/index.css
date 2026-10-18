@@ -2490,6 +2490,12 @@
     border-radius: var(--mobile-inner-radius);
   }
 
+  /* Keep the dashboard banner flush with the mobile navigation bar. */
+  .dashboard-workspace > header.rounded-2xl {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
   /* Content actions and fields remain comfortable touch targets. */
   :is(.portal-new-request, .portal-my-requests, .profile-page--cards, .settings-workspace)
   :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, button[aria-haspopup="listbox"]) {
