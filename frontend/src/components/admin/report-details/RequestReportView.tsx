@@ -1,3 +1,4 @@
+import PdfProgressNotice from './PdfProgressNotice';
 import { downloadReportSpreadsheet } from '../printableReportUtils';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -445,6 +446,7 @@ export function RequestReportView({
   };
 
   const exportRequestPdf = async (scope: 'period' | 'filtered') => {
+    if (pdfExporting) return;
     setPdfExporting(true);
     try {
       const response = await reportsApi.downloadBorrowRequestPdf({
@@ -473,7 +475,7 @@ export function RequestReportView({
       anchor.download = filename;
       anchor.click();
       URL.revokeObjectURL(url);
-      toast.success('The PDF report was generated and downloaded.');
+      toast.success('The PDF report is ready. Download started.');
     } catch (error) {
       console.error('Failed to export the request report PDF.', error);
       toast.error((error as { response?: { data?: { error?: string } } }).response?.data?.error ?? 'The PDF report could not be generated. Please try again.');
@@ -487,6 +489,7 @@ export function RequestReportView({
   const exportPdfFilteredTable = () => exportRequestPdf('filtered');
 
   const exportDemandPdf = async () => {
+    if (pdfExporting) return;
     setPdfExporting(true);
     try {
       const response = await reportsApi.downloadDemandAnalysisPdf({
@@ -515,7 +518,7 @@ export function RequestReportView({
       anchor.download = filename;
       anchor.click();
       URL.revokeObjectURL(url);
-      toast.success('The demand analysis PDF was generated and downloaded.');
+      toast.success('The demand analysis PDF is ready. Download started.');
     } catch (error) {
       console.error('Failed to export the demand analysis PDF.', error);
       toast.error((error as { response?: { data?: { error?: string } } }).response?.data?.error ?? 'The demand analysis PDF could not be generated. Please try again.');
@@ -582,6 +585,7 @@ export function RequestReportView({
 
   return (
     <>
+      <PdfProgressNotice active={pdfExporting} />
       <FormalReportFrame
         title="SmartLab Borrow Request Report"
         subtitle="Analyze borrowing demand by faculty, submitter, program, subject, or requested room."

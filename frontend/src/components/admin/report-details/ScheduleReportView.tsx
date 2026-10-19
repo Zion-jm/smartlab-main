@@ -1,3 +1,4 @@
+import PdfProgressNotice from './PdfProgressNotice';
 import { downloadReportSpreadsheet } from '../printableReportUtils';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -401,6 +402,7 @@ export function ScheduleReportView({
   };
 
   const exportSchedulePdf = async (scope: 'period' | 'filtered', view: 'log' | 'analysis' = 'log') => {
+    if (pdfExporting) return;
     setPdfExporting(true);
     try {
       const response = await reportsApi.downloadLabSchedulePdf({
@@ -436,8 +438,8 @@ export function ScheduleReportView({
       URL.revokeObjectURL(url);
       toast.success(
         view === 'analysis'
-          ? 'The schedule analysis PDF was generated and downloaded.'
-          : 'The schedule PDF was generated and downloaded.'
+          ? 'The schedule analysis PDF is ready. Download started.'
+          : 'The schedule PDF is ready. Download started.'
       );
     } catch (error) {
       console.error('Failed to export the schedule report PDF.', error);
@@ -491,6 +493,7 @@ export function ScheduleReportView({
 
   return (
     <>
+      <PdfProgressNotice active={pdfExporting} />
       <FormalReportFrame
         title="SmartLab Laboratory Schedule Report"
         subtitle="Analyze room and class schedules by day, schedule type, program, and year level."

@@ -1,3 +1,4 @@
+import PdfProgressNotice from './PdfProgressNotice';
 import { downloadReportSpreadsheet } from '../printableReportUtils';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -432,6 +433,7 @@ export function EquipmentReportView({
     scope: 'period' | 'filtered',
     report: 'log' | 'analysis'
   ) => {
+    if (pdfExporting) return;
     setPdfExporting(true);
     try {
       const response = await reportsApi.downloadEquipmentPdf({
@@ -461,7 +463,7 @@ export function EquipmentReportView({
       anchor.download = filename;
       anchor.click();
       URL.revokeObjectURL(url);
-      toast.success('The equipment PDF report was generated and downloaded.');
+      toast.success('The equipment PDF report is ready. Download started.');
     } catch (error) {
       console.error('Failed to export the equipment report PDF.', error);
       toast.error((error as { response?: { data?: { error?: string } } }).response?.data?.error ?? 'The equipment PDF report could not be generated. Please try again.');
@@ -511,6 +513,7 @@ export function EquipmentReportView({
 
   return (
     <>
+      <PdfProgressNotice active={pdfExporting} />
     <FormalReportFrame
       title={hasRange ? 'SmartLab Equipment Usage Report' : 'SmartLab Equipment Inventory Report'}
       subtitle="Review equipment demand and inventory health using the equipment catalog and borrowing records."
