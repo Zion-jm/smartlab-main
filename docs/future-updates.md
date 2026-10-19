@@ -61,3 +61,38 @@ These are proposed SmartLab settings, to confirm with the instructor before roll
 Ship the frontend, backend, migration and tests together. Validate on staging, take a production backup, then promote the reviewed release. Existing users will need to sign in once under the new session system. Document that transition and a rollback procedure that does not restore acceptance of invalidated legacy tokens.
 
 References: [existing session behavior](session-security.md), [verification](reproducible-verification.md), and [OWASP session-management guidance](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
+
+## Public laboratory schedules on the homepage
+
+Recorded: 20 October 2026 (Asia/Manila).
+Status: Planned; implementation not started.
+
+### Purpose
+
+Let students and other visitors check laboratory schedules from the homepage without creating an account or signing in. Browsing is public and read-only; submitting or managing requests still requires an authorized account.
+
+### Proposed experience
+
+- Add a clearly labeled **Laboratory schedules** section or entry point on the homepage.
+- Let visitors filter by laboratory and date, with a readable mobile agenda and desktop calendar.
+- Show laboratory name, scheduled date, start/end time and a simple availability or booking label in Philippine time.
+- Explain that displayed availability is informational and does not guarantee a reservation until a request is submitted and approved.
+- Show loading, empty, unavailable and last-updated states so stale data is not mistaken for current availability.
+
+### Privacy and access
+
+- Use a dedicated public API response containing only approved public fields. Do not expose requester names, email addresses, contact details, student identifiers, private purposes, internal notes or request identifiers.
+- Agree with the instructor which schedule types and statuses may be published. Display confirmed laboratory bookings that affect availability; exclude rejected, cancelled and private pending requests.
+- Do not publish equipment-only usage locations as room reservations.
+- Keep detailed schedule records and all create/edit/cancel operations behind existing authentication and authorization.
+
+### Implementation and acceptance checklist
+
+- [ ] Confirm the public fields, publication rules and date range with the instructor.
+- [ ] Add a read-only public schedule endpoint with bounded date ranges, response limits, input validation and rate limiting.
+- [ ] Reuse the existing schedule display where practical, with a separate public data model and no private detail actions.
+- [ ] Add homepage navigation, laboratory/date filters, mobile layout and accessible controls.
+- [ ] Define cache/refresh behavior so approved changes and cancellations appear promptly without excessive database requests.
+- [ ] Test anonymous access without login, private-field exclusion, publication rules, Manila dates/times, empty/error states and mobile display.
+- [ ] Confirm public users cannot mutate schedules or access protected record details through direct API requests.
+- [ ] Verify on staging before promoting to production and update the user guide.
