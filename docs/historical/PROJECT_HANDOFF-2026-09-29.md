@@ -2,7 +2,7 @@
 
 # Historical handoff — superseded
 
-Snapshot predating remediation steps 1–20. Commands, counts, security assumptions, and proposed work below are historical and must not be used as current setup instructions. See ../../PROJECT_HANDOFF.md and ../reproducible-verification.md.
+Snapshot predating remediation steps 1–20. Commands, counts, security assumptions, and proposed work below are historical and must not be used as current setup instructions. See ../PROJECT_HANDOFF.md and ../reproducible-verification.md.
 
 # SmartLab 2.0 — Project Handoff
 

@@ -12,7 +12,7 @@ Use Node.js 22.13.0, npm 10.9.2, and PostgreSQL.
 4. Review the database migration instructions before setting up or upgrading a database. Do not reset an existing database to install changes.
 5. Run `npm run dev` and open http://localhost:5000. The API runs on port 3001.
 
-See [local development](docs/local-development.md), [project handoff](PROJECT_HANDOFF.md), and [verification](docs/reproducible-verification.md).
+See [local development](docs/local-development.md), [project handoff](docs/PROJECT_HANDOFF.md), and [verification](docs/reproducible-verification.md).
 
 ## Production
 
@@ -22,4 +22,8 @@ See [local development](docs/local-development.md), [project handoff](PROJECT_HA
 
 PDF exports require Chrome or Chromium. Outside Docker, set `CHROMIUM_PATH` to the installed executable. Python is not required by the application.
 
-See [email configuration](EMAIL_NOTIFICATIONS.md). Set `FRONTEND_URL` to the accessible website origin for email links. Never commit environment credentials.
+See [email configuration](docs/EMAIL_NOTIFICATIONS.md). Set `FRONTEND_URL` to the accessible website origin for email links. Never commit environment credentials.
+
+## Documentation
+
+All project guides are collected in [docs/](docs/README.md), including setup, deployment, verification, email and API references.

@@ -1,5 +1,7 @@
 # SmartLab 2.0 — current handoff
 
+Paths in this document are relative to the repository root unless linked. This handoff records the 1 October implementation; use the current setup, deployment and verification guides linked in [the documentation index](README.md) for operating instructions.
+
 Updated 1 October 2026 following remediation steps 1–20. Implemented behavior and remaining limitations are distinguished below. The previous extensive inventory is retained as a labeled historical snapshot in docs/historical/PROJECT_HANDOFF-2026-09-29.md.
 
 ## Runtime and installation

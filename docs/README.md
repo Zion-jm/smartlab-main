@@ -1,7 +1,31 @@
-# Documentation status
+# SmartLab documentation
 
-Current entry points: ../PROJECT_HANDOFF.md, reproducible-verification.md, production-deployment.md, and local-development.md. Security/domain implementation guides (approval, inventory, quantities, sessions, retirement, Manila time, privacy/errors, pagination, indexes) describe implemented remediation. code-consolidation.md, reusable-tables-remediation.md, and control-ribbon-remediation.md describe completed UI work.
+All project documentation lives in this folder. The repository root README is the entry point shown on GitHub. Commands in guides run from the repository root unless stated otherwise.
 
-Historical/proposed records: control-ribbon-checklist.md, control-ribbon-consistency-baseline.md, control-ribbon-consistency-fix-plan.md, control-ribbon-implementation-plan.md, reusable-table-standardization-plan.md, project-test-plan.md, and historical/PROJECT_HANDOFF-2026-09-29.md. Plans are not proof that every proposed change was implemented. Older development-guide.md and component-guide.md are architectural background; current setup commands above take precedence. CHANGELOG.md is chronological history.
+## Start here
 
-Screenshots under ../screenshots and review captures under ../attached_assets predate the current verification unless explicitly dated otherwise. Fresh automated evidence is generated under ignored artifacts/ or SMARTLAB_EVIDENCE_DIR; do not treat old images as screenshots of the latest build.
+- [Local development](local-development.md)
+- [First-time setup](first-time-setup.md)
+- [Production deployment](production-deployment.md)
+- [Verification and test commands](reproducible-verification.md)
+- [Security review — 19 October 2026](security-review-2026-10-19.md)
+- [Email configuration](EMAIL_NOTIFICATIONS.md)
+- [API reference](API.md) — verify endpoint details against current route source.
+- [Project handoff](PROJECT_HANDOFF.md) — implementation snapshot dated 1 October; counts and results are historical.
+- [Changelog](CHANGELOG.md)
+
+## Feature and maintenance guides
+
+- [Borrowing policy](borrowing-policy.md)
+- [Student academic records](student-academic-records.md)
+- [Equipment lifecycle](equipment-lifecycle.md)
+- [Inventory safety](inventory-safety.md)
+- [Session security](session-security.md)
+- [PDF and report limits](pagination-and-report-limits.md)
+- [Repository cleanup record](unused-file-cleanup.md)
+
+Other domain and testing guides remain alongside these files. Dated results describe the runs recorded at that time, not proof that the latest revision has passed.
+
+## Historical material
+
+The historical/ folder holds the original handoff and Vite starter README. Control-ribbon plans, reusable-table plans, project-test-plan.md and older development/component guides record earlier proposals or architecture. Current setup and deployment guides take precedence. Fresh test evidence is generated under ignored artifacts/; older screenshots are not current verification.

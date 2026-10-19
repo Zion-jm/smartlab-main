@@ -35,7 +35,7 @@ Use the actual disposable database name. Production mode, missing confirmation, 
 The reset script additionally requires RESET_TEST_DATABASE=1 and deletes database records. Do not run it on valuable data. No database reset or seed is needed for this configuration fix.
 
 ## Hosting
-Store DATABASE_URL, JWT_SECRET, and SMTP credentials in your hosting provider's environment settings. Use the root npm scripts for startup and the Dockerfile for a portable production runtime. Run npm ci and npm run db:generate during setup, then npm run build. Review migrations before applying them; never enable demo seed flags in production. See README.md and EMAIL_NOTIFICATIONS.md for runtime requirements.
+Store DATABASE_URL, JWT_SECRET, and SMTP credentials in your hosting provider's environment settings. Use the root npm scripts for startup and the Dockerfile for a portable production runtime. Run npm ci and npm run db:generate during setup, then npm run build. Review migrations before applying them; never enable demo seed flags in production. See [repository overview](../README.md) and [email configuration](EMAIL_NOTIFICATIONS.md) for runtime requirements.
 
 ## Git and existing secrets
 Ignore rules do not remove files already tracked. From the repository root, run git rm --cached -- .env backend/.env if these files still appear in git ls-files. This keeps the files on disk. Commit the removal alongside the safe example files and configuration changes.
