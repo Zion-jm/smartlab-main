@@ -1,2 +1,0 @@
--- Additive migration; apply before deploying the new API.
-ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "sessionVersion" INTEGER NOT NULL DEFAULT 0;

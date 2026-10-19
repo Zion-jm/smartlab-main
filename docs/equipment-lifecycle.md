@@ -16,13 +16,11 @@ POST /api/equipment/:id/retire and legacy DELETE archive equipment. POST /api/eq
 
 ## Database migration
 
-Added nullable equipment.retiredAt. Applied backend/prisma/equipment-lifecycle.sql to localhost smartlab_test and regenerated Prisma Client. No reset or demo seed was run.
+The nullable equipment.retiredAt column is installed by `backend/prisma/migrations/0004_equipment_lifecycle/migration.sql`. Back up the database, follow [production deployment](production-deployment.md), and run `npm run db:deploy` from the repository root. Existing databases without migration history require the documented baseline adoption first. Do not use db push or a reset as a substitute.
 
-The old UNAVAILABLE status could mean archive or empty stock. The one-time migration conservatively marks ALL existing UNAVAILABLE records retired. Review these items and use Restore for any that were merely empty. Re-running the SQL does not rearchive restored items because backfill only runs when introducing the column.
+The migration conservatively archives existing UNAVAILABLE equipment when introducing the column. Review those items and restore any that were merely empty. Repeated deployment does not rearchive restored records. The duplicate standalone SQL and local apply helper were removed on 2026-10-19.
 
-For another database: back up first, apply the reviewed SQL BEFORE running the new API, regenerate Prisma Client, build, and restart. Do not use db push to introduce this column before the SQL; doing that would skip its one-time legacy backfill. The helper backend/scripts/apply-local-equipment-lifecycle.cjs deliberately refuses non-local/non-test databases.
-
-The additive column has already been applied locally. Restart local development processes to load the regenerated Prisma Client, then refresh localhost:5000. Older running API processes should not keep serving alongside the new version because they do not maintain the lifecycle marker.
+Generate Prisma Client and rebuild/restart the API as described in the deployment guide.
 
 ## Try it locally
 
@@ -39,7 +37,7 @@ Both builds passed; 243 tests passed across 14 suites. Full regression-test resu
 
 The SQL uses the existing inventory counters; this change does not reconcile historical inventory discrepancies. Physical availableQuantity continues to mean on-hand undamaged stock even when archived; retirement and the time-window capacity service determine whether it can be lent. Restoration does not reserve equipment or approve pending requests.
 
-## Files and recovery
+## Historical implementation record
 
 Changed backend/prisma/schema.prisma; new equipment-lifecycle.sql and scripts/apply-local-equipment-lifecycle.cjs; new services/equipmentLifecycle.ts; inventoryCapacityService.ts, inventoryMovementService.ts, retirementService.ts and routes/equipment.ts; frontend equipment types, API, AdminEquipment, AdminAuditLogs and EquipmentDrawer; retirement and inventory-capacity tests.
 

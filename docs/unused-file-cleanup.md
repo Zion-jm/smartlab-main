@@ -29,3 +29,16 @@ Evidence: SmartLab-Fix-18-Build.log, SmartLab-Fix-18-Import-Audit.json, SmartLab
 Next: step 19, duplicated UI and domain-code consolidation.
 
 Follow-up cleanup (2026-10-04): removed five standalone backend browser verification scripts (dashboard width, mobile scroll, report width, responsive workspace, and ribbon rollback) and the conflict, detail, and request manual preview HTML/TSX pairs. A reference scan found only the preview files referencing their own entry points. Retained frontend/tests/table-harness.* and backend/scripts verification/regression tools used by the automated checks. The email-preview artifacts were already absent.
+
+## Handover cleanup — 2026-10-19
+
+Removed six tracked files after checking source, scripts, package commands, workflows and references:
+
+- `frontend/src/components/equipment/ConflictWarningList.tsx`: neither exported component has a caller; active conflict UI remains.
+- `backend/scripts/checkUser.ts`: unreferenced debug helper that printed a complete user record.
+- `backend/scripts/apply-local-equipment-lifecycle.cjs` and `apply-local-session-version.cjs`: superseded by Prisma migrations.
+- `backend/prisma/equipment-lifecycle.sql` and `session-version.sql`: identical copies of migrations 0004 and 0003 respectively. The migrations are retained unchanged.
+
+Updated the lifecycle and session guides to use the supported migration workflow. Historical implementation inventories remain as historical records. Tests, test harnesses, baseline adoption schema, seeds and operational diagnostics are retained. Existing untracked local maintenance tools and documents were not deleted or added. No database cleanup, Git history rewrite or deployment was performed.
+
+Validation: backend and frontend production builds passed; strict lint passed with zero errors and warnings; git diff --check passed. Vite still reports its existing large-bundle warning. Database and browser suites were not rerun for these unused-file deletions.

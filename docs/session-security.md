@@ -16,13 +16,9 @@ The frontend clears its saved authentication on explicit SESSION_INVALID respons
 
 ## Database change and rollout
 
-Added users.sessionVersion, an integer with default 0. Applied only to localhost smartlab_test using the guarded backend/scripts/apply-local-session-version.cjs script. Prisma Client regenerated. No database reset, seed, record deletion, or remote deployment was performed.
+The users.sessionVersion column is installed by `backend/prisma/migrations/0003_session_version/migration.sql`. Back up the database, follow [production deployment](production-deployment.md), and run `npm run db:deploy` from the repository root. Existing databases without migration history require the documented baseline adoption first. The duplicate standalone SQL and local apply helper were removed on 2026-10-19.
 
-The reviewed additive SQL is backend/prisma/session-version.sql. Before running this code against the previous hosted development environment or another database, back up that database and apply that SQL, then generate Prisma Client and build/restart the API. The helper script intentionally refuses databases other than local smartlab_test. Do not run a reset to install this column.
-
-Previously issued tokens do not contain a session version and are rejected. All users must sign in again after this update. Restart your local development processes to load the regenerated Prisma Client.
-
-Future password-reset or account-access mutation code must increment sessionVersion in the same database write. Direct manual database edits do not automatically increment it. Keep the version column if reverting application code; removing it is unnecessary, and reverting authentication code restores the previous security weaknesses.
+Generate Prisma Client and rebuild/restart the API. Tokens issued before session versioning require a fresh login. Password and access mutations must increment sessionVersion in the same database write; direct manual edits do not do this automatically.
 
 ## How to see the change locally
 
@@ -43,7 +39,7 @@ New tests cover active-token deactivation, protected mutations, inactive login, 
 
 Tests used isolated records in local smartlab_test, with a temporary API on port 3119 and SMTP disabled. The test server was stopped afterward. Full results: SmartLab-Fix-8-Test-Results.txt.
 
-## Changed files
+## Historical implementation record
 
 - backend/prisma/schema.prisma and session-version.sql
 - backend/scripts/apply-local-session-version.cjs
