@@ -192,7 +192,7 @@ export default function FacultyPanel() {
     <PortalLayout
       navItems={navItems}
       portalLabel="Faculty Portal"
-      portalSubLabel="smartlab."
+      portalSubLabel="Smartlab"
       sidebarExtras={sidebarExtras}
     >
       <div className="space-y-4">

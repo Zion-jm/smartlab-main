@@ -226,7 +226,7 @@ export default function StudentPanel() {
     <PortalLayout
       navItems={navItems}
       portalLabel="Student Portal"
-      portalSubLabel="smartlab."
+      portalSubLabel="Smartlab"
       sidebarExtras={sidebarExtras}
     >
       <div className="space-y-4">

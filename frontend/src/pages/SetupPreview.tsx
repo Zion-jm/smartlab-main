@@ -40,7 +40,7 @@ export default function SetupPreview({ live = false }: { live?: boolean }) {
   const go = (next: number) => { setError(''); setStep(next); };
 
   return <main className="setup-preview">
-    <header className="setup-brand"><div><img src="/PUPLogo.png" alt="PUP seal" /><span><strong>smartlab.</strong><small>PUP Lopez Campus</small></span></div><span className="setup-badge">{live ? 'First-time setup' : 'Design preview'}</span></header>
+    <header className="setup-brand"><div><img src="/PUPLogo.png" alt="PUP seal" /><span><strong>Smartlab</strong><small>PUP Lopez Campus</small></span></div><span className="setup-badge">{live ? 'First-time setup' : 'Design preview'}</span></header>
     <div className="setup-shell">
       <aside className="setup-intro">
         <span className="setup-eyebrow">A good place to begin</span>
