@@ -3,10 +3,11 @@
 export const paginateReportTables = `(async () => {
   await document.fonts.ready;
   const originals = Array.from(document.querySelectorAll('.report-page'));
-  for (const original of originals) {
+  const original = originals[0];
+  if (original && originals.every(p => p.querySelector('.table-wrap tbody'))) {
     const originalBody = original.querySelector('.table-wrap tbody');
-    if (!originalBody) continue;
-    const rows = Array.from(originalBody.rows);
+    const rows = originals.flatMap(p => Array.from(p.querySelector('.table-wrap tbody').rows));
+    originals.slice(1).forEach(p => p.remove());
     originalBody.replaceChildren();
     let current = original;
     let body = originalBody;
