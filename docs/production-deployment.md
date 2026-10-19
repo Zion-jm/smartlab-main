@@ -1,12 +1,12 @@
 # SmartLab production preparation — step 11
 
-Prepared locally on 2026-10-01. Nothing was deployed, and no hosting provider was selected.
+Historical preparation record from 2026-10-01. For the current provider setup, use [the production launch guide](production-launch-guide.md). Test totals below describe historical runs.
 
 ## Deployment design
 
 One Node web service serves the compiled React app and Express API. PostgreSQL is configured separately. Leave VITE_API_BASE_URL unset so the browser uses the same-origin /api path. The eventual provider supplies HTTPS and forwards traffic to PORT.
 
-Production uses compiled files only. Startup does not install packages, migrate, push schema changes or seed demo data. It checks configuration, database access, required columns and frontend index.html before listening. /health is liveness; /ready checks database connectivity without exposing user counts or database diagnostics. The old /api/test-db endpoint was removed.
+Production uses compiled files only. Docker and npm run start:production apply tracked migrations with prisma migrate deploy before starting the API. Startup does not install packages, push schema changes or seed demo data. It checks configuration, database access, required columns and frontend index.html before listening. /health is liveness; /ready checks database connectivity without exposing user counts or database diagnostics. The old /api/test-db endpoint was removed.
 
 React deep links serve index.html. Unknown API paths return JSON 404. Hashed assets use long-lived immutable caching, while index.html is revalidated. Production CORS allows the exact configured FRONTEND_URL; it does not replace authentication.
 
@@ -18,7 +18,7 @@ React deep links serve index.html. Unknown API paths return JSON 404. Hashed ass
 - Keep backend/dist, frontend/dist, frontend/public (PDF images), Prisma migrations and generated Prisma Client/runtime dependencies in the workspace layout.
 - Never package real .env files or local test data. Supply secrets through deployment configuration.
 
-No container or provider-specific manifest was added. The local Windows rehearsal does not validate a future Linux host's system libraries, TLS or proxy settings.
+A root Dockerfile now installs Chromium, builds both packages and invokes the migration-aware startup script. Local rehearsal alone does not validate a cloud host's TLS or proxy settings.
 
 ## Production environment
 

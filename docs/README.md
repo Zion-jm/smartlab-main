@@ -1,33 +1,65 @@
 # SmartLab documentation
 
-All project documentation lives in this folder. The repository root README is the entry point shown on GitHub. Commands in guides run from the repository root unless stated otherwise.
+Choose the guide for your task. Commands run from the repository root unless stated otherwise. Planned work and historical results are not proof of current functionality or release readiness.
 
-## Start here
+## Operate and hand over
 
-- [Future updates and planned improvements](future-updates.md)
 - [Instructor handover checklist](instructor-handover-checklist.md)
-- [Local development](local-development.md)
 - [First-time setup](first-time-setup.md)
-- [Production deployment](production-deployment.md)
-- [Verification and test commands](reproducible-verification.md)
-- [Security review — 19 October 2026](security-review-2026-10-19.md)
 - [Email configuration](EMAIL_NOTIFICATIONS.md)
-- [API reference](API.md) — verify endpoint details against current route source.
-- [Project handoff](PROJECT_HANDOFF.md) — implementation snapshot dated 1 October; counts and results are historical.
-- [Changelog](CHANGELOG.md)
+- [Backup recovery (private repository)](https://github.com/Zion-jm/smartlab-backups/blob/main/RECOVERY.md)
+- [Future updates — planned work](future-updates.md)
 
-## Feature and maintenance guides
+## Develop, test and deploy
 
+- [Local development](local-development.md)
+- [Automated verification](reproducible-verification.md)
+- [Production launch: Render, Aiven and backups](production-launch-guide.md)
+- [Database deployment and baseline adoption](production-deployment.md)
+- [API reference — verify against current routes](API.md)
+- [Prisma and indexes](prisma-and-indexes.md)
+- [Release-readiness plan](release-readiness-plan.md)
+
+## Requests and academic records
+
+- [Request types](request-types-rollout.md)
+- [Approval safety](approval-safety.md)
 - [Borrowing policy](borrowing-policy.md)
+- [Academic directory validation](academic-directory-validation.md)
 - [Student academic records](student-academic-records.md)
-- [Equipment lifecycle](equipment-lifecycle.md)
+- [Manila time contract](manila-time-contract.md)
+
+## Equipment, inventory and reports
+
+- [Inventory quantities](inventory-quantities.md)
 - [Inventory safety](inventory-safety.md)
+- [Equipment validation](equipment-validation.md)
+- [Equipment archive and restore](equipment-lifecycle.md)
+- [Account and equipment retirement](retirement-policy.md)
+- [Pagination and PDF limits](pagination-and-report-limits.md)
+
+## Security and maintenance
+
+- [Security review: 19 October 2026](security-review-2026-10-19.md)
 - [Session security](session-security.md)
-- [PDF and report limits](pagination-and-report-limits.md)
-- [Repository cleanup record](unused-file-cleanup.md)
+- [Errors and audit records](errors-and-audit.md)
+- [Dependency remediation](dependency-remediation.md)
+- [Lint remediation](lint-remediation.md)
+- [Cleanup record](unused-file-cleanup.md)
 
-Other domain and testing guides remain alongside these files. Dated results describe the runs recorded at that time, not proof that the latest revision has passed.
+## Manual testing
 
-## Historical material
+- [Checkout](checkout-workflow-test-guide.md)
+- [Partial returns](partial-return-test-guide.md)
+- [Request reliability](request-reliability-test-guide.md)
+- [Request safeguards and refresh](request-safeguards-and-refresh-testing.md)
+- [Setup design preview — simulated only](setup-preview.md)
 
-The historical/ folder holds the original handoff and Vite starter README. Control-ribbon plans, reusable-table plans, project-test-plan.md and older development/component guides record earlier proposals or architecture. Current setup and deployment guides take precedence. Fresh test evidence is generated under ignored artifacts/; older screenshots are not current verification.
+## Historical reference
+
+- [Historical index — archived plans and consolidated UI reports](historical/README.md)
+- [Changelog](CHANGELOG.md)
+- [Earlier security review: 4 October](security-review-2026-10-04.md)
+- [Legacy request removal](remove-legacy-requests.md)
+
+Historical reports retain original results for context; current operating guides take precedence. Generated evidence belongs under ignored artifacts/. Local unpublished notes may also exist here; review them before adding them to Git.

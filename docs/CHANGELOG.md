@@ -48,7 +48,7 @@ All notable changes to the SmartLab project will be documented in this file.
 
 ### 🔧 Technical Improvements
 - **Eliminated CSS duplications** across all panels
-- **Standardized component structure** 
+- **Standardized component structure**
 - **Improved performance** with optimized CSS
 - **Better maintainability** with modular architecture
 - **Enhanced developer experience** with clear patterns
@@ -119,4 +119,4 @@ If upgrading from v1.x to v2.0:
 
 ---
 
-*For detailed migration instructions, see [development-guide.md](./development-guide.md)*
+*For detailed migration instructions, see [development-guide.md](historical/development-guide.md)*

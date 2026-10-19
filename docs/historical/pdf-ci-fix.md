@@ -1,3 +1,5 @@
+> Archived record, not current operating instructions. Start with the [documentation index](../README.md).
+
 # PDF runtime CI correction
 
 The hosted diagnostic returned ENOENT after approximately 60 seconds. It confirms the CLI renderer did not return a usable PDF, but does not establish the underlying Chromium failure.
