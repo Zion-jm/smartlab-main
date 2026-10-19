@@ -1,5 +1,6 @@
 import { access } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
+import { paginateReportTables } from './reportPagination';
 
 const chromiumCandidates = [
   process.env.CHROMIUM_PATH,
@@ -27,7 +28,9 @@ export async function renderHtmlPdf(html: string): Promise<Buffer> {
       const page = await browser.newPage();
       // Reports embed their assets; external requests are unnecessary.
       await page.route('**/*', route => route.abort());
+      await page.emulateMedia({ media: 'print' });
       await page.setContent(html, { waitUntil: 'load', timeout: 30000 });
+      await page.evaluate(paginateReportTables);
       return page.pdf({ printBackground: true, preferCSSPageSize: true, displayHeaderFooter: false });
     };
     return await Promise.race([

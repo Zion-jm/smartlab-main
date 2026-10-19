@@ -1,6 +1,6 @@
 const fs = require('node:fs/promises');
 jest.mock('node:fs/promises', () => ({ access: jest.fn() }));
-const mockPage = { route: jest.fn(), setContent: jest.fn(), pdf: jest.fn() };
+const mockPage = { route: jest.fn(), emulateMedia: jest.fn(), evaluate: jest.fn(), setContent: jest.fn(), pdf: jest.fn() };
 const mockBrowser = { newPage: jest.fn(), close: jest.fn() };
 const mockLaunch = jest.fn();
 jest.mock('playwright-core', () => ({ chromium: { launch: (...args) => mockLaunch(...args) } }));
@@ -17,7 +17,7 @@ test('prints with CSS page size and backgrounds, blocks external requests, and c
   const abort = jest.fn(); mockPage.route.mock.calls[0][1]({ abort }); expect(abort).toHaveBeenCalled();
   expect(mockBrowser.close).toHaveBeenCalledTimes(1);
 });
-test.each(['newPage', 'setContent', 'pdf'])('closes browser after %s failure', async stage => {
+test.each(['newPage', 'setContent', 'evaluate', 'pdf'])('closes browser after %s failure', async stage => {
   const error = new Error('render failed'); (mockBrowser[stage] || mockPage[stage]).mockRejectedValueOnce(error);
   await expect(renderHtmlPdf('<html/>')).rejects.toBe(error); expect(mockBrowser.close).toHaveBeenCalledTimes(1);
 });

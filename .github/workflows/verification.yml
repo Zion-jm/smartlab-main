@@ -39,6 +39,8 @@ jobs:
       - run: npm run test:setup
       - run: npm run test:regression
       - run: npx playwright install --with-deps chromium
+      - name: PDF pagination with wrapped rows
+        run: node backend/scripts/verify-pdf-pagination.cjs
       - name: Browser contracts
         run: npm run test:ui
       - name: Fresh and upgrade migrations with production smoke

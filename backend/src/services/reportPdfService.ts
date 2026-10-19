@@ -306,7 +306,7 @@ const renderPage = (
   `;
 };
 
-const renderDocument = (
+export const renderBorrowRequestDocument = (
   pages: RequestSummary[][],
   logoDataUri: string,
   certificationDataUri: string
@@ -1191,7 +1191,7 @@ export const generateBorrowRequestPdf = limitedReport(async (
   ]);
 
     return {
-      buffer: await renderHtmlPdf(await withReportHeaderContext(renderDocument(pages, logoDataUri, certificationDataUri), prisma, filters)),
+      buffer: await renderHtmlPdf(await withReportHeaderContext(renderBorrowRequestDocument(pages, logoDataUri, certificationDataUri), prisma, filters)),
       filename: buildFilename(filters),
       count: requests.length,
     };
