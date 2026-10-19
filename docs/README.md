@@ -4,6 +4,7 @@ All project documentation lives in this folder. The repository root README is th
 
 ## Start here
 
+- [Instructor handover checklist](instructor-handover-checklist.md)
 - [Local development](local-development.md)
 - [First-time setup](first-time-setup.md)
 - [Production deployment](production-deployment.md)
