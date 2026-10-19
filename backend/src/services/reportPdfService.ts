@@ -345,7 +345,7 @@ export const renderBorrowRequestDocument = (
       }
       .logo-frame { display: flex; width: 28mm; height: 28mm; flex: 0 0 28mm; align-items: center; justify-content: center; }
       .logo-frame img { width: 26mm; height: 26mm; object-fit: contain; }
-      .header-text { padding-top: 4mm; color: #111; font-family: "Times New Roman", Georgia, serif; line-height: 1.05; }
+      .header-text { padding-top: 2mm; color: #111; font-family: "Times New Roman", Georgia, serif; line-height: 1.05; }
       .header-text p { margin: 0; font-variant: small-caps; }
       .header-text p:nth-child(1) { font-size: 11pt; }
       .header-text p:nth-child(2) { font-size: 17pt; }
@@ -682,7 +682,7 @@ const renderScheduleDocument = (
       .report-header { display: flex; align-items: flex-start; gap: 4mm; width: 100%; height: 32mm; min-height: 32mm; padding: 4mm; }
       .logo-frame { display: flex; width: 28mm; height: 28mm; flex: 0 0 28mm; align-items: center; justify-content: center; }
       .logo-frame img { width: 26mm; height: 26mm; object-fit: contain; }
-      .header-text { padding-top: 4mm; color: #111; font-family: "Times New Roman", Georgia, serif; line-height: 1.05; }
+      .header-text { padding-top: 2mm; color: #111; font-family: "Times New Roman", Georgia, serif; line-height: 1.05; }
       .header-text p { margin: 0; font-variant: small-caps; }
       .header-text p:nth-child(1) { font-size: 11pt; }
       .header-text p:nth-child(2) { font-size: 17pt; }
@@ -762,7 +762,7 @@ const renderScheduleAnalysisDocument = (
       .report-header { display: flex; align-items: flex-start; gap: 4mm; width: 100%; height: 32mm; min-height: 32mm; padding: 4mm; }
       .logo-frame { display: flex; width: 28mm; height: 28mm; flex: 0 0 28mm; align-items: center; justify-content: center; }
       .logo-frame img { width: 26mm; height: 26mm; object-fit: contain; }
-      .header-text { padding-top: 4mm; color: #111; font-family: "Times New Roman", Georgia, serif; line-height: 1.05; }
+      .header-text { padding-top: 2mm; color: #111; font-family: "Times New Roman", Georgia, serif; line-height: 1.05; }
       .header-text p { margin: 0; font-variant: small-caps; }
       .header-text p:nth-child(1) { font-size: 11pt; }
       .header-text p:nth-child(2) { font-size: 17pt; }
@@ -1104,7 +1104,7 @@ const renderDemandDocument = (
       }
       .logo-frame { display: flex; width: 28mm; height: 28mm; flex: 0 0 28mm; align-items: center; justify-content: center; }
       .logo-frame img { width: 26mm; height: 26mm; object-fit: contain; }
-      .header-text { padding-top: 4mm; color: #111; font-family: "Times New Roman", Georgia, serif; line-height: 1.05; }
+      .header-text { padding-top: 2mm; color: #111; font-family: "Times New Roman", Georgia, serif; line-height: 1.05; }
       .header-text p { margin: 0; font-variant: small-caps; }
       .header-text p:nth-child(1) { font-size: 11pt; }
       .header-text p:nth-child(2) { font-size: 17pt; }
@@ -1571,7 +1571,7 @@ const renderEquipmentDocument = (
       .report-header { display: flex; align-items: flex-start; gap: 4mm; width: 100%; height: 32mm; min-height: 32mm; padding: 4mm; }
       .logo-frame { display: flex; width: 28mm; height: 28mm; flex: 0 0 28mm; align-items: center; justify-content: center; }
       .logo-frame img { width: 26mm; height: 26mm; object-fit: contain; }
-      .header-text { padding-top: 4mm; color: #111; font-family: "Times New Roman", Georgia, serif; line-height: 1.05; }
+      .header-text { padding-top: 2mm; color: #111; font-family: "Times New Roman", Georgia, serif; line-height: 1.05; }
       .header-text p { margin: 0; font-variant: small-caps; }
       .header-text p:nth-child(1) { font-size: 11pt; }
       .header-text p:nth-child(2) { font-size: 17pt; }
