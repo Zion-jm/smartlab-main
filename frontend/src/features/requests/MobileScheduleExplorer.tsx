@@ -1,3 +1,4 @@
+import type { ChartOutputOptions } from '../../components/lab-schedule/chartOutputOptions';
 import { dateToDateKey } from '../../utils/dateTime';
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import ControlRibbon from '../../components/shared/ControlRibbon';
@@ -15,7 +16,7 @@ const shift = (key: string, days: number) => { const date = new Date(key + 'T00:
 const todayKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const label = (key: string) => new Date(key + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
-export default function MobileScheduleExplorer({ schedules, loading, error, reload, computerLabNames, actions, extraControls, onSelectSchedule, onPrintChart, printTitle, allRooms = false }: Pick<SchedulesState, 'schedules' | 'loading' | 'error' | 'reload'> & Partial<Pick<SchedulesState, 'dateFilter' | 'setDateFilter'>> & { computerLabNames: string[]; actions?: ReactNode; extraControls?: ReactNode; onSelectSchedule?: (id: string) => void; onPrintChart?: () => void; printTitle?: string; allRooms?: boolean }) {
+export default function MobileScheduleExplorer({ schedules, loading, error, reload, computerLabNames, actions, extraControls, onSelectSchedule, onPrintChart, printTitle, allRooms = false }: Pick<SchedulesState, 'schedules' | 'loading' | 'error' | 'reload'> & Partial<Pick<SchedulesState, 'dateFilter' | 'setDateFilter'>> & { computerLabNames: string[]; actions?: ReactNode; extraControls?: ReactNode; onSelectSchedule?: (id: string) => void; onPrintChart?: (options: ChartOutputOptions) => void | Promise<void>; printTitle?: string; allRooms?: boolean }) {
   const openSchedule = (item: LabSchedule) => { if (onSelectSchedule) onSelectSchedule(item.id); else setSelected(item); };
   const weekMonday = (key: string) => shift(key, 1 - (new Date(key + 'T00:00:00Z').getUTCDay() || 7));
   const [chartWeek, setChartWeek] = useState(() => weekMonday(todayKey()));

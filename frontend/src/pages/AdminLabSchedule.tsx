@@ -1,3 +1,7 @@
+import { outputWeeks } from '../components/lab-schedule/chartOutputOptions';
+import { dateToDateKey, manilaTodayForPicker, addCalendarDays, dateKeyToPickerDate } from '../utils/dateTime';
+import { occursOnDate } from '../components/lab-schedule/scheduleViewUtils';
+import type { ChartOutputOptions } from '../components/lab-schedule/chartOutputOptions';
 import { useAdminShortcut } from '../hooks/useAdminShortcut';
 import { useAuthStore } from '../stores/authStore';
 import { getUserPreferences, usePreferencesStore } from '../stores/preferencesStore';
@@ -20,7 +24,7 @@ import AdminLayout from '../components/AdminLayout';
 
 import FilterToolbar from '../components/FilterToolbar';
 
-import { academicPeriodApi, labScheduleApi } from '../services/api';
+import { labScheduleApi } from '../services/api';
 
 import type { AcademicContextSelection, ApiLabSchedule, LabSchedule, LabScheduleResourceOption, LabScheduleResources, ScheduleType } from '../types/labSchedule';
 
@@ -64,7 +68,7 @@ const isScheduleView = (value: string | null): value is ScheduleView =>
 
 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function ExpandedChartDialog({ schedules, computerLabNames, selectedLab, onSelectedLabChange, selectedWeekStart, onSelectedWeekStartChange, onSelectSchedule, onPrint, printTitle, onClose }: { schedules: LabSchedule[]; computerLabNames: string[]; selectedLab: string; onSelectedLabChange: (lab: string) => void; selectedWeekStart: string; onSelectedWeekStartChange: (weekStart: string) => void; onSelectSchedule: (id: string) => void; onPrint: () => void; printTitle: string; onClose: () => void }) {
+function ExpandedChartDialog({ schedules, computerLabNames, selectedLab, onSelectedLabChange, selectedWeekStart, onSelectedWeekStartChange, onSelectSchedule, onPrint, printTitle, onClose }: { schedules: LabSchedule[]; computerLabNames: string[]; selectedLab: string; onSelectedLabChange: (lab: string) => void; selectedWeekStart: string; onSelectedWeekStartChange: (weekStart: string) => void; onSelectSchedule: (id: string) => void; onPrint: (options: ChartOutputOptions) => void | Promise<void>; printTitle: string; onClose: () => void }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -539,22 +543,29 @@ export default function AdminLabSchedule() {
       ? 'One-Time Laboratory Schedule'
       : 'Laboratory Schedule';
 
-  const printScheduleChart = async () => {
-    const chart = document.querySelector<HTMLElement>('[aria-labelledby="expanded-chart-title"] .schedule-chart-print-area') ?? document.querySelector<HTMLElement>('.schedule-chart-print-area');
-    if (!chart) return;
-    const printChart = chart.cloneNode(true) as HTMLElement;
-    try {
-      const { data } = await academicPeriodApi.getCurrent();
-      const periodLine = document.createElement('p');
-      periodLine.className = 'schedule-chart-active-period';
-      periodLine.textContent = data.current
-        ? `Academic period: ${data.current.academicYear.year} · ${data.current.term.name}`
-        : 'Academic period: Not configured';
-      printChart.querySelector('.schedule-chart-print-title')?.after(periodLine);
-    } catch {
-      setError('Unable to load the active academic period for printing. Please try again.');
-      return;
+  const printScheduleChart = async (options: ChartOutputOptions) => {
+    const response = await labScheduleApi.getAll({ academicYearId: academicPeriod.academicYearId || undefined, termId: academicPeriod.termId || undefined });
+    const raw = response.data;
+    const allSchedules = (Array.isArray(raw) ? raw : raw.schedules).map((schedule: ApiLabSchedule) => normalizeSchedule(schedule, dayNames));
+    const outputSchedules = allSchedules.filter((schedule: LabSchedule) => options.type === 'ALL' || schedule.scheduleType === options.type);
+    const labs = options.lab === 'ALL' ? computerLabNames : [options.lab];
+    if (!labs.length) throw new Error('No laboratories available');
+    const today = dateToDateKey(manilaTodayForPicker());
+    const month = options.period === 'month' ? today.slice(0, 7) : undefined;
+    const weeks = outputWeeks(options.period, today);
+    const pages = labs.flatMap(lab => weeks.map(week => ({ lab, week })));
+    if (options.action === 'csv') {
+      const rows = pages.flatMap(({ lab, week }) => Array.from({ length: 6 }, (_, day) => addCalendarDays(week, day)).filter(date => !month || date.startsWith(month)).flatMap(date => outputSchedules.filter((schedule: LabSchedule) => schedule.isComputerLab && schedule.roomLabel === lab && occursOnDate(schedule, dateKeyToPickerDate(date)!)).map((schedule: LabSchedule) => [date, lab, schedule.timeRange, scheduleTypeLabel[schedule.scheduleType], schedule.programLabel, schedule.facultyName, schedule.subjectLabel, schedule.academicYearLabel, schedule.termLabel])));
+      const cell = (value: unknown) => { const text = String(value ?? ''); const safe = /^[\s]*[=+@-]/.test(text) || /^[\t\r\n]/.test(text) ? `'${text}` : text; return `"${safe.replace(/"/g, '""')}"`; };
+      const csv = '\uFEFF' + [['Date', 'Lab', 'Time', 'Type', 'Program', 'Faculty', 'Subject', 'Academic year', 'Term'], ...rows].map(row => row.map(cell).join(',')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const anchor = document.createElement('a'); anchor.href = url; anchor.download = `lab-schedules-${today}.csv`; anchor.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000); return;
     }
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const markup = pages.map(({ lab, week }, index) => renderToStaticMarkup(<section className="chart-output-page">
+      <ChartView flush showEmptyGrid schedules={outputSchedules} computerLabNames={labs} selectedLab={lab} selectedWeekStart={week} outputMonth={month} printTitle={options.type === 'ALL' ? 'Laboratory Schedule' : `${scheduleTypeLabel[options.type]} Laboratory Schedule`} />
+      <footer className="chart-output-footer">Weekly: blue · One-time: red{month ? ' · Gray dates are outside the month' : ''} · Page {index + 1} of {pages.length}</footer>
+    </section>)).join('');
 
     const frame = document.createElement('iframe');
     frame.setAttribute('title', `${chartPrintTitle} print document`);
@@ -581,9 +592,12 @@ export default function AdminLabSchedule() {
     printDocument.write(`<!doctype html><html><head><meta charset="utf-8"><title>${chartPrintTitle}</title>${styles}<style>
       @page { size: 8.5in 13in !important; margin: 10mm !important; }
       html, body { width: 195.9mm !important; min-width: 195.9mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
-      .schedule-chart-print-area { page: auto !important; width: 195.9mm !important; }
+      .schedule-chart-print-area { page: auto !important; position: relative !important; inset: auto !important; width: 195.9mm !important; }
+      .chart-output-page { break-after: page; break-inside: avoid; }
+      .chart-output-page:last-child { break-after: auto; }
+      .chart-output-footer { visibility: visible !important; font-size: 9pt; padding-top: 3mm; }
       .schedule-chart-time-axis, .schedule-chart-grid { height: 215mm !important; }
-    </style></head><body class="printing-schedule-chart">${printChart.outerHTML}</body></html>`);
+    </style></head><body class="printing-schedule-chart">${markup}</body></html>`);
     printDocument.close();
 
     const finish = () => window.setTimeout(() => frame.remove(), 500);
@@ -600,7 +614,8 @@ export default function AdminLabSchedule() {
       frame.contentWindow?.focus();
       frame.contentWindow?.print();
     };
-    window.setTimeout(() => void print(), 300);
+    await new Promise<void>(resolve => window.setTimeout(resolve, 300));
+    try { await print(); } catch (error) { frame.remove(); throw error; }
   };
 
   return (
