@@ -239,7 +239,7 @@ export default function LandingPage() {
               Features
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-[#1f2937] leading-tight mb-3">Tools for Your<br />Laboratory Activities</h2>
-            <p className="text-base text-[#4b5563] max-w-[550px] mx-auto">Built to simplify every step of the lab management process — from borrowing equipment to scheduling rooms.</p>
+            <p className="text-base text-[#4b5563] max-w-[550px] mx-auto">Built to simplify every step of the lab management process, from borrowing equipment to scheduling rooms.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -271,7 +271,7 @@ export default function LandingPage() {
               icon={UsersIcon}
               iconColor="bg-linear-to-br from-[#800000] to-[#5c0000]"
               title="Multi-Role Dashboards"
-              description="Dedicated interfaces for admins, faculty, and students — each tailored with the tools and views they need."
+              description="Dedicated interfaces give administrators, faculty, and students the tools and views they need."
             />
             <FeatureCard
               icon={ClockIcon}
@@ -430,7 +430,7 @@ export default function LandingPage() {
           <h3 className="text-lg font-bold">Smartlab</h3>
         </div>
         <p className="text-sm mb-1 opacity-85">Laboratory Equipment Borrowing and Scheduling System</p>
-        <p className="text-sm mb-4 opacity-85">Polytechnic University of the Philippines — Lopez, Quezon Campus</p>
+        <p className="text-sm mb-4 opacity-85">Polytechnic University of the Philippines, Lopez, Quezon Campus</p>
         <div className="w-[60px] h-0.5 bg-[#FFB81C] rounded mx-auto my-4 opacity-60" />
         <span className="block text-xs opacity-65">© {new Date().getFullYear()} Smartlab · Developed by BS Information Technology students</span>
       </footer>
