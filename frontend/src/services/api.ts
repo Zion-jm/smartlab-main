@@ -267,6 +267,8 @@ export type EquipmentReportPdfParams = {
 };
 
 export const reportsApi = {
+  downloadLabChartPdf: (params: { period: 'week' | 'month'; lab: string; scheduleType: 'ALL' | 'WEEKLY' | 'ONE_TIME'; academicYearId?: string; termId?: string }) =>
+    api.get('/reports/lab-charts.pdf', { params, responseType: 'blob', timeout: 90000 }),
   downloadBorrowRequestPdf: (params: BorrowRequestReportPdfParams) =>
     api.get('/reports/borrow-requests.pdf', {
       params,

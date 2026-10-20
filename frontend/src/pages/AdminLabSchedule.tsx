@@ -24,7 +24,7 @@ import AdminLayout from '../components/AdminLayout';
 
 import FilterToolbar from '../components/FilterToolbar';
 
-import { labScheduleApi } from '../services/api';
+import { labScheduleApi, reportsApi } from '../services/api';
 
 import type { AcademicContextSelection, ApiLabSchedule, LabSchedule, LabScheduleResourceOption, LabScheduleResources, ScheduleType } from '../types/labSchedule';
 
@@ -544,6 +544,21 @@ export default function AdminLabSchedule() {
       : 'Laboratory Schedule';
 
   const printScheduleChart = async (options: ChartOutputOptions) => {
+    if (options.action === 'pdf') {
+      const response = await reportsApi.downloadLabChartPdf({ period: options.period, lab: options.lab, scheduleType: options.type, academicYearId: academicPeriod.academicYearId || undefined, termId: academicPeriod.termId || undefined }).catch(async (error: unknown) => {
+        const data = (error as { response?: { data?: unknown } }).response?.data;
+        if (data instanceof Blob) {
+          let message = '';
+          try { message = (JSON.parse(await data.text()) as { error?: string }).error || ''; } catch { /* Fall back to a plain message. */ }
+          if (message) throw new Error(message);
+        }
+        throw new Error('The chart PDF could not be generated. Please try again.');
+      });
+      const url = URL.createObjectURL(response.data);
+      const anchor = document.createElement('a'); anchor.href = url; anchor.download = `smartlab-lab-charts-${options.period}.pdf`; anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return;
+    }
     const response = await labScheduleApi.getAll({ academicYearId: academicPeriod.academicYearId || undefined, termId: academicPeriod.termId || undefined });
     const raw = response.data;
     const allSchedules = (Array.isArray(raw) ? raw : raw.schedules).map((schedule: ApiLabSchedule) => normalizeSchedule(schedule, dayNames));
