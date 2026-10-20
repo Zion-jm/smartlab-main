@@ -30,15 +30,33 @@ const StarIcon = () => (
   </svg>
 );
 
+const LockIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+);
+
 const CalendarIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
   </svg>
 );
 
+const FileTextIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+  </svg>
+);
+
 const PackageIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
   </svg>
 );
 
@@ -141,8 +159,7 @@ export default function LandingPage() {
             <li><a href="#home" onClick={(e) => { e.preventDefault(); scrollToSection('home'); }} className="text-[#4b5563] px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all hover:text-[#800000] hover:bg-[rgba(128,0,0,0.05)]">Home</a></li>
             <li><a href="#features" onClick={(e) => { e.preventDefault(); scrollToSection('features'); }} className="text-[#4b5563] px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all hover:text-[#800000] hover:bg-[rgba(128,0,0,0.05)]">Features</a></li>
             <li><a href="#about" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }} className="text-[#4b5563] px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all hover:text-[#800000] hover:bg-[rgba(128,0,0,0.05)]">About</a></li>
-            <li><a href="#how-it-works" onClick={(e) => { e.preventDefault(); scrollToSection('how-it-works'); }} className="text-[#4b5563] px-3.5 py-1.5 rounded-lg text-sm font-medium hover:text-[#800000]">How it works</a></li>
-            <li><a href="#help" onClick={(e) => { e.preventDefault(); scrollToSection('help'); }} className="text-[#4b5563] px-3.5 py-1.5 rounded-lg text-sm font-medium hover:text-[#800000]">Help</a></li>
+            <li><a href="#help" onClick={(e) => { e.preventDefault(); scrollToSection('help'); }} className="text-[#4b5563] px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all hover:text-[#800000] hover:bg-[rgba(128,0,0,0.05)]">Help</a></li>
             <li className="mx-1 text-[#e5e7eb] select-none">|</li>
             <li><a href="#login" onClick={(e) => { e.preventDefault(); scrollToSection('login'); }} className="bg-[#800000] text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all hover:bg-[#a83232]">Sign In</a></li>
           </ul>
@@ -152,13 +169,13 @@ export default function LandingPage() {
           <button type="button" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={menuOpen} aria-controls="landing-mobile-nav" onClick={() => setMenuOpen(!menuOpen)} className="flex h-11 w-11 items-center justify-center rounded-lg text-[#800000]">{menuOpen ? <X size={22} /> : <Menu size={22} />}</button>
         </div>
         {menuOpen && <nav id="landing-mobile-nav" aria-label="Mobile navigation" onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); document.querySelector<HTMLButtonElement>('[aria-controls="landing-mobile-nav"]')?.focus(); } }} className="absolute inset-x-0 top-full border-b border-[#ead7d3] bg-[#faf9f7] p-3 shadow-lg lg:hidden">
-          {['home','features','how-it-works','help','about'].map(id => <a key={id} href={'#' + id} onClick={event => { event.preventDefault(); scrollToSection(id); }} className="flex min-h-11 items-center rounded-lg px-4 text-sm font-medium capitalize text-[#57322d] hover:bg-[#f4e8e5]">{id.replaceAll('-', ' ')}</a>)}
+          {['home','features','about','help'].map(id => <a key={id} href={'#' + id} onClick={event => { event.preventDefault(); scrollToSection(id); }} className="flex min-h-11 items-center rounded-lg px-4 text-sm font-medium capitalize text-[#57322d] hover:bg-[#f4e8e5]">{id}</a>)}
         </nav>}
       </header>
 
       <main className="pt-[72px]">
         {/* Hero Section */}
-        <section id="home" className="relative flex flex-col items-center text-center px-5 pt-12 pb-14 md:pt-20 md:pb-20 gap-4 overflow-hidden">
+        <section id="home" className="relative flex flex-col items-center text-center px-5 pt-12 pb-14 md:pt-24 md:pb-32 gap-4 overflow-hidden">
           <div className="absolute -top-[60%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle,rgba(128,0,0,0.04)_0%,transparent_70%)] pointer-events-none" />
 
           <div className="inline-flex justify-center items-center gap-2 px-4 py-1.5 bg-[#fef3e2] border border-[rgba(255,184,28,0.3)] rounded-full text-xs font-semibold text-[#9a7b4f] tracking-wide">
@@ -167,32 +184,52 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-[52px] leading-tight text-[#800000] max-w-[900px] font-bold tracking-tight">
-            Borrow equipment and<br />
-            <span className="bg-linear-to-br from-[#800000] to-[#a83232] bg-clip-text text-transparent">plan your laboratory use.</span>
+            Smart Laboratory<br />
+            <span className="bg-linear-to-br from-[#800000] to-[#a83232] bg-clip-text text-transparent">Management System</span>
           </h1>
 
           <p className="max-w-[600px] text-base md:text-lg text-[#4b5563] leading-relaxed mt-2">
             Request equipment, reserve laboratory rooms, and track your requests
-            at PUP Lopez Campus.
+            through one platform for students, faculty, and administrators at PUP Lopez Campus.
           </p>
 
           <div className="flex w-full max-w-sm flex-col gap-3 mt-4 items-stretch sm:w-auto sm:max-w-none sm:flex-row sm:items-center">
-            <button 
+            <button
               onClick={() => scrollToSection('login')}
               className="inline-flex justify-center items-center gap-2 px-8 py-3.5 rounded-xl bg-linear-to-br from-[#800000] to-[#5c0000] text-white font-semibold transition-all hover:from-[#a83232] hover:to-[#800000] hover:-translate-y-0.5 shadow-[0_4px_12px_rgba(128,0,0,0.25)] hover:shadow-[0_6px_20px_rgba(128,0,0,0.3)]"
             >
-              Sign in
+              Sign In
               <ArrowRightIcon />
             </button>
-            <button 
-              onClick={() => scrollToSection('how-it-works')}
+            <button
+              onClick={() => scrollToSection('features')}
               className="inline-flex justify-center items-center gap-2 px-7 py-3.5 rounded-xl bg-white text-[#800000] font-semibold border border-[rgba(128,0,0,0.15)] transition-all hover:border-[#800000] hover:bg-[rgba(128,0,0,0.03)]"
             >
-              How it works
+              Learn More
               <ChevronDownIcon />
             </button>
           </div>
         </section>
+
+        {/* Stats Strip */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 px-5 py-7 md:flex md:justify-center md:gap-12 md:py-10 bg-white border-y border-[#e5e7eb]">
+          <div className="text-center">
+            <div className="whitespace-nowrap text-2xl md:text-3xl font-bold text-[#800000] leading-tight">3</div>
+            <div className="text-sm text-[#4b5563] font-medium">User Roles</div>
+          </div>
+          <div className="text-center">
+            <div className="whitespace-nowrap text-2xl md:text-3xl font-bold text-[#800000] leading-tight">Online</div>
+            <div className="text-sm text-[#4b5563] font-medium">Request Submission</div>
+          </div>
+          <div className="text-center">
+            <div className="whitespace-nowrap text-2xl md:text-3xl font-bold text-[#800000] leading-tight">Schedule</div>
+            <div className="text-sm text-[#4b5563] font-medium">Conflict Checks</div>
+          </div>
+          <div className="text-center">
+            <div className="whitespace-nowrap text-2xl md:text-3xl font-bold text-[#800000] leading-tight">Digital</div>
+            <div className="text-sm text-[#4b5563] font-medium">Request Records</div>
+          </div>
+        </div>
 
         {/* Features Section */}
         <section id="features" className="scroll-mt-[88px] py-12 md:py-24 px-5 md:px-20 max-w-[1200px] mx-auto">
@@ -201,47 +238,76 @@ export default function LandingPage() {
               <StarIcon />
               Features
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1f2937] leading-tight mb-3">Your laboratory tasks in one place</h2>
-            <p className="text-base text-[#4b5563] max-w-[550px] mx-auto">Find the tools you need to request resources and follow their status.</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-[#1f2937] leading-tight mb-3">Tools for Your<br />Laboratory Activities</h2>
+            <p className="text-base text-[#4b5563] max-w-[550px] mx-auto">Built to simplify every step of the lab management process — from borrowing equipment to scheduling rooms.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FeatureCard 
-              icon={PackageIcon} 
-              iconColor="bg-[#800000]"
-              title="Equipment borrowing"
-              description="Request equipment for your activities and keep track of borrowed items and returns."
+            <FeatureCard
+              icon={LockIcon}
+              iconColor="bg-linear-to-br from-[#800000] to-[#5c0000]"
+              title="Account Access"
+              description="Sign in with your assigned account to access the tools available to your role."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={CalendarIcon}
-              iconColor="bg-[#800000]"
-              title="Laboratory reservations"
-              description="Check schedules and submit a room reservation request. Reservations are subject to approval."
+              iconColor="bg-linear-to-br from-[#FFB81C] to-[#e5a518]"
+              title="Smart Scheduling"
+              description="Check laboratory schedules and submit reservation requests. Schedule checks help identify conflicting bookings."
             />
-            <FeatureCard 
-              icon={ClockIcon} 
-              iconColor="bg-[#800000]"
-              title="Request tracking"
-              description="Check the status of your requests and review notifications about approvals and changes."
+            <FeatureCard
+              icon={FileTextIcon}
+              iconColor="bg-linear-to-br from-[#0d9488] to-[#0f766e]"
+              title="Reports & Export"
+              description="Administrators can review laboratory records and download reports for monitoring and documentation."
+            />
+            <FeatureCard
+              icon={PackageIcon}
+              iconColor="bg-linear-to-br from-[#FFB81C] to-[#e5a518]"
+              title="Equipment Tracking"
+              description="Monitor laboratory equipment inventory, track borrowing status, and manage returns through a centralized dashboard."
+            />
+            <FeatureCard
+              icon={UsersIcon}
+              iconColor="bg-linear-to-br from-[#800000] to-[#5c0000]"
+              title="Multi-Role Dashboards"
+              description="Dedicated interfaces for admins, faculty, and students — each tailored with the tools and views they need."
+            />
+            <FeatureCard
+              icon={ClockIcon}
+              iconColor="bg-linear-to-br from-[#0d9488] to-[#0f766e]"
+              title="Request Notifications"
+              description="Review notifications and check the latest status of your requests, approvals, and schedule changes."
             />
           </div>
         </section>
 
-        <section id="how-it-works" className="scroll-mt-[88px] border-y border-[#eadfd9] bg-white px-5 py-12 md:py-16">
-          <div className="mx-auto max-w-[1040px]">
-            <h2 className="text-2xl font-bold md:text-3xl">How it works</h2>
-            <p className="mt-3 max-w-2xl text-[#4b5563]">Submit your request, then check its status before using laboratory resources.</p>
-            <ol className="mt-8 grid gap-8 md:grid-cols-3">
-              {[
-                ['Sign in', 'Use the account provided by your laboratory administrator.'],
-                ['Submit your request', 'Choose the equipment or laboratory room and provide the required details.'],
-                ['Check the approval status', 'Wait for approval before borrowing equipment or using the reserved room.'],
-              ].map(([title, description], index) => <li key={title}>
-                <span aria-hidden="true" className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-[#f6ece9] font-bold text-[#800000]">{index + 1}</span>
-                <h3 className="font-semibold text-[#1f2937]">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-[#4b5563]">{description}</p>
-              </li>)}
-            </ol>
+        {/* About Section */}
+        <section id="about" className="scroll-mt-[88px] bg-linear-to-br from-[#5c0000] via-[#800000] to-[#a83232] text-white py-12 md:py-24 px-5 md:px-20 relative overflow-hidden">
+          <div className="absolute -bottom-24 -right-24 w-[400px] h-[400px] rounded-full bg-[rgba(255,184,28,0.06)] pointer-events-none" />
+
+          <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-8 md:gap-16 items-center relative z-10">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold leading-tight mb-4">About<br />Smartlab</h2>
+              <div className="w-[60px] h-[3px] bg-[#FFB81C] rounded mb-4" />
+              <p className="text-sm opacity-80 leading-relaxed">
+                Polytechnic University of the Philippines<br />
+                Lopez, Quezon Campus<br />
+                Bachelor of Science in Information Technology
+              </p>
+            </div>
+
+            <div className="space-y-5">
+              <p className="text-base leading-7 opacity-90">
+                Smartlab brings equipment borrowing, laboratory reservations, and request tracking together for the PUP Lopez Campus community. Students, faculty, and administrators can manage these activities through their assigned accounts.
+              </p>
+              <p className="text-base leading-7 opacity-90">
+                Submit a request with the required details, then check its status in your account. Submitting a request does not mean it is approved; wait for approval before borrowing equipment or using a reserved laboratory.
+              </p>
+              <p className="text-base leading-7 opacity-90">
+                Need access or help with a request? Your laboratory administrator can assist with accounts, equipment borrowing, and room reservations.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -355,12 +421,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="about" className="scroll-mt-[88px] border-t border-[#eadfd9] bg-white px-5 py-10">
-          <div className="mx-auto max-w-[760px]">
-            <h2 className="text-xl font-bold">About Smartlab</h2>
-            <p className="mt-3 text-sm leading-7 text-[#4b5563]">Smartlab supports equipment borrowing, laboratory reservations, and request tracking at the Polytechnic University of the Philippines, Lopez Campus. It brings these tasks together for students, faculty, and laboratory administrators.</p>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
