@@ -1,7 +1,7 @@
 import DropdownField from '../shared/DropdownField';
 import ScheduleDetailModal from './ScheduleDetailModal';
 import { useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Maximize2, Printer } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Maximize2, Printer, Download } from 'lucide-react';
 import type { LabSchedule } from '../../types/labSchedule';
 import { addCalendarDays, dateKeyToPickerDate, dateToDateKey, manilaTodayForPicker } from '../../utils/dateTime';
 import { calendarColors, chartDayOrder, chartHourMarks, chartMinuteEnd, chartMinuteStart, chartRowHeight, chartSlotMinutes, chartSlotPercents, chartTotalMinutes, clampMinutes, dayNames, formatClockLabel, getMonthLabel, minutesFromIso, occursOnDate, sameDay, scheduleTypeLabel } from './scheduleViewUtils';
@@ -155,7 +155,7 @@ export function ChartView({ flush = false, schedules, computerLabNames = [], onS
             <div className="schedule-chart-lab-control flex min-w-0 flex-1 items-center gap-2 sm:flex-none"><span className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</span>
             <DropdownField value={selectedLab} onChange={selectLab} options={labs.map(lab => ({value:lab,label:lab}))} placeholder="No labs available" disabled={!labs.length} className="min-w-0 flex-1 sm:min-w-[140px]" />
             </div>
-            {onPrint && <button type="button" onClick={onPrint} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Print weekly lab utilization chart or save it as PDF"><Printer size={15} aria-hidden="true" />Print / PDF</button>}
+            {onPrint && <button type="button" onClick={onPrint} className="inline-flex min-h-11 min-w-11 justify-center items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" title="Print chart or save as PDF" aria-label="Print weekly lab utilization chart or save it as PDF"><Download size={18} className="md:hidden" aria-hidden="true" /><Printer size={15} className="hidden md:block" aria-hidden="true" /><span className="hidden md:inline">Print / PDF</span><span className="sr-only md:hidden">Save chart as PDF</span></button>}
             {onExpand && <button type="button" onClick={onExpand} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Expand weekly lab utilization chart"><Maximize2 size={15} aria-hidden="true" />Expand</button>}
           </div>
         </div>

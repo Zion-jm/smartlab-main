@@ -605,7 +605,7 @@ export default function AdminLabSchedule() {
 
   return (
     <AdminLayout>
-      {mobile && <MobileScheduleExplorer schedules={schedules} loading={loading} error={error} reload={fetchSchedules} computerLabNames={computerLabNames} allRooms onSelectSchedule={handleViewSchedule}
+      {mobile && <MobileScheduleExplorer schedules={schedules} loading={loading} error={error} reload={fetchSchedules} computerLabNames={computerLabNames} allRooms onSelectSchedule={handleViewSchedule} onPrintChart={printScheduleChart} printTitle="Laboratory Schedule"
         actions={<button type="button" onClick={openCreateModal} className="page-control-ribbon__add-button inline-flex min-h-11 shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-lg bg-[#800000] px-3 text-xs font-semibold text-white"><Plus size={16} aria-hidden="true" /><span className="sr-only md:not-sr-only">Add Schedule</span></button>}
         extraControls={<AcademicPeriodFilter compact compactDropdown value={academicPeriod} onChange={setAcademicPeriod} />}
       />}
