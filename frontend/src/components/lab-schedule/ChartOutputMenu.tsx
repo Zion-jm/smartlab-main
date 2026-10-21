@@ -1,3 +1,4 @@
+import PdfProgressNotice from '../admin/report-details/PdfProgressNotice';
 import { useEffect, useRef, useState } from 'react';
 import { outputWeeks, type ChartOutputOptions } from './chartOutputOptions';
 import { Download, Printer } from 'lucide-react';
@@ -8,16 +9,17 @@ export default function ChartOutputMenu({ onPrint, labs, selectedLab }: Props) {
   const [period, setPeriod] = useState<ChartOutputOptions['period']>('week');
   const [lab, setLab] = useState(selectedLab);
   const [type, setType] = useState<ChartOutputOptions['type']>('ALL');
-  const [busy, setBusy] = useState(false);
+  const [activeAction, setActiveAction] = useState<ChartOutputOptions['action'] | null>(null);
+  const busy = activeAction !== null;
   const [error, setError] = useState('');
   const chosenLab = lab === 'ALL' || labs.includes(lab) ? lab : selectedLab;
   const pages = outputWeeks(period).length * (chosenLab === 'ALL' ? labs.length : 1);
   const run = async (action: ChartOutputOptions['action']) => {
     if (busy) return;
-    setBusy(true); setError('');
+    setActiveAction(action); setError('');
     try { await onPrint({ period, lab: chosenLab, type, action }); close(); }
     catch (error) { setError(error instanceof Error ? error.message : 'Unable to prepare schedules. Please try again.'); }
-    finally { setBusy(false); }
+    finally { setActiveAction(null); }
   };
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -56,9 +58,9 @@ export default function ChartOutputMenu({ onPrint, labs, selectedLab }: Props) {
       }}>
       <Download size={18} className="md:hidden" aria-hidden="true" /><Printer size={15} className="hidden md:block" aria-hidden="true" /><span className="hidden md:inline">Print / Export</span>
     </button>
-    {busy && <span role="status" className="ml-2 text-xs font-semibold text-[#800000]">Preparing your file...</span>}
+    <PdfProgressNotice active={activeAction === 'pdf'} />
     {position && <div ref={panel} role="dialog" aria-label="Chart print and export options" style={{ ...position, maxHeight: `calc(100dvh - ${position.top + 16}px)` }} className="fixed z-[80] w-[min(40rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-[#eadfdd] bg-white text-left shadow-xl">
-      <div className="border-b border-[#f1e9e7] px-5 py-3 text-xs text-[#786565]">{busy ? 'Preparing your file. Please wait…' : `${pages} ${pages === 1 ? 'page' : 'pages'}: one lab per week`}</div>
+      <div className="border-b border-[#f1e9e7] px-5 py-3 text-xs text-[#786565]">{`${pages} ${pages === 1 ? 'page' : 'pages'}: one lab per week`}</div>
       <div className="grid gap-3 p-4 sm:grid-cols-3">
         <label className="text-xs font-semibold">Period<select disabled={busy} value={period} onChange={e => setPeriod(e.target.value as ChartOutputOptions['period'])} className="mt-2 block min-h-11 w-full rounded-lg border p-2"><option value="week">This week</option><option value="month">This month</option></select></label>
         <label className="text-xs font-semibold">Laboratory<select disabled={busy} value={chosenLab} onChange={e => setLab(e.target.value)} className="mt-2 block min-h-11 w-full rounded-lg border p-2">{labs.map(name => <option key={name} value={name}>{name}</option>)}<option value="ALL">All labs</option></select></label>
