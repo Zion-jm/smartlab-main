@@ -35,5 +35,6 @@
   "equipmentReturnValidation.test.js",
   "requestReliability.test.js",
   "requestSafeguards.test.js",
-  "borrowingPolicy.test.js"
+  "borrowingPolicy.test.js",
+  "accountInvitations.test.js"
 ]

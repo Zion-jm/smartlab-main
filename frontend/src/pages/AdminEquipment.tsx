@@ -335,7 +335,7 @@ export default function AdminEquipment() {
       {
         title: 'Damaged',
         value: stats.inventory?.damagedQuantity ?? 0,
-        subtext: `${stats.overdue?.requests ?? 0} overdue returns`,
+        subtext: 'Needs inspection',
       },
       {
         title: 'Archived',
@@ -656,9 +656,9 @@ export default function AdminEquipment() {
               {viewMode === 'table' && stats && !loading && !error && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                   <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4 shadow-sm">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">Pending requests</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">Pending requests with equipment</p>
                     <p className="text-2xl font-semibold text-[#111827]">{stats.pendingRequests ?? 0}</p>
-                    <p className="text-xs text-[#6b7280]">Awaiting approval</p>
+                    <p className="text-xs text-[#6b7280]">Includes lab reservations with equipment in the selected academic period.</p>
                   </div>
                   <div className="rounded-xl border border-[#ead7d3] border-t-4 border-t-[#9a7b4f] bg-[#fffaf7] p-4 shadow-sm">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]">Upcoming reservations</p>

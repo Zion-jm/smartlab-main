@@ -69,7 +69,7 @@ function RoleShell({ children }: { children: ReactNode }) {
     <PortalLayout
       navItems={navItems}
       portalLabel={role === 'FACULTY' ? 'Faculty Portal' : 'Student Portal'}
-      portalSubLabel="smartlab."
+      portalSubLabel="Smartlab"
       sidebarExtras={periodLabel ? (
         <div className="mx-4 mt-4 rounded-lg border border-[rgba(255,184,28,0.3)] bg-[#fef3e2] p-3">
           <p className="text-xs font-medium text-[#9a7b4f]">{periodLabel}</p>

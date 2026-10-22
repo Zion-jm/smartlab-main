@@ -12,7 +12,7 @@ export async function assertAccountDeactivationAllowed(tx: Prisma.TransactionCli
   const target = await tx.user.findUnique({ where: { id: targetId } });
   if (!target) throw new RequestActionError(404, 'Account not found.');
   if (target.role === UserRole.ADMIN && target.status === UserStatus.ACTIVE) {
-    const remaining = await tx.user.count({ where: { role: UserRole.ADMIN, status: UserStatus.ACTIVE, id: { not: targetId } } });
+    const remaining = await tx.user.count({ where: { role: UserRole.ADMIN, status: UserStatus.ACTIVE, activationState: { in: ['LEGACY', 'COMPLETE'] }, id: { not: targetId } } });
     if (remaining === 0) throw new RequestActionError(409, 'At least one active administrator must remain.');
   }
 }

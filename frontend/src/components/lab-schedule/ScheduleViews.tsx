@@ -1,7 +1,9 @@
+import type { ChartOutputOptions } from './chartOutputOptions';
+import ChartOutputMenu from './ChartOutputMenu';
 import DropdownField from '../shared/DropdownField';
 import ScheduleDetailModal from './ScheduleDetailModal';
 import { useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Maximize2, Printer } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import type { LabSchedule } from '../../types/labSchedule';
 import { addCalendarDays, dateKeyToPickerDate, dateToDateKey, manilaTodayForPicker } from '../../utils/dateTime';
 import { calendarColors, chartDayOrder, chartHourMarks, chartMinuteEnd, chartMinuteStart, chartRowHeight, chartSlotMinutes, chartSlotPercents, chartTotalMinutes, clampMinutes, dayNames, formatClockLabel, getMonthLabel, minutesFromIso, occursOnDate, sameDay, scheduleTypeLabel } from './scheduleViewUtils';
@@ -16,7 +18,8 @@ export type ChartViewProps = {
   selectedLab?: string;
   onSelectedLabChange?: (lab: string) => void;
   onExpand?: () => void;
-  onPrint?: () => void;
+  onPrint?: (options: ChartOutputOptions) => void | Promise<void>;
+  outputMonth?: string;
   printTitle?: string;
   selectedWeekStart?: string;
   onSelectedWeekStartChange?: (weekStart: string) => void;
@@ -49,7 +52,7 @@ const weekRangeLabel = (monday: string) => {
   return `${startMonth} ${startDay}, ${startYear}–${endMonth} ${endDay}, ${endYear}`;
 };
 
-export function ChartView({ flush = false, schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand, onPrint, printTitle = 'Laboratory Schedule', selectedWeekStart: controlledWeekStart, onSelectedWeekStartChange }: ChartViewProps) {
+export function ChartView({ outputMonth, flush = false, schedules, computerLabNames = [], onSelectSchedule, dayLabels = dayNames, showEmptyGrid = false, selectedLab: controlledLab, onSelectedLabChange, onExpand, onPrint, printTitle = 'Laboratory Schedule', selectedWeekStart: controlledWeekStart, onSelectedWeekStartChange }: ChartViewProps) {
   const [labOverride, setLabOverride] = useState<string | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<LabSchedule | null>(null);
   const [weekOverride, setWeekOverride] = useState(() => mondayForDate(manilaTodayForPicker()));
@@ -104,7 +107,7 @@ export function ChartView({ flush = false, schedules, computerLabNames = [], onS
       dayIndex,
       dateKey,
       label: `${dayLabels[dayIndex].slice(0, 3)} ${Number(dateKey.slice(8))}`,
-      schedules: dataset.filter((schedule) => occursOnDate(schedule, date)),
+      schedules: dataset.filter((schedule) => (!outputMonth || dateKey.startsWith(outputMonth)) && occursOnDate(schedule, date)),
     };
   });
   const visibleScheduleCount = columnData.reduce((count, column) => count + column.schedules.length, 0);
@@ -155,7 +158,7 @@ export function ChartView({ flush = false, schedules, computerLabNames = [], onS
             <div className="schedule-chart-lab-control flex min-w-0 flex-1 items-center gap-2 sm:flex-none"><span className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Lab</span>
             <DropdownField value={selectedLab} onChange={selectLab} options={labs.map(lab => ({value:lab,label:lab}))} placeholder="No labs available" disabled={!labs.length} className="min-w-0 flex-1 sm:min-w-[140px]" />
             </div>
-            {onPrint && <button type="button" onClick={onPrint} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Print weekly lab utilization chart or save it as PDF"><Printer size={15} aria-hidden="true" />Print / PDF</button>}
+            {onPrint && <ChartOutputMenu onPrint={onPrint} labs={labs} selectedLab={selectedLab} />}
             {onExpand && <button type="button" onClick={onExpand} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border border-[#e5d5d1] bg-white px-3 text-xs font-semibold text-[#800000] transition hover:border-[#800000] hover:bg-[#fff8f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#800000]" aria-label="Expand weekly lab utilization chart"><Maximize2 size={15} aria-hidden="true" />Expand</button>}
           </div>
         </div>
@@ -185,7 +188,7 @@ export function ChartView({ flush = false, schedules, computerLabNames = [], onS
                 </div>
                 <div className="schedule-chart-grid grid flex-1 grid-cols-6 gap-2" style={{ height: chartHeightPx }}>
                   {columnData.map(({ dayIndex, schedules: daySchedules }) => (
-                    <div key={dayIndex} className="relative rounded-xl border border-[#f1f5f9] bg-white">
+                    <div key={dayIndex} className="relative rounded-xl border border-[#f1f5f9] bg-white" style={outputMonth && !addCalendarDays(selectedWeekStart, dayIndex - 1).startsWith(outputMonth) ? { backgroundColor: "#e5e7eb" } : undefined}>
                       {chartSlotPercents.map((pct, idx) => (
                         <span
                           key={`${dayIndex}-${pct}`}

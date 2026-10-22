@@ -1,5 +1,6 @@
 export interface Account {
   id: string;
+  activationState?: 'LEGACY' | 'PENDING' | 'COMPLETE' | 'CANCELLED';
   roleId: number;
   role: 'ADMIN' | 'FACULTY' | 'STUDENT';
   name: string;

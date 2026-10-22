@@ -7,7 +7,7 @@ beforeAll(()=>{assertLocalTestEnvironment();db=new PrismaClient();});
 afterAll(async()=>{await cleanupFixtures({userIds:ids});await db?.$disconnect();});
 test('simultaneous administrators cannot deactivate each other',async()=>{
  const tag='admin-race-'+Date.now();
- for(const suffix of ['a','b']){const user=await db.user.create({data:{email:tag+suffix+'@example.test',firstName:'Test',lastName:'Admin',role:'ADMIN',status:'ACTIVE',passwordHash:'unused'}});ids.push(user.id);}
+ for(const suffix of ['a','b']){const user=await db.user.create({data:{activationState: 'LEGACY', email:tag+suffix+'@example.test',firstName:'Test',lastName:'Admin',role:'ADMIN',status:'ACTIVE',passwordHash:'unused'}});ids.push(user.id);}
  let arrivals=0,release;const gate=new Promise(resolve=>{release=resolve;});
  const deactivate=(actorId,targetId)=>{let first=true;return inventoryTransaction(db,async tx=>{
   await assertAccountDeactivationAllowed(tx,targetId,actorId,'DEACTIVATED');

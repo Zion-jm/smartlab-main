@@ -1,3 +1,4 @@
+import InvitationActions from '../components/accounts/InvitationActions';
 import { toast } from '../stores/toastStore';
 import { useRef } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -21,7 +22,7 @@ import TablePagination from '../components/shared/TablePagination';
 import { DEFAULT_TABLE_PAGE_SIZE } from '../components/shared/tablePaginationConstants';
 
 type RoleFilter = 'all' | 'ADMIN' | 'FACULTY' | 'STUDENT';
-type StatusFilter = 'all' | 'ACTIVE' | 'DEACTIVATED';
+type StatusFilter = 'all' | 'ACTIVE' | 'DEACTIVATED' | 'PENDING' | 'CANCELLED';
 type AccountStats = { activeStudents:number; activeFaculty:number; administrators:number; archivedAccounts:number; archivedBreakdown:{students:number;faculty:number;administrators:number}; pendingReactivation:number };
 
 const roleFilterOptions: { label: string; value: RoleFilter }[] = [
@@ -33,6 +34,8 @@ const roleFilterOptions: { label: string; value: RoleFilter }[] = [
 
 const statusFilterOptions: { label: string; value: StatusFilter }[] = [
   { label: 'All statuses', value: 'all' },
+  { label: 'Pending activation', value: 'PENDING' },
+  { label: 'Invitation cancelled', value: 'CANCELLED' },
   { label: 'Active', value: 'ACTIVE' },
   { label: 'Deactivated', value: 'DEACTIVATED' },
 ];
@@ -56,6 +59,7 @@ interface ApiUser {
   role_id: number;
   role_name?: string;
   status_id: number;
+  activation_state?: Account['activationState'];
   status_name?: string;
   full_name?: string;
   first_name?: string;
@@ -174,6 +178,7 @@ export default function ManageAccounts() {
         yearLevel: user.year_level ?? null,
         status: normalizeStatus(user.status_id, user.status_name),
         statusId: user.status_id,
+        activationState: user.activation_state,
       }));
       setAccounts(normalized);
 
@@ -453,9 +458,9 @@ export default function ManageAccounts() {
                 <>
                   <div className="space-y-3 md:hidden">
                     {paginatedAccounts.map(account => <article key={account.id} className="overflow-hidden rounded-2xl border border-[#ead7d3] bg-white">
-                      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f1e6e3] bg-[#fffaf7] p-3"><span className="text-xs font-semibold text-[#800000]">{roleSelectOptions.find(role => role.value === account.role)?.label || account.role}</span><span className={'rounded-full px-2.5 py-1 text-xs font-semibold ' + statusStyles[account.status]}>{account.status === 'ACTIVE' ? 'Active' : 'Deactivated'}</span></header>
+                      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f1e6e3] bg-[#fffaf7] p-3"><span className="text-xs font-semibold text-[#800000]">{roleSelectOptions.find(role => role.value === account.role)?.label || account.role}</span><span className={'rounded-full px-2.5 py-1 text-xs font-semibold ' + statusStyles[account.status]}>{account.activationState === 'PENDING' ? 'Pending activation' : account.activationState === 'CANCELLED' ? 'Invitation cancelled' : account.status === 'ACTIVE' ? 'Active' : 'Deactivated'}</span></header>
                       <div className="space-y-3 p-4"><div><h3 className="break-words text-base font-semibold text-[#321d1d]">{account.name}</h3><p className="mt-1 break-all text-xs text-[#786565]">{account.email}</p></div><div className="rounded-xl bg-[#faf7f5] p-3"><p className="text-xs text-[#786565]">{account.role === 'STUDENT' ? 'Program & year' : 'Department'}</p><p className="mt-1 break-words text-sm text-[#514343]">{(account.role === 'STUDENT' ? [account.program, account.yearLevel ? 'Year ' + account.yearLevel : null].filter(Boolean).join(' · ') : account.department) || 'Not assigned'}</p></div></div>
-                      <footer className="grid grid-cols-2 gap-2 border-t border-[#f1e6e3] p-3"><button type="button" onClick={() => setDrawerState({ account, mode: 'edit' })} className="min-h-11 rounded-xl bg-[#800000] px-2 text-xs font-semibold text-white">Edit account</button><button type="button" disabled={resetSending !== null} onClick={async()=>{setResetSending(account.id);try{const {data}=await userApi.sendPasswordReset(account.id);toast.success(data.message);}catch{toast.error('Could not request a reset email. Please try again.');}finally{setResetSending(null);}}} className="min-h-11 rounded-xl border border-[#ead7d3] px-2 text-xs font-semibold text-[#800000] disabled:opacity-50">{resetSending === account.id ? 'Sending…' : 'Send reset link'}</button></footer>
+                      {account.activationState === 'PENDING' || account.activationState === 'CANCELLED' ? <div className="p-3"><InvitationActions account={account} onUpdated={() => { void fetchAccounts(); void fetchStats(); }} /></div> : <footer className="grid grid-cols-2 gap-2 border-t border-[#f1e6e3] p-3"><button type="button" onClick={() => setDrawerState({ account, mode: 'edit' })} className="min-h-11 rounded-xl bg-[#800000] px-2 text-xs font-semibold text-white">Edit account</button><button type="button" disabled={resetSending !== null} onClick={async()=>{setResetSending(account.id);try{const {data}=await userApi.sendPasswordReset(account.id);toast.success(data.message);}catch{toast.error('Could not request a reset email. Please try again.');}finally{setResetSending(null);}}} className="min-h-11 rounded-xl border border-[#ead7d3] px-2 text-xs font-semibold text-[#800000] disabled:opacity-50">{resetSending === account.id ? 'Sending…' : 'Send reset link'}</button></footer>}
                     </article>)}
                   </div>
                   <div className="hidden md:block"><TableContainer>
@@ -485,17 +490,17 @@ export default function ManageAccounts() {
                             </TableCell>
                             <TableCell>
                               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusStyles[account.status]}`}>
-                                {account.status === 'ACTIVE' ? 'Active' : 'Deactivated'}
+                                {account.activationState === 'PENDING' ? 'Pending activation' : account.activationState === 'CANCELLED' ? 'Invitation cancelled' : account.status === 'ACTIVE' ? 'Active' : 'Deactivated'}
                               </span>
                             </TableCell>
                             <TableCell align="center">
                               <div className="flex min-w-max items-center justify-center gap-2">
-                              <IconActionButton
+                              {account.activationState === 'PENDING' || account.activationState === 'CANCELLED' ? <InvitationActions account={account} onUpdated={() => { void fetchAccounts(); void fetchStats(); }} /> : <><IconActionButton
                                 label={`Update ${account.name}`}
                                 onClick={() => setDrawerState({ account, mode: 'edit' })}
                                 icon="edit"
                               />
-                              <IconActionButton icon="resetPassword" label={`Send password reset link to ${account.name}`} disabled={resetSending !== null} busy={resetSending === account.id} onClick={async()=>{setResetSending(account.id);try{const {data}=await userApi.sendPasswordReset(account.id);toast.success(data.message);}catch{toast.error('Could not request a reset email. Please try again.');}finally{setResetSending(null);}}} />
+                              <IconActionButton icon="resetPassword" label={`Send password reset link to ${account.name}`} disabled={resetSending !== null} busy={resetSending === account.id} onClick={async()=>{setResetSending(account.id);try{const {data}=await userApi.sendPasswordReset(account.id);toast.success(data.message);}catch{toast.error('Could not request a reset email. Please try again.');}finally{setResetSending(null);}}} /></>}
                               </div>
                             </TableCell>
                           </TableRow>

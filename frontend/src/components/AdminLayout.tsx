@@ -197,7 +197,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       navItems={baseAdminNavItems}
       navGroups={adminNavGroups}
       portalLabel="Admin Portal"
-      portalSubLabel="smartlab."
+      portalSubLabel="Smartlab"
       sidebarExtras={sidebarExtras}
     >
       <div className="admin-workspace min-w-0 max-w-full">{children}</div>

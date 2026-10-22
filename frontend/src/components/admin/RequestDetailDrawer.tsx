@@ -1,3 +1,4 @@
+import { requestApprovalNotice } from '../../utils/requestApproval';
 import ReturnHistory from '../shared/ReturnHistory';
 import ConfirmationModal from '../shared/ConfirmationModal';
 import { UserRound, FileText, MapPin, CalendarDays, Clock } from 'lucide-react';
@@ -176,6 +177,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
   if (!open || !request) return null;
 
   const statusChip = statusMeta[request.status];
+  const approvalNotice = requestApprovalNotice(request);
   const canApprove = request.status === 'PENDING';
   const emptyEquipment = request.requestType === 'EQUIPMENT' && !request.items?.some(item => item.quantity > 0);
   const canBorrow = !emptyEquipment && request.status === 'APPROVED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length));
@@ -200,14 +202,15 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
   };
 
   const actionButtons = [
+    approvalNotice && <p key="approval-notice" role="status" className="w-full rounded-lg bg-amber-50 p-3 text-xs text-amber-900">{approvalNotice}</p>,
     canApprove && (
       <button
         key="approve"
-        disabled={mutating || emptyEquipment || conflictBlocked || hasEquipmentShortages || equipmentAvailabilityLoading}
+        disabled={Boolean(approvalNotice) || mutating || emptyEquipment || conflictBlocked || hasEquipmentShortages || equipmentAvailabilityLoading}
         onClick={() => onAction('approve')}
         className="px-4 py-2 rounded-full bg-[#065f46] text-white text-xs font-semibold disabled:opacity-60"
         title={
-          emptyEquipment ? 'No equipment remains available. Modify this request or cancel it.' : hasEquipmentShortages
+          approvalNotice ? approvalNotice : emptyEquipment ? 'No equipment remains available. Modify this request or cancel it.' : hasEquipmentShortages
             ? 'Cannot approve: insufficient equipment availability'
             : conflictBlocked
             ? 'Cannot approve: schedule conflicts detected'
@@ -346,7 +349,7 @@ export default function RequestDetailDrawer({ request, open, onClose, onAction, 
                   </div>
                 ))
               ) : (
-                <p className="text-[#6b7280]">{emptyEquipment ? 'No equipment remains. Ask the requester to modify this request or cancel it.' : 'No equipment included'}</p>
+                <p className="text-[#6b7280]">{approvalNotice ? approvalNotice : emptyEquipment ? 'No equipment remains. Ask the requester to modify this request or cancel it.' : 'No equipment included'}</p>
               )}
             </div>
           </section>

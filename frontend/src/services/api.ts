@@ -44,6 +44,8 @@ api.interceptors.response.use(response => {
 
 // Auth API
 export const authApi = {
+  inspectInvitation: (token: string) => api.post('/auth/invitations/inspect', { token }),
+  acceptInvitation: (token: string, password: string, confirmPassword: string) => api.post('/auth/invitations/accept', { token, password, confirmPassword }),
   forgotPassword: (email: string) => api.post('/auth/forgot-password', {email}),
   resetPassword: (data: {token:string;password:string}) => api.post('/auth/reset-password',data),
   requestReactivation: (data: { email: string; password: string; reason: string }) => api.post('/auth/reactivation', data),
@@ -113,6 +115,8 @@ export const borrowRequestApi = {
 
 // Users API
 export const userApi = {
+  invitationInfo: (id: string) => api.get(`/users/${encodeURIComponent(id)}/invitation`),
+  invitationAction: (id: string, action: 'resend' | 'email' | 'cancel' | 'reinvite', email?: string) => api.post(`/users/${encodeURIComponent(id)}/invitation/${action}`, { email }),
   getStats: () => api.get('/users/stats/overview'),
   sendPasswordReset: (id:string) => api.post('/users/'+encodeURIComponent(id)+'/password-reset'),
   getById: (id: string) => api.get('/users/' + encodeURIComponent(id)),
@@ -267,6 +271,8 @@ export type EquipmentReportPdfParams = {
 };
 
 export const reportsApi = {
+  downloadLabChartPdf: (params: { period: 'week' | 'month'; lab: string; scheduleType: 'ALL' | 'WEEKLY' | 'ONE_TIME'; academicYearId?: string; termId?: string }) =>
+    api.get('/reports/lab-charts.pdf', { params, responseType: 'blob', timeout: 90000 }),
   downloadBorrowRequestPdf: (params: BorrowRequestReportPdfParams) =>
     api.get('/reports/borrow-requests.pdf', {
       params,

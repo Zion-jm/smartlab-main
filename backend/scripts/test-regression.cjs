@@ -25,14 +25,14 @@ async function main() {
   fs.mkdirSync(evidence,{recursive:true});
   const env = {...process.env, DATABASE_URL:url.href, SMARTLAB_TEST_SCHEMA:schema,
     TEST_API_URL:'http://127.0.0.1:'+port+'/api', NODE_ENV:'test', PORT:String(port), TZ:'UTC',
-    JWT_SECRET:crypto.randomBytes(32).toString('hex'), SMTP_PASS:'', SMARTLAB_EVIDENCE_DIR:evidence,
+    JWT_SECRET:crypto.randomBytes(32).toString('hex'), SMTP_PASS:'', EMAIL_DELIVERY_ENABLED:'true', FRONTEND_URL:'http://127.0.0.1:'+port, SMARTLAB_EVIDENCE_DIR:evidence,
     ALLOW_DEMO_SEED:'1', DEMO_DATABASE_NAME:'smartlab_test'};
   let server;
   try {
     await run([resolveTool('prisma/build/index.js'),'migrate','deploy'],env);
     await run([resolveTool('prisma/build/index.js'),'migrate','deploy'],env);
     await run([resolveTool('ts-node/dist/bin.js'),'prisma/seed.ts'],env);
-    server=spawn(process.execPath,['dist/server.js'],{cwd:backend,env,stdio:'ignore',windowsHide:true});
+    server=spawn(process.execPath,['--require','./tests/support/invitationMailCapture.cjs','dist/server.js'],{cwd:backend,env,stdio:'ignore',windowsHide:true});
     let ready=false;
     for(let i=0;i<300;i++) {
       if(server.exitCode!==null)throw Error('Isolated test server exited');

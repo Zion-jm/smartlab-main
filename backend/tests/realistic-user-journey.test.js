@@ -280,9 +280,7 @@ describe('Realistic SmartLab user journeys', () => {
       first_name: 'Rafael',
       last_name: 'Mendoza',
       gmail: studentEmail,
-      password: TEST_PASSWORD,
       role_id: 3,
-      status_id: 1,
       program_id: programId,
       year_level: 2,
     }, adminToken), 201, 'admin create student');
@@ -293,13 +291,18 @@ describe('Realistic SmartLab user journeys', () => {
       first_name: 'Celine',
       last_name: 'Navarro',
       gmail: facultyEmail,
-      password: TEST_PASSWORD,
       role_id: 2,
-      status_id: 1,
       department_id: created.departments[0],
     }, adminToken), 201, 'admin create faculty');
     const facultyId = faculty.user.user_id;
     created.users.push(facultyId);
+
+    for (const id of [studentId, facultyId]) {
+      const invitation = await prisma.accountInvitation.findFirst({ where: { userId: id }, orderBy: { createdAt: 'desc' } });
+      const mail = await prisma.emailOutbox.findUnique({ where: { eventKey: 'invitation:' + invitation.id } });
+      const token = mail.text.match(/token=([a-f0-9]{64})/)[1];
+      expectStatus(await apiRequest('POST', '/auth/invitations/accept', { token, password: TEST_PASSWORD, confirmPassword: TEST_PASSWORD }), 200, 'activate invited account');
+    }
 
     expect(expectStatus(await apiRequest('GET', `/users/${studentId}`, null, adminToken), 200, 'admin read created student').user.email).toBe(studentEmail);
     expect(expectStatus(await apiRequest('GET', `/users?role=STUDENT&search=Rafael`, null, adminToken), 200, 'admin filter students').some((user) => user.user_id === studentId)).toBe(true);

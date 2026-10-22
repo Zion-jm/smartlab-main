@@ -21,9 +21,9 @@ describe('inventory capacity API on local smartlab_test', () => {
   beforeAll(async()=>{
     let d,a;try{d=new URL(process.env.DATABASE_URL);a=new URL(BASE_URL)}catch{throw Error('Invalid test configuration')}
     if(!['localhost','127.0.0.1'].includes(d.hostname)||d.pathname!=='/smartlab_test'||!['localhost','127.0.0.1'].includes(a.hostname))throw Error('Local smartlab_test/API required');
-    db=new PrismaClient();admin=await db.user.create({data:{email:tag+'@smartlab.local',passwordHash:await bcrypt.hash('CapacityTest123!',10),firstName:'Capacity',lastName:'Test',role:'ADMIN'}});
+    db=new PrismaClient();admin=await db.user.create({data:{activationState: 'LEGACY', email:tag+'@smartlab.local',passwordHash:await bcrypt.hash('CapacityTest123!',10),firstName:'Capacity',lastName:'Test',role:'ADMIN'}});
     token=await loginAs(admin.email,'CapacityTest123!');
-    faculty=await db.user.create({data:{email:tag+'-faculty@smartlab.local',passwordHash:await bcrypt.hash('CapacityTest123!',10),firstName:'Capacity',lastName:'Faculty',role:'FACULTY'}});
+    faculty=await db.user.create({data:{activationState: 'LEGACY', email:tag+'-faculty@smartlab.local',passwordHash:await bcrypt.hash('CapacityTest123!',10),firstName:'Capacity',lastName:'Faculty',role:'FACULTY'}});
     facultyToken=await loginAs(faculty.email,'CapacityTest123!');
     profile=await db.facultyProfile.create({data:{userId:faculty.id}});
     year=await db.academicYear.findFirstOrThrow({where:{isActive:true}});term=await db.term.findFirstOrThrow({where:{isActive:true}});

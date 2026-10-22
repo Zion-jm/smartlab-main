@@ -16,7 +16,7 @@ describe('Inventory concurrency on local smartlab_test', () => {
     year = await prisma.academicYear.findFirst({ where: { isActive: true } });
     term = await prisma.term.findFirst({ where: { isActive: true } });
     if (!year || !term) throw new Error('Existing test academic period required');
-    admin = await prisma.user.create({ data: { email: tag + '@smartlab.local', passwordHash: await bcrypt.hash('ConcurrencyTest123!', 10), firstName: 'Inventory', lastName: 'Test', role: 'ADMIN' } });
+    admin = await prisma.user.create({ data: {activationState: 'LEGACY',  email: tag + '@smartlab.local', passwordHash: await bcrypt.hash('ConcurrencyTest123!', 10), firstName: 'Inventory', lastName: 'Test', role: 'ADMIN' } });
     token = await loginAs(admin.email, 'ConcurrencyTest123!');
   });
   afterAll(async () => {

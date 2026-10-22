@@ -13,8 +13,8 @@ const equipmentIds = [];
 const tag = 'reliability-' + randomUUID();
 beforeAll(async () => {
   db = new PrismaClient();
-  faculty = await db.user.create({ data: { email: tag + '@test.local', firstName: 'Test', lastName: 'Faculty', role: 'FACULTY', passwordHash: 'unused' } });
-  admin = await db.user.create({ data: { email: tag + '-admin@test.local', firstName: 'Test', lastName: 'Admin', role: 'ADMIN', passwordHash: 'unused' } });
+  faculty = await db.user.create({ data: {activationState: 'LEGACY',  email: tag + '@test.local', firstName: 'Test', lastName: 'Faculty', role: 'FACULTY', passwordHash: 'unused' } });
+  admin = await db.user.create({ data: {activationState: 'LEGACY',  email: tag + '-admin@test.local', firstName: 'Test', lastName: 'Admin', role: 'ADMIN', passwordHash: 'unused' } });
   mockActors.FACULTY = faculty; mockActors.ADMIN = admin;
   profile = await db.facultyProfile.create({ data: { userId: faculty.id } });
   year = await db.academicYear.findFirstOrThrow({ where: { isActive: true } });

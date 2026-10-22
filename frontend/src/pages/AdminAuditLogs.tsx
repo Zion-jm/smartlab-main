@@ -339,7 +339,7 @@ export default function AdminAuditLogs() {
                         <div className="font-semibold text-[#1f2937]" data-testid={`value-audit-log-actor-${log.id}`}>{log.actor?.name || 'Unknown actor'}</div>
                         <div className="text-xs text-[#6b7280]">{log.actor?.email || 'No email'}</div>
                       </>},
-{id:'1',header:'Action',cell:log=><><span className="inline-flex rounded-full bg-[#fff5f5] px-2.5 py-1 text-xs font-semibold text-[#800000]">{log.actionLabel || log.action}</span></>},
+{id:'1',header:'Action',width:'180px',cell:log=><><span className="inline-flex whitespace-nowrap shrink-0 rounded-full bg-[#fff5f5] px-2.5 py-1 text-xs font-semibold text-[#800000]">{log.actionLabel || log.action}</span></>},
 {id:'2',header:'Entity',cell:log=><>
                         <div className="font-medium text-[#374151]">{log.entityLabel || log.entityType}</div>
                         <div className="max-w-[180px] truncate text-xs text-[#6b7280]" title={log.entityId}>{log.recordReference || log.entityId}</div>

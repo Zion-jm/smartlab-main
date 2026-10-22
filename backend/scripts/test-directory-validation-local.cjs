@@ -25,7 +25,7 @@ async function main() {
     const migrate = spawnSync(process.execPath, [require.resolve('prisma/build/index.js'), 'migrate', 'deploy'], { env: process.env, encoding:'utf8', windowsHide:true });
     assert.equal(migrate.status, 0, 'Isolated migrations must apply successfully');
     const {saveDirectory,directoryText}=require('../dist/services/directoryValidation');
-    const actor=await db.user.create({data:{email:'directory@test.invalid',firstName:'Test',lastName:'Admin',passwordHash:'test',role:'ADMIN'}});
+    const actor=await db.user.create({data:{activationState: 'LEGACY', email:'directory@test.invalid',firstName:'Test',lastName:'Admin',passwordHash:'test',role:'ADMIN'}});
     const save=(kind,data,id)=>saveDirectory(db,kind,data,actor.id,id);
     assert.equal(directoryText('  Niño   Hall ', 'Name',150),'Niño Hall');
     assert.throws(()=>directoryText(42,'Name',150),{statusCode:400});

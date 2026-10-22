@@ -25,7 +25,7 @@ describe('Equipment adjustment authorization and cancellation', () => {
     if (!year || !term) throw new Error('Seed the local test database first.');
     const passwordHash = await bcrypt.hash('RegressionOnly123!', 10);
     for (const [label, role] of [['owner', 'STUDENT'], ['other', 'FACULTY'], ['admin', 'ADMIN']]) {
-      users.push(await prisma.user.create({ data: {
+      users.push(await prisma.user.create({ data: {activationState: 'LEGACY',
         email: `${tag}-${label}@smartlab.local`, passwordHash,
         firstName: 'Adjustment', lastName: label, role, status: 'ACTIVE',
       } }));

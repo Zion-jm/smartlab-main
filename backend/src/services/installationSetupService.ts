@@ -110,7 +110,7 @@ export async function finishSetup(token: unknown, session: unknown, input: {year
     requireSession(state, session);
     if (!state.verifiedAt || !state.email || !state.name || !state.passwordHash) throw new DomainError(403, 'Verify your email before finishing setup.');
     const [firstName, ...rest] = state.name.split(/\s+/);
-    const user = await tx.user.create({data:{email:state.email,passwordHash:state.passwordHash,firstName,lastName:rest.join(' '),role:'ADMIN',adminProfile:{create:{}}}});
+    const user = await tx.user.create({data:{activationState:'COMPLETE',emailVerifiedAt:state.verifiedAt,activatedAt:new Date(),email:state.email,passwordHash:state.passwordHash,firstName,lastName:rest.join(' '),role:'ADMIN',adminProfile:{create:{}}}});
     await tx.academicYear.upsert({where:{year},create:{year,isActive:true},update:{isActive:true}});
     await tx.term.create({data:{name:term,isActive:true}});
     await recordRequiredAuditLog(tx,{actorUserId:user.id,action:'INSTALLATION_INITIALIZED',entityType:'Installation',entityId:'installation',details:{year,term}});

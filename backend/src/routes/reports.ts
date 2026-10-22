@@ -1,3 +1,4 @@
+import { generateLabChartPdf } from '../services/labChartPdfService';
 import { reportLimiter } from '../middleware/requestLimiter';
 import { prisma } from '../db/prisma';
 import { sendError } from '../middleware/errors';
@@ -40,6 +41,19 @@ const scheduleRoomValues: ScheduleRoomFilter[] = ['ALL', 'COMPUTER_LAB', 'OTHER'
 const scheduleViewValues: ScheduleReportView[] = ['log', 'analysis'];
 const equipmentViewValues = ['inventory', 'usage'] as const;
 const equipmentReportValues = ['log', 'analysis'] as const;
+
+router.get('/lab-charts.pdf', authenticateToken, authorizeRoles(UserRole.ADMIN), reportLimiter, async (req, res) => {
+  try {
+    const query = req.query;
+    if ((query.period !== 'week' && query.period !== 'month') || typeof query.lab !== 'string' || !query.lab || query.lab.length > 300 || (query.scheduleType !== 'ALL' && query.scheduleType !== 'WEEKLY' && query.scheduleType !== 'ONE_TIME')) {
+      res.status(400).json({ error: 'Choose a valid period, laboratory and schedule type.' }); return;
+    }
+    const selection = await resolveAcademicPeriodSelection(prisma, getPeriodSelectionFromQuery(query), req.user?.role);
+    const report = await generateLabChartPdf(prisma, { ...selection, period: query.period, lab: query.lab, scheduleType: query.scheduleType });
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${report.filename}"`, 'Content-Length': String(report.buffer.length), 'Cache-Control': 'private, no-store' });
+    res.send(report.buffer);
+  } catch (error) { sendError(error, res); }
+});
 
 router.get(
   '/borrow-requests.pdf',

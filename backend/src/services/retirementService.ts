@@ -9,8 +9,9 @@ import { assertStockSupportsReservations } from './inventoryCapacityService';
 export async function retireAccount(prisma: PrismaClient, id: string, actorId: string) {
   return inventoryTransaction(prisma, async tx => {
     await assertAccountDeactivationAllowed(tx, id, actorId, UserStatus.DEACTIVATED);
-    const user = await tx.user.findUnique({ where: { id }, select: { id: true, email: true, status: true } });
+    const user = await tx.user.findUnique({ where: { id }, select: { id: true, email: true, status: true, activationState: true } });
     if (!user) throw new RequestActionError(404, 'Account not found.');
+    if (user.activationState === 'PENDING' || user.activationState === 'CANCELLED') throw new RequestActionError(409, 'Use invitation cancellation for this account.');
     if (user.status === UserStatus.DEACTIVATED) return user;
     const retired = await tx.user.update({ where: { id }, data: { status: UserStatus.DEACTIVATED, sessionVersion: { increment: 1 } }, select: { id: true, email: true, status: true } });
     await tx.auditLog.create({ data: { actorUserId: actorId, action: 'RETIRE', entityType: 'User', entityId: id, details: { label: user.email, previous: user.status, next: retired.status } } });

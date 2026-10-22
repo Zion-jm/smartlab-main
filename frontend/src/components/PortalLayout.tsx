@@ -139,7 +139,7 @@ export default function PortalLayout({
   navItems,
   navGroups,
   portalLabel,
-  portalSubLabel = 'smartlab.',
+  portalSubLabel = 'Smartlab',
   headerTitle,
   headerBadge,
   sidebarExtras,

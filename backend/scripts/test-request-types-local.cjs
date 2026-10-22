@@ -26,7 +26,7 @@ async function main() {
     assert.equal(migrate.status, 0, 'Isolated migrations must apply successfully');
     const year = await db.academicYear.create({data:{year:'2035-2036',isActive:true}});
     const term = await db.term.create({data:{name:'Test semester',isActive:true}});
-    const user = role => db.user.create({data:{email:role+'@test.invalid',passwordHash:'test-only',firstName:'Test',lastName:role,role}});
+    const user = role => db.user.create({data:{activationState: 'LEGACY', email:role+'@test.invalid',passwordHash:'test-only',firstName:'Test',lastName:role,role}});
     const admin = await user('ADMIN'), faculty = await user('FACULTY'), student = await user('STUDENT');
     const profile = await db.facultyProfile.create({data:{userId:faculty.id}});
     const room = await db.room.create({data:{name:'ICT laboratory',isComputerLab:true}});

@@ -5,7 +5,7 @@ import { sendQueuedEmail, emailDeliveryConfigured, EmailDeliveryError } from './
 
 
 type Mail = { eventKey: string; to: string; subject: string; html: string; text: string };
-type Job = { id: string; recipient: string; subject: string; html: string; text: string; attempts: number };
+type Job = { eventKey: string; id: string; recipient: string; subject: string; html: string; text: string; attempts: number };
 let timer: ReturnType<typeof setInterval> | undefined;
 let active: Promise<void> | undefined;
 export async function enqueueEmail(mail: Mail, db: Prisma.TransactionClient = prisma): Promise<void> {
@@ -13,6 +13,9 @@ export async function enqueueEmail(mail: Mail, db: Prisma.TransactionClient = pr
     VALUES (${randomUUID()}, ${mail.eventKey}, ${mail.to}, ${mail.subject}, ${mail.html}, ${mail.text}) ON CONFLICT ("eventKey") DO NOTHING`;
 }
 export async function deliverEmailBatch(): Promise<void> {
+  // Remove obsolete invitation secrets even when delivery is disabled.
+  await prisma.$executeRaw`UPDATE "EmailOutbox" SET "html"='', "text"='', "status"=CASE WHEN "status" IN ('PENDING','SENDING') THEN 'FAILED' ELSE "status" END
+    WHERE "eventKey" IN (SELECT 'invitation:' || "id" FROM "AccountInvitation" WHERE "usedAt" IS NOT NULL OR "revokedAt" IS NOT NULL OR "expiresAt"<=CURRENT_TIMESTAMP) AND ("html"<>'' OR "text"<>'')`;
   // No external delivery unless explicitly enabled. Pending messages remain saved.
   if (process.env.EMAIL_DELIVERY_ENABLED !== 'true' || !emailDeliveryConfigured()) return;
   for (let count = 0; count < 10; count++) {
@@ -22,6 +25,13 @@ export async function deliverEmailBatch(): Promise<void> {
         ORDER BY "createdAt" LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING *`;
     const job = jobs[0]; if (!job) break;
     try {
+      if (job.eventKey.startsWith('invitation:')) {
+        const invitation = await prisma.accountInvitation.findUnique({ where: { id: job.eventKey.slice(11) }, include: { user: true } });
+        if (!invitation || invitation.usedAt || invitation.revokedAt || invitation.expiresAt <= new Date() || invitation.user.activationState !== 'PENDING' || invitation.user.status !== 'DEACTIVATED' || invitation.invitedEmail !== invitation.user.email) {
+          await prisma.emailOutbox.update({ where: { id: job.id }, data: { status: 'FAILED', html: '', text: '', lockedAt: null, lastError: 'Invitation no longer valid.' } });
+          continue;
+        }
+      }
       await sendQueuedEmail(job);
       await prisma.$executeRaw`UPDATE "EmailOutbox" SET "status"='SENT', "sentAt"=NOW(), "lockedAt"=NULL, "lastError"=NULL WHERE "id"=${job.id}`;
     } catch (error) {

@@ -70,15 +70,20 @@ describe('User Management', () => {
         first_name: 'Test',
         last_name: 'Student',
         gmail: `teststudent_${ts}@smartlab.local`,
-        password: 'Password123!',
         role_id: 3,
-        status_id: 1,
         program_id: programId,
         year_level: 2,
       }, adminToken);
       if (data.user?.user_id) fixtureIds.push(data.user.user_id);
       expect(status).toBe(201);
       expect(data.user.role_name).toBe('STUDENT');
+      expect(data.user.activation_state).toBe('PENDING');
+      const { prisma } = require('../dist/db/prisma');
+      const invitation = await prisma.accountInvitation.findFirst({ where: { userId: data.user.user_id }, orderBy: { createdAt: 'desc' } });
+      const mail = await prisma.emailOutbox.findUnique({ where: { eventKey: 'invitation:' + invitation.id } });
+      const token = mail.text.match(/token=([a-f0-9]{64})/)[1];
+      const accepted = await apiRequest('POST', '/auth/invitations/accept', { token, password: 'Password123!', confirmPassword: 'Password123!' });
+      expect(accepted.status).toBe(200);
       expect(data.user.user_id).toBeDefined();
       createdUserId = data.user.user_id;
     });
@@ -88,9 +93,7 @@ describe('User Management', () => {
         first_name: 'Test',
         last_name: 'Faculty',
         gmail: `testfaculty_${ts}@smartlab.local`,
-        password: 'Password123!',
         role_id: 2,
-        status_id: 1,
         department_id: departmentId,
       }, adminToken);
       if (data.user?.user_id) fixtureIds.push(data.user.user_id);
@@ -101,7 +104,6 @@ describe('User Management', () => {
     test('rejects missing required fields', async () => {
       const { status, data } = await apiRequest('POST', '/users', {
         gmail: `incomplete_${ts}@smartlab.local`,
-        password: 'Password123!',
       }, adminToken);
       expect(status).toBe(400);
       expect(data.error).toBeDefined();
@@ -112,9 +114,7 @@ describe('User Management', () => {
         first_name: 'Dup',
         last_name: 'User',
         gmail: 'admin@smartlab.local',
-        password: 'Password123!',
         role_id: 3,
-        status_id: 1,
         program_id: programId,
         year_level: 1,
       }, adminToken);
@@ -127,9 +127,7 @@ describe('User Management', () => {
         first_name: 'No',
         last_name: 'Dept',
         gmail: `nodept_${ts}@smartlab.local`,
-        password: 'Password123!',
         role_id: 2,
-        status_id: 1,
       }, adminToken);
       expect(status).toBe(400);
       expect(data.error).toMatch(/department/i);
@@ -140,9 +138,7 @@ describe('User Management', () => {
         first_name: 'No',
         last_name: 'Program',
         gmail: `noprog_${ts}@smartlab.local`,
-        password: 'Password123!',
         role_id: 3,
-        status_id: 1,
       }, adminToken);
       expect(status).toBe(400);
       expect(data.error).toMatch(/program|year/i);
@@ -153,9 +149,7 @@ describe('User Management', () => {
         first_name: 'X',
         last_name: 'Y',
         gmail: `xfac_${ts}@smartlab.local`,
-        password: 'P@ssword1',
         role_id: 3,
-        status_id: 1,
       }, facultyToken);
       expect(status).toBe(403);
     });

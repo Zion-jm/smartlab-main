@@ -9,8 +9,8 @@ const tag='academic-record-'+Date.now();
 beforeAll(async()=>{
  const url=new URL(process.env.DATABASE_URL);if(!['localhost','127.0.0.1'].includes(url.hostname)||url.pathname!=='/smartlab_test')throw Error('Local test database required');
  db=new PrismaClient();
- admin=await db.user.create({data:{email:tag+'-admin@test.local',firstName:'Record',lastName:'Admin',role:'ADMIN',passwordHash:'unused'}});
- student=await db.user.create({data:{email:tag+'-student@test.local',firstName:'Record',lastName:'Student',role:'STUDENT',passwordHash:'unused'}});
+ admin=await db.user.create({data:{activationState: 'LEGACY', email:tag+'-admin@test.local',firstName:'Record',lastName:'Admin',role:'ADMIN',passwordHash:'unused'}});
+ student=await db.user.create({data:{activationState: 'LEGACY', email:tag+'-student@test.local',firstName:'Record',lastName:'Student',role:'STUDENT',passwordHash:'unused'}});
  program=await db.program.create({data:{code:tag,name:'Original program'}});
  await db.studentProfile.create({data:{userId:student.id,programId:program.id,yearLevel:3}});
  years=await Promise.all(['2080-2081','2081-2082','2083-2084'].map(year=>db.academicYear.create({data:{year}})));
@@ -59,7 +59,7 @@ test('invalid levels and stale updates cannot overwrite history',async()=>{
 test('bulk setup and promotion preview, exceptions, protection and rollback',async()=>{
  const {previewAcademicBatch,commitAcademicBatch}=require('../dist/services/studentAcademicBatch');
  const batchYears=await Promise.all(['2090-2091','2091-2092','2092-2093'].map(year=>db.academicYear.create({data:{year}})));
- const second=await db.user.create({data:{email:tag+'-batch@test.local',firstName:'Batch',lastName:'Student',role:'STUDENT',passwordHash:'unused',studentProfile:{create:{programId:program.id,yearLevel:4}}}});
+ const second=await db.user.create({data:{activationState: 'LEGACY', email:tag+'-batch@test.local',firstName:'Batch',lastName:'Student',role:'STUDENT',passwordHash:'unused',studentProfile:{create:{programId:program.id,yearLevel:4}}}});
  try {
   const setup={mode:'SETUP',academicYearId:batchYears[0].id,studentIds:[student.id,second.id]};
   const preview=await previewAcademicBatch(db,setup);expect(preview.rows).toHaveLength(2);expect(await db.studentAcademicRecord.count({where:{academicYearId:batchYears[0].id}})).toBe(0);

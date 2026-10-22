@@ -11,7 +11,7 @@ describe('Manila API date boundaries on local smartlab_test',()=>{
   beforeAll(async()=>{
     let d,a;try{d=new URL(process.env.DATABASE_URL);a=new URL(BASE_URL)}catch{throw Error('Invalid test configuration')}
     if(!['localhost','127.0.0.1'].includes(d.hostname)||d.pathname!=='/smartlab_test'||!['localhost','127.0.0.1'].includes(a.hostname))throw Error('Local smartlab_test/API required');
-    db=new PrismaClient();admin=await db.user.create({data:{email:tag+'@smartlab.local',passwordHash:await bcrypt.hash('ManilaTest123!',10),firstName:'Manila',lastName:'Test',role:'ADMIN'}});
+    db=new PrismaClient();admin=await db.user.create({data:{activationState: 'LEGACY', email:tag+'@smartlab.local',passwordHash:await bcrypt.hash('ManilaTest123!',10),firstName:'Manila',lastName:'Test',role:'ADMIN'}});
     token=await loginAs(admin.email,'ManilaTest123!');profile=await db.facultyProfile.create({data:{userId:admin.id}});
     year=await db.academicYear.create({data:{year:'2035-2036'}});term=await db.term.create({data:{name:tag}});
     room=await db.room.create({data:{name:tag,isComputerLab:true}});equipment=await db.equipment.create({data:{name:tag,totalQuantity:20,availableQuantity:20}});
@@ -49,7 +49,7 @@ describe('Manila API date boundaries on local smartlab_test',()=>{
     expect(result.data.requests.map(r=>r.id).sort()).toEqual([a.id,b.id].sort());
   });
   test('duplicate detection sees a pending request at Manila midnight',async()=>{
-    const faculty=await db.user.create({data:{email:tag+'-faculty@smartlab.local',passwordHash:await bcrypt.hash('ManilaTest123!',10),firstName:'Manila',lastName:'Faculty',role:'FACULTY'}});
+    const faculty=await db.user.create({data:{activationState: 'LEGACY', email:tag+'-faculty@smartlab.local',passwordHash:await bcrypt.hash('ManilaTest123!',10),firstName:'Manila',lastName:'Faculty',role:'FACULTY'}});
     try {
       const facultyToken=await loginAs(faculty.email,'ManilaTest123!');
       const facultyProfile=await db.facultyProfile.create({data:{userId:faculty.id}});
