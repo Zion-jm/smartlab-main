@@ -50,3 +50,5 @@ node scripts/test-ui.cjs --deployment
 The page check uses mocked API responses and local Chrome (or `CHROMIUM_PATH`); it does not prove email delivery. Regression tests use isolated schemas and a test-only mail transport that never contacts an email provider. They cover account creation for all roles, blocked pending sessions, password validation, resend/correction, expiry, cancellation, one-use links and concurrent acceptance, alongside the existing business regression suites.
 
 Before production, verify a real invitation on staging with a controlled inbox, confirm all three roles retain their existing permissions, and complete the existing borrowing, schedule, PDF, setup and deployment checks. Do not treat a build or mocked test as evidence that database migration and email delivery passed.
+
+Use the [staging test checklist](account-invitation-staging-checklist.md) to record real-email and role checks before production.
