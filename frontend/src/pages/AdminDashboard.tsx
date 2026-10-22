@@ -432,7 +432,7 @@ export default function AdminDashboard() {
   const utilization = Math.min(100, Math.max(0, stats.equipment.utilizationRate));
   const attentionTotal = stats.requests.pending + stats.requests.overdue + stats.equipment.lowStockCount + (stats.academicRecords?.missing ?? 0);
   const workloadItems = [
-    { label: 'Pending requests', value: stats.requests.pending, detail: 'Awaiting review', color: 'bg-[#800000]' },
+    { label: 'Pending requests', value: stats.requests.pending, detail: 'All request types in the current academic period', color: 'bg-[#800000]' },
     { label: 'Upcoming reservations', value: stats.requests.upcoming, detail: 'Within the next 7 days', color: 'bg-[#d97706]' },
     { label: 'Schedules this week', value: stats.schedules.thisWeek, detail: 'One-time and weekly entries', color: 'bg-[#967348]' },
   ];
@@ -510,7 +510,7 @@ export default function AdminDashboard() {
             <StatsCard icon={UsersIcon} iconGradient="bg-[#800000]" title="Total users" value={stats.users.total} />
             <StatsCard icon={GraduationCapIcon} iconGradient="bg-[#a15c45]" title="Students" value={stats.users.students} />
             <StatsCard icon={TeacherIcon} iconGradient="bg-[#967348]" title="Faculty" value={stats.users.faculty} />
-            <StatsCard icon={ClockIcon} iconGradient="bg-[#d97706]" title="Pending requests" value={stats.requests.pending} isRed={stats.requests.pending > 0} />
+            <StatsCard icon={ClockIcon} iconGradient="bg-[#d97706]" title="Pending requests (all types)" value={stats.requests.pending} isRed={stats.requests.pending > 0} />
             <StatsCard icon={AlertTriangleIcon} iconGradient="bg-[#b91c1c]" title="Overdue returns" value={stats.requests.overdue} isRed={stats.requests.overdue > 0} />
             <StatsCard icon={PackageIcon} iconGradient="bg-[#15803d]" title="Equipment utilization" value={`${stats.equipment.utilizationRate}%`} />
           </div>

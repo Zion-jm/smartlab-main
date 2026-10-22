@@ -1,3 +1,4 @@
+import { requestApprovalNotice } from '../utils/requestApproval';
 import EquipmentReturnModal from '../components/admin/EquipmentReturnModal';
 import ReturnHistory from '../components/shared/ReturnHistory';
 import { ArrowRight, ClipboardList, CalendarDays, Clock, MapPin, UserRound } from 'lucide-react';
@@ -142,7 +143,7 @@ function RequestTableRow({ request, onOpen, onSelect, onAction }: {
               const badge = statusMeta[request.status];
               const emptyEquipment = request.requestType === 'EQUIPMENT' && !request.items?.length;
               const inlineActions = [
-                { label: 'Approve', action: 'approve' as const, show: !emptyEquipment && request.status === 'PENDING' },
+                { label: 'Approve', action: 'approve' as const, show: !emptyEquipment && request.status === 'PENDING' && !requestApprovalNotice(request) },
                 { label: 'Borrowed', action: 'borrow' as const, show: !emptyEquipment && request.status === 'APPROVED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length)) },
                 { label: 'Returned', action: 'return' as const, show: request.status === 'BORROWED' && (request.requestType !== 'LABORATORY' || Boolean(request.items?.length)) },
               ].filter((item) => item.show);
@@ -170,7 +171,7 @@ function RequestTableRow({ request, onOpen, onSelect, onAction }: {
                     )}
                   </TableCell>
                   <TableCell>
-                    <p>{formatDate(request.dateNeeded)}</p>
+                    <p>{formatDate(request.dateNeeded)}</p>{requestApprovalNotice(request) && <p className="mt-1 text-xs text-amber-800">{requestApprovalNotice(request)}</p>}
                     <p className="text-xs text-[#9ca3af]">{formatTimeRange(request.timeStart, request.timeEnd)}</p>
                   </TableCell>
                   <TableCell>
@@ -247,6 +248,7 @@ export default function AdminRequests() {
   }, [reviewRequestId, reviewToken]);
   const [mutatingId, setMutatingId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
+  const [statusCounts, setStatusCounts] = useState<Partial<Record<BorrowRequestStatus, number>>>({});
   const [detailModalRequest, setDetailModalRequest] = useState<ApiBorrowRequest | null>(null);
   const [returnRequest,setReturnRequest]=useState<ApiBorrowRequest|null>(null);
   const [checkoutWarning, setCheckoutWarning] = useState<{request: ApiBorrowRequest; message: string} | null>(null);
@@ -328,6 +330,7 @@ export default function AdminRequests() {
       const { requests: data, total: serverTotal } = res.data;
       if (requestPage > 1 && serverTotal <= (requestPage - 1) * requestPageSize) setRequestPage(Math.max(1, Math.ceil(serverTotal / requestPageSize)));
       setRequests(Array.isArray(data) ? data : []);
+      setStatusCounts(res.data.stats ?? {});
       setTotal(typeof serverTotal === 'number' ? serverTotal : data?.length ?? 0);
     
     }).catch((err) => {
@@ -607,6 +610,9 @@ export default function AdminRequests() {
     { status: 'PENDING' as const, label: 'Pending review', description: 'Review availability and approve or decline.', color: 'bg-amber-500', tone: 'border-amber-200 bg-amber-50 text-amber-900' },
     { status: 'APPROVED' as const, label: 'Approved', description: 'Coordinate the reservation or equipment pickup.', color: 'bg-green-600', tone: 'border-green-200 bg-green-50 text-green-900' },
     { status: 'BORROWED' as const, label: 'Borrowed', description: 'Follow up on equipment and record returns.', color: 'bg-blue-600', tone: 'border-blue-200 bg-blue-50 text-blue-900' },
+    { status: 'RETURNED' as const, label: 'Returned', description: 'Completed equipment returns.', color: 'bg-emerald-600', tone: 'border-emerald-200 bg-emerald-50 text-emerald-900' },
+    { status: 'REJECTED' as const, label: 'Declined', description: 'Requests that were not approved.', color: 'bg-red-600', tone: 'border-red-200 bg-red-50 text-red-900' },
+    { status: 'CANCELLED' as const, label: 'Cancelled', description: 'Requests that were cancelled.', color: 'bg-gray-500', tone: 'border-gray-200 bg-gray-50 text-gray-900' },
   ];
   const visibleLaboratoryCount = requests.filter(request => request.requestType === 'LABORATORY').length;
   const visibleEquipmentCount = requests.filter(request => request.requestType === 'EQUIPMENT').length;
@@ -627,7 +633,7 @@ export default function AdminRequests() {
               <h3 className="text-sm font-semibold text-[#57322d]">{request.referenceCode || request.id.slice(-6).toUpperCase()}</h3>
               <span className={'rounded-full px-2.5 py-1 text-xs font-semibold ' + statusMeta[request.status].className}>{statusMeta[request.status].label}</span>
             </header>
-            <div className="space-y-3 p-4 text-sm"><p className="text-xs font-semibold text-[#800000]">{request.requestType === 'EQUIPMENT' ? 'Equipment borrowing · intended usage location' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Request type unavailable'}</p>
+            <div className="space-y-3 p-4 text-sm">{requestApprovalNotice(request) && <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-800">{requestApprovalNotice(request)}</p>}<p className="text-xs font-semibold text-[#800000]">{request.requestType === 'EQUIPMENT' ? 'Equipment borrowing · intended usage location' : request.requestType === 'LABORATORY' ? 'Laboratory reservation' : 'Request type unavailable'}</p>
               <div><p className="font-semibold text-[#321d1d]">{request.requesterName}</p><p className="break-all text-xs text-[#786565]">{request.requesterEmail}</p></div>
               <p className="flex items-start gap-2"><MapPin size={17} className="mt-0.5 shrink-0 text-[#9a7b4f]" aria-hidden="true" /><span>{resolveRoom(request)}</span></p>
               <div className="flex items-start gap-2"><CalendarDays size={17} className="mt-0.5 shrink-0 text-[#9a7b4f]" aria-hidden="true" /><p>{formatDate(request.dateNeeded)}<span className="block text-xs text-[#786565]">{formatTimeRange(request.timeStart, request.timeEnd)}</span></p></div>
@@ -697,11 +703,11 @@ export default function AdminRequests() {
               <span className="rounded-full border border-[#ead7d3] bg-white px-3 py-1 text-xs font-semibold text-[#800000]">{summaryReady ? `${total} matching requests` : loading ? 'Updating...' : 'Summary unavailable'}</span>
             </header>
             <div className="p-5">
-              <p className="mb-3 text-xs text-[#786565]">Current page{summaryReady ? `: ${requests.length} requests` : ''} · counts follow your filters</p>
+              <p className="mb-3 text-xs text-[#786565]">All matching requests across every page · includes your selected status and other filters</p>
               <div className="request-overview-metrics grid gap-3 sm:grid-cols-3">
                 {queueStages.map(stage => <div key={stage.status} className={`rounded-xl border p-4 ${stage.tone}`}>
                   <p className="text-xs font-semibold">{stage.label}</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums">{summaryReady ? requests.filter(request => request.status === stage.status).length : '—'}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums">{summaryReady ? (filters.status === 'ALL' || filters.status === stage.status ? statusCounts[stage.status] ?? 0 : 0) : '—'}</p>
                   <p className="mt-1 text-[11px] leading-5">{stage.description}</p>
                 </div>)}
               </div>
