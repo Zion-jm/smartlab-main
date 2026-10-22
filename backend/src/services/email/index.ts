@@ -6,7 +6,7 @@ export type { RequestDetails };
 export { verifyEmailTransport } from './transporter';
 const send = async (to: string, req: RequestDetails, event: string, title: string, message: string, reason?: string, includeRequesterIdentity = false, db: Prisma.TransactionClient = prisma) => {
   const content = renderRequestEmail(title, message, req, 'View request', reason, includeRequesterIdentity);
-  await enqueueEmail({ to, eventKey: `${req.id}:${event}:${to.toLowerCase()}`, subject: `[SmartLab] ${title} â€“ ${reference(req.id)}`, ...content }, db);
+  await enqueueEmail({ to, eventKey: `${req.id}:${event}:${to.toLowerCase()}`, subject: `[SmartLab] ${title} - ${reference(req.id)}`, ...content }, db);
 };
 export const sendRequestSubmittedEmail = (to: string, req: RequestDetails, db: Prisma.TransactionClient = prisma) => send(to,req,'submitted','Request received','Your request is pending administrator review.', undefined, false, db);
 export const sendRequestApprovedEmail = (to: string, req: RequestDetails, db: Prisma.TransactionClient = prisma) => send(to,req,'approved','Request approved',req.items.length ? 'Your request is approved. Coordinate equipment collection with the laboratory administrator for your scheduled session.' : 'Your room request is approved. Use the room during your approved time slot.', undefined, false, db);
