@@ -18,8 +18,8 @@ describe('Shared approvals and schedule conflicts on local smartlab_test',()=>{
     year=await db.academicYear.findFirst({where:{isActive:true}});term=await db.term.findFirst({where:{isActive:true}});
     if(!year||!term)throw Error('Existing test academic period required');
     const passwordHash=await bcrypt.hash('ApprovalTest123!',10);
-    admin=await db.user.create({data:{email:tag+'-admin@smartlab.local',passwordHash,firstName:'Approval',lastName:'Admin',role:'ADMIN'}});
-    faculty=await db.user.create({data:{email:tag+'-faculty@smartlab.local',passwordHash,firstName:'Approval',lastName:'Faculty',role:'FACULTY'}});
+    admin=await db.user.create({data:{activationState: 'LEGACY', email:tag+'-admin@smartlab.local',passwordHash,firstName:'Approval',lastName:'Admin',role:'ADMIN'}});
+    faculty=await db.user.create({data:{activationState: 'LEGACY', email:tag+'-faculty@smartlab.local',passwordHash,firstName:'Approval',lastName:'Faculty',role:'FACULTY'}});
     profile=await db.facultyProfile.create({data:{userId:faculty.id}});
     token=await loginAs(admin.email,'ApprovalTest123!');facultyToken=await loginAs(faculty.email,'ApprovalTest123!');
   });

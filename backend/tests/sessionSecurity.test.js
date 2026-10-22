@@ -3,7 +3,7 @@ const {PrismaClient}=require('@prisma/client'),bcrypt=require('bcryptjs'),jwt=re
 describe('session invalidation on local smartlab_test',()=>{
   let db,admin,adminToken;const users=[];const tag='sessions-'+Date.now();const password='SessionTest123!';
   beforeAll(async()=>{let d,a;try{d=new URL(process.env.DATABASE_URL);a=new URL(BASE_URL)}catch{throw Error('Invalid test configuration')};if(!['localhost','127.0.0.1'].includes(d.hostname)||d.pathname!=='/smartlab_test'||!['localhost','127.0.0.1'].includes(a.hostname))throw Error('Local test database/API required');db=new PrismaClient();admin=await create();adminToken=await loginAs(admin.email,password)});
-  async function create(role='ADMIN'){const u=await db.user.create({data:{email:tag+'-'+users.length+'@smartlab.local',passwordHash:await bcrypt.hash(password,10),firstName:'Session',lastName:'Test',role}});users.push(u.id);return u}
+  async function create(role='ADMIN'){const u=await db.user.create({data:{activationState: 'LEGACY', email:tag+'-'+users.length+'@smartlab.local',passwordHash:await bcrypt.hash(password,10),firstName:'Session',lastName:'Test',role}});users.push(u.id);return u}
   afterAll(async()=>{if(!db)return;try{await db.auditLog.deleteMany({where:{actorUserId:{in:users}}});await db.notification.deleteMany({where:{userId:{in:users}}});await db.user.deleteMany({where:{id:{in:users}}})}finally{await db.$disconnect()}});
   const me=t=>apiRequest('GET','/auth/me',null,t);
   const status=(u,s)=>apiRequest('PATCH','/users/'+u.id+'/status',{status:s},adminToken);

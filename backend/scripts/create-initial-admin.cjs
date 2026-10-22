@@ -12,7 +12,7 @@ async function main(){
       await tx.$executeRawUnsafe('LOCK TABLE "users" IN EXCLUSIVE MODE');
       if(await tx.user.count({where:{role:'ADMIN'}}))throw Error('An administrator already exists. Use account management.');
       await tx.$executeRaw`UPDATE "InstallationSetup" SET "completedAt"=NOW(), "sessionHash"=NULL, "passwordHash"=NULL, "verificationHash"=NULL WHERE "id"='installation'`;
-      await tx.user.create({data:{email,passwordHash,firstName:'System',lastName:'Administrator',role:'ADMIN',adminProfile:{create:{}}}});
+      await tx.user.create({data:{activationState:'LEGACY',email,passwordHash,firstName:'System',lastName:'Administrator',role:'ADMIN',adminProfile:{create:{}}}});
     });
     console.log('Initial administrator created. Remove temporary bootstrap secrets.');
   }finally{await db.$disconnect()}

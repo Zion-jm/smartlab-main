@@ -64,18 +64,11 @@ export default function AccountDrawer({
     department: account?.departmentId ?? '',
     program: account?.programId ?? '',
     yearLevel: account?.yearLevel ? String(account.yearLevel) : '',
-    password: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isCreate = mode === 'create';
-  const passwordError = formValues.password.length < 8
-    ? 'Use at least 8 characters for the temporary password.'
-    : new TextEncoder().encode(formValues.password).length > 72
-      ? 'This password is too long. Use no more than 72 bytes (some symbols use multiple bytes).'
-      : null;
-  const [passwordTouched, setPasswordTouched] = useState(false);
   const isEdit = mode === 'edit';
   const isView = mode === 'view';
   const isFacultyRole = formValues.role === 'FACULTY';
@@ -110,12 +103,6 @@ export default function AccountDrawer({
       return;
     }
 
-    if (isCreate && passwordError) {
-      setPasswordTouched(true);
-      setSubmitError(passwordError);
-      return;
-    }
-
     if (isFacultyRole && !formValues.department) {
       setSubmitError('Select a department for faculty accounts.');
       return;
@@ -140,7 +127,7 @@ export default function AccountDrawer({
       };
 
       if (isCreate) {
-        payload.password = formValues.password;
+        delete payload.status_id;
       }
 
       if (isFacultyRole) {
@@ -159,7 +146,7 @@ export default function AccountDrawer({
 
       if (isCreate) {
         await userApi.create(payload);
-        toast.success('Account created successfully.');
+        toast.success('Invitation queued. The user will set their own password.');
       } else if (account) {
         delete payload.program_id;
         delete payload.year;
@@ -193,7 +180,7 @@ export default function AccountDrawer({
   const formId = 'account-sidebar-form';
 
   return (
-    <SidebarDrawer title={headingLabel} subtitle={subLabel} icon={isCreate?<UserPlus size={23} strokeWidth={1.75}/>:<Pencil size={22} strokeWidth={1.75}/>} badge={account?<span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${statusStyles[account.status]}`}>{account.status==='ACTIVE'?'Active':'Deactivated'}</span>:undefined} onClose={onClose} closeDisabled={isSubmitting} labelledBy="account-drawer-title" footer={isView?<button type="button" onClick={onClose} className="min-h-11 rounded-full border border-[#e5e7eb] px-5 text-sm font-semibold text-[#374151]">Close</button>:<><button type="button" disabled={isSubmitting} onClick={onClose} className="min-h-11 rounded-full border border-[#e5e7eb] px-5 text-sm font-semibold text-[#374151] disabled:opacity-50">Cancel</button><button type="submit" form={formId} disabled={isSubmitting} className={`min-h-11 rounded-full px-5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(128,0,0,0.25)] ${isSubmitting?'cursor-not-allowed bg-[#b56565]':'bg-[#800000] hover:bg-[#680000]'}`}>{isSubmitting?'Saving…':isCreate?'Create account':'Save changes'}</button></>}>
+    <SidebarDrawer title={headingLabel} subtitle={subLabel} icon={isCreate?<UserPlus size={23} strokeWidth={1.75}/>:<Pencil size={22} strokeWidth={1.75}/>} badge={account?<span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${statusStyles[account.status]}`}>{account.status==='ACTIVE'?'Active':'Deactivated'}</span>:undefined} onClose={onClose} closeDisabled={isSubmitting} labelledBy="account-drawer-title" footer={isView?<button type="button" onClick={onClose} className="min-h-11 rounded-full border border-[#e5e7eb] px-5 text-sm font-semibold text-[#374151]">Close</button>:<><button type="button" disabled={isSubmitting} onClick={onClose} className="min-h-11 rounded-full border border-[#e5e7eb] px-5 text-sm font-semibold text-[#374151] disabled:opacity-50">Cancel</button><button type="submit" form={formId} disabled={isSubmitting} className={`min-h-11 rounded-full px-5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(128,0,0,0.25)] ${isSubmitting?'cursor-not-allowed bg-[#b56565]':'bg-[#800000] hover:bg-[#680000]'}`}>{isSubmitting?'Saving…':isCreate?'Send invitation':'Save changes'}</button></>}>
           {isView ? (
             <div className="space-y-4 text-sm text-[#374151]">
               <div>
@@ -295,7 +282,7 @@ export default function AccountDrawer({
                 <div>
                   <label className="block text-xs font-semibold text-[#374151] mb-1">Status</label>
                   <div className="w-full rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 py-2 text-sm font-semibold text-[#1f2937]">
-                    Active (default)
+                    Pending activation
                   </div>
                   <input type="hidden" name="status" value={formValues.status} />
                 </div>
@@ -307,27 +294,7 @@ export default function AccountDrawer({
                   onChange={handleStatusChange}
                 />
               )}
-              {isCreate && (
-                <div>
-                  <label htmlFor="account-temporary-password" className="block text-xs font-semibold text-[#374151] mb-1">Temporary password</label>
-                  <input
-                    type="text"
-                    id="account-temporary-password"
-                    name="password"
-                    autoComplete="new-password"
-                    onBlur={() => setPasswordTouched(true)}
-                    aria-describedby="account-password-help"
-                    aria-invalid={passwordTouched && !!passwordError}
-                    value={formValues.password}
-                    onChange={handleChange}
-                    placeholder="At least 8 characters"
-                    className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
-                  />
-                  <p id="account-password-help" aria-live="polite" className={`mt-1 text-xs ${passwordTouched && passwordError ? 'text-red-600' : 'text-[#6b7280]'}`}>
-                    {passwordTouched && passwordError ? passwordError : 'Use at least 8 characters. Maximum 72 bytes; some symbols count as multiple bytes.'}
-                  </p>
-                </div>
-              )}
+              {isCreate && <p className="text-sm text-[#786565]">We will email a setup link. The user chooses their password and verifies access to their email before signing in.</p>}
               {isFacultyRole && (
                 <DropdownField
                   label="Faculty department"

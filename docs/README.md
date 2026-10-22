@@ -7,6 +7,7 @@ Choose the guide for your task. Commands run from the repository root unless sta
 - [Instructor handover checklist](instructor-handover-checklist.md)
 - [First-time setup](first-time-setup.md)
 - [Email configuration](EMAIL_NOTIFICATIONS.md)
+- [Account invitations and password setup](account-invitations.md)
 - [Backup recovery (private repository)](https://github.com/Zion-jm/smartlab-backups/blob/main/RECOVERY.md)
 - [Future updates — planned work](future-updates.md)
 
@@ -19,6 +20,7 @@ Choose the guide for your task. Commands run from the repository root unless sta
 - [API reference — verify against current routes](API.md)
 - [Prisma and indexes](prisma-and-indexes.md)
 - [Release-readiness plan](release-readiness-plan.md)
+- [Account invitation implementation plan](account-invitation-implementation-plan.md)
 
 ## Requests and academic records
 

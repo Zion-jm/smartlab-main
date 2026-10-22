@@ -1,9 +1,10 @@
+import { randomBytes } from 'node:crypto';
+import { invitationOrigin, normalizeInvitationEmail, issueInvitation, manageInvitation, isPendingActivation, usableActivation } from '../services/accountInvitationService';
 import { assertAccountDeactivationAllowed } from '../services/adminAccessProtection';
 import { inventoryTransaction } from '../services/inventoryTransaction';
 import { currentStudentAcademic } from '../services/currentStudentAcademic';
 import { ValidationError } from '../services/domainError';
 import { allowedAcademicYearWhere } from '../services/academicYearPolicy';
-import { validNewPassword, passwordPolicyMessage } from '../utils/passwordPolicy';
 import { requestPasswordReset } from '../services/passwordResetService';
 import { accountStatusChanged } from '../services/accountReactivationService';
 import { prisma } from '../db/prisma';
@@ -19,15 +20,30 @@ import { recordRequiredAuditLog } from '../services/auditLogService';
 
 const router = Router();
 
+router.get('/:id/invitation', authenticateToken, authorizeRoles(UserRole.ADMIN), async (req, res) => {
+  try {
+    const invitation = await prisma.accountInvitation.findFirst({ where: { userId: req.params.id }, orderBy: { createdAt: 'desc' }, select: { id: true, expiresAt: true, usedAt: true, revokedAt: true } });
+    const mail = invitation ? await prisma.emailOutbox.findUnique({ where: { eventKey: 'invitation:' + invitation.id }, select: { status: true, sentAt: true } }) : null;
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ invitation: invitation ? { expiresAt: invitation.expiresAt, usedAt: invitation.usedAt, revokedAt: invitation.revokedAt, delivery: mail?.status ?? 'PENDING' } : null });
+  } catch (error) { sendError(error, res); }
+});
+for (const action of ['resend', 'email', 'cancel', 'reinvite'] as const) {
+  router.post('/:id/invitation/' + action, authenticateToken, authorizeRoles(UserRole.ADMIN), async (req, res) => {
+    try { await manageInvitation(req.params.id, req.user!.id, action, req.body.email); res.json({ message: action === 'cancel' ? 'Invitation cancelled.' : 'Invitation queued. The user must complete email setup before signing in.' }); }
+    catch (error) { sendError(error, res); }
+  });
+}
+
 router.get('/stats/overview', authenticateToken, authorizeRoles(UserRole.ADMIN), async (_req, res) => {
   try {
     const [activeStudents, activeFaculty, administrators, archivedStudents, archivedFaculty, archivedAdministrators, pendingReactivation] = await Promise.all([
-      prisma.user.count({ where: { role: UserRole.STUDENT, status: UserStatus.ACTIVE } }),
-      prisma.user.count({ where: { role: UserRole.FACULTY, status: UserStatus.ACTIVE } }),
-      prisma.user.count({ where: { role: UserRole.ADMIN, status: UserStatus.ACTIVE } }),
-      prisma.user.count({ where: { role: UserRole.STUDENT, status: UserStatus.DEACTIVATED } }),
-      prisma.user.count({ where: { role: UserRole.FACULTY, status: UserStatus.DEACTIVATED } }),
-      prisma.user.count({ where: { role: UserRole.ADMIN, status: UserStatus.DEACTIVATED } }),
+      prisma.user.count({ where: { role: UserRole.STUDENT, status: UserStatus.ACTIVE, activationState: usableActivation } }),
+      prisma.user.count({ where: { role: UserRole.FACULTY, status: UserStatus.ACTIVE, activationState: usableActivation } }),
+      prisma.user.count({ where: { role: UserRole.ADMIN, status: UserStatus.ACTIVE, activationState: usableActivation } }),
+      prisma.user.count({ where: { role: UserRole.STUDENT, status: UserStatus.DEACTIVATED, activationState: usableActivation } }),
+      prisma.user.count({ where: { role: UserRole.FACULTY, status: UserStatus.DEACTIVATED, activationState: usableActivation } }),
+      prisma.user.count({ where: { role: UserRole.ADMIN, status: UserStatus.DEACTIVATED, activationState: usableActivation } }),
       prisma.reactivationRequest.count({ where: { status: 'PENDING' } }),
     ]);
     res.json({ activeStudents, activeFaculty, administrators, archivedAccounts: archivedStudents + archivedFaculty + archivedAdministrators,
@@ -60,7 +76,7 @@ const STATUS_ID_TO_VALUE: Record<number, UserStatus> = {
   [STATUS_VALUE_TO_ID.DEACTIVATED]: UserStatus.DEACTIVATED,
 };
 
-type UserWithProfiles = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'status'> & {
+type UserWithProfiles = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'status' | 'activationState'> & {
   facultyProfile?: (FacultyProfile & { department?: { id: string; name: string } | null }) | null;
   studentProfile?: (StudentProfile & { program?: { id: string; name: string; code: string } | null }) | null;
 };
@@ -80,6 +96,7 @@ const mapUserToResponse = (user: UserWithProfiles) => {
     role_name: user.role,
     status_id: STATUS_VALUE_TO_ID[user.status],
     status_name: user.status,
+    activation_state: user.activationState,
     department_id: department?.id ?? null,
     department_name: department?.name ?? null,
     department: department?.name ?? null,
@@ -107,7 +124,8 @@ router.get(
       }
 
       if (status) {
-        where.status = status;
+        if (status === 'PENDING' || status === 'CANCELLED') where.activationState = status;
+        else { where.status = status; where.activationState = usableActivation; }
       }
 
       if (search) {
@@ -123,7 +141,7 @@ router.get(
         skip: paging.skip, take: paging.take,
         where,
         select: {
-          id: true, email: true, firstName: true, lastName: true, role: true, status: true,
+          id: true, email: true, firstName: true, lastName: true, role: true, status: true, activationState: true,
           facultyProfile: {
             include: {
               department: true,
@@ -164,7 +182,7 @@ router.post(
       const {
         first_name,
         last_name,
-        gmail,
+        gmail: emailInput,
         password,
         role_id,
         status_id,
@@ -174,15 +192,16 @@ router.post(
         year_level,
       } = req.body;
 
-      if (!gmail || !password || role_id == null || status_id == null) {
-        res.status(400).json({ error: 'Email, password, role, and status are required.' });
+      if (!emailInput || role_id == null || password !== undefined || status_id !== undefined) {
+        res.status(400).json({ error: 'Provide email and role only. New accounts are activated through an email invitation, not an administrator password.' });
         return;
       }
 
-      if (!validNewPassword(password)) { res.status(400).json({ error: passwordPolicyMessage }); return; }
+      const origin = invitationOrigin();
+      const gmail = normalizeInvitationEmail(emailInput);
       if (typeof gmail !== 'string' || gmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gmail)) { res.status(400).json({ error: 'Enter a valid email address.' }); return; }
       const role = ROLE_ID_TO_VALUE[Number(role_id)];
-      const status = STATUS_ID_TO_VALUE[Number(status_id)];
+      const status = UserStatus.DEACTIVATED;
 
       if (!role || !status) {
         res.status(400).json({ error: 'Invalid role or status provided.' });
@@ -199,7 +218,7 @@ router.post(
         return;
       }
 
-      const existingUser = await prisma.user.findUnique({ where: { email: gmail } });
+      const existingUser = await prisma.user.findFirst({ where: { email: { equals: gmail, mode: 'insensitive' } } });
       if (existingUser) {
         res.status(409).json({ error: 'Email is already registered.' });
         return;
@@ -210,13 +229,14 @@ router.post(
         return;
       }
 
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = await bcrypt.hash(randomBytes(48).toString('hex'), 12);
 
       const createdUser = await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
           data: {
             email: gmail,
             passwordHash,
+            activationState: 'PENDING',
             firstName: first_name,
             lastName: last_name,
             role,
@@ -266,6 +286,7 @@ router.post(
             status: user.status,
           },
         });
+        await issueInvitation(tx, user, req.user!.id, origin);
         return user;
       });
 
@@ -293,6 +314,7 @@ router.post(
         role_name: savedUser?.role,
         status_id: STATUS_VALUE_TO_ID[savedUser!.status],
         status_name: savedUser?.status,
+        activation_state: savedUser?.activationState,
         department_id: department?.id ?? null,
         department_name: department?.name ?? null,
         department: department?.name ?? null,
@@ -329,6 +351,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         phone: true,
         role: true,
         status: true,
+        activationState: true,
         lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
@@ -378,6 +401,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return;
     }
 
+    if (isPendingActivation(existingUser.activationState)) { res.status(409).json({ error: 'Use the invitation actions for this account.' }); return; }
     const firstName = typeof firstNameInput === 'string' && firstNameInput.trim() ? firstNameInput.trim() : existingUser.firstName;
     const lastName = typeof lastNameInput === 'string' && lastNameInput.trim() ? lastNameInput.trim() : existingUser.lastName;
     const email = typeof emailInput === 'string' && emailInput.trim() ? emailInput.trim() : existingUser.email;
@@ -470,6 +494,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
           phone,
           status: nextStatus,
           ...(nextStatus !== existingUser.status || email !== existingUser.email ? { sessionVersion: { increment: 1 } } : {}),
+          ...(email !== existingUser.email ? { emailVerifiedAt: null } : {}),
         },
       });
 
@@ -546,7 +571,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
 router.post('/:id/password-reset', authenticateToken, authorizeRoles(UserRole.ADMIN), async (req,res) => {
   try {
-    const user=await prisma.user.findUniqueOrThrow({where:{id:req.params.id},select:{email:true}});
+    const user=await prisma.user.findUniqueOrThrow({where:{id:req.params.id},select:{email:true,activationState:true}});
+    if (isPendingActivation(user.activationState)) throw new ValidationError('Use invitation actions to send this user a setup link.');
     await requestPasswordReset(user.email,req.user!.id);
     res.json({message:'A reset link has been requested. If one was sent recently, ask the user to check their existing email.'});
   } catch(error) { sendError(error,res); }
@@ -569,6 +595,7 @@ router.patch(
       const user = await inventoryTransaction(prisma, async tx => {
         await assertAccountDeactivationAllowed(tx, id, req.user!.id, requestedStatus);
         const previous = await tx.user.findUniqueOrThrow({ where: { id } });
+        if (isPendingActivation(previous.activationState)) throw new ValidationError('Use the invitation actions for this account.');
         const user = await tx.user.update({
           where: { id, updatedAt: previous.updatedAt },
           data: { status: requestedStatus, sessionVersion: { increment: 1 } },
@@ -576,6 +603,7 @@ router.patch(
             id: true,
             email: true,
             status: true,
+        activationState: true,
             updatedAt: true,
           },
         });

@@ -172,7 +172,33 @@ model Department {
 // USER SYSTEM (Optimized your structure)
 // ====================================================
 
+enum ActivationState {
+  LEGACY
+  PENDING
+  COMPLETE
+  CANCELLED
+}
+
+model AccountInvitation {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String @unique
+  invitedEmail String
+  expiresAt DateTime
+  usedAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  createdById String
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+}
+
 model User {
+  activationState ActivationState @default(PENDING)
+  emailVerifiedAt DateTime?
+  activatedAt DateTime?
+  invitations AccountInvitation[]
   studentAcademicRecords StudentAcademicRecord[]
   passwordResets PasswordReset[]
   reactivationRequests ReactivationRequest[]

@@ -6,8 +6,8 @@ jest.mock('../dist/middleware/auth',()=>({authenticateToken:(req,_res,next)=>{re
 const audit=require('../dist/services/auditLogService');const {errorResponseContract,errorHandler}=require('../dist/middleware/errors');
 let db,server,base,year,term,equipment,borrower,loan;const tag='audit-rollback-'+Date.now();const password='AuditTest123!';
 beforeAll(async()=>{const u=new URL(process.env.DATABASE_URL);if(!['localhost','127.0.0.1'].includes(u.hostname)||u.pathname!=='/smartlab_test')throw Error('Local smartlab_test required');db=new PrismaClient();
- mockActor=await db.user.create({data:{email:tag+'@test.local',firstName:'Audit',lastName:'Admin',role:'ADMIN',passwordHash:await bcrypt.hash(password,10)}});
- borrower=await db.user.create({data:{email:tag+'-borrower@test.local',firstName:'Audit',lastName:'Student',role:'STUDENT',passwordHash:'unused'}});
+ mockActor=await db.user.create({data:{activationState: 'LEGACY', email:tag+'@test.local',firstName:'Audit',lastName:'Admin',role:'ADMIN',passwordHash:await bcrypt.hash(password,10)}});
+ borrower=await db.user.create({data:{activationState: 'LEGACY', email:tag+'-borrower@test.local',firstName:'Audit',lastName:'Student',role:'STUDENT',passwordHash:'unused'}});
  year=await db.academicYear.create({data:{year:'2039-2040'}});term=await db.term.create({data:{name:tag}});
  await db.studentAcademicRecord.create({data:{studentId:borrower.id,academicYearId:year.id,programId:(await db.program.findFirst()).id,programCode:'TEST',programName:'Test program',yearLevel:1,status:'ENROLLED'}});
  equipment=await db.equipment.create({data:{name:tag,totalQuantity:3,availableQuantity:3}});

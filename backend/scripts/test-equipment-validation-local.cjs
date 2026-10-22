@@ -29,7 +29,7 @@ async function main() {
     await db.$connect(); connected=true;
     const migration = spawnSync(process.execPath, [require.resolve('prisma/build/index.js'), 'migrate', 'deploy'], {env:process.env, encoding:'utf8', windowsHide:true, timeout:60000});
     assert.equal(migration.status,0,'Isolated migrations must apply');
-    const actor = await db.user.create({data:{email:'equipment@test.invalid',firstName:'Test',lastName:'Admin',passwordHash:'unused',role:'ADMIN'}});
+    const actor = await db.user.create({data:{activationState: 'LEGACY', email:'equipment@test.invalid',firstName:'Test',lastName:'Admin',passwordHash:'unused',role:'ADMIN'}});
     const jwt = require('jsonwebtoken');
     const token = jwt.sign({userId:actor.id,sessionVersion:actor.sessionVersion},process.env.JWT_SECRET);
     const app = require('express')(); app.use(require('express').json()); app.use('/equipment',require('../dist/routes/equipment').default);

@@ -688,7 +688,8 @@ async function main() {
       status: UserStatus.ACTIVE,
     },
     create: {
-      email: adminSeed.email,
+      activationState: 'LEGACY',
+        email: adminSeed.email,
       passwordHash,
       firstName: adminSeed.firstName,
       lastName: adminSeed.lastName,
@@ -707,6 +708,7 @@ async function main() {
         status: UserStatus.ACTIVE,
       },
       create: {
+        activationState: 'LEGACY',
         email: faculty.email,
         passwordHash,
         firstName: faculty.firstName,
@@ -738,6 +740,7 @@ async function main() {
         status: UserStatus.ACTIVE,
       },
       create: {
+        activationState: 'LEGACY',
         email: student.email,
         passwordHash,
         firstName: student.firstName,

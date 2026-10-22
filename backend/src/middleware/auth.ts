@@ -58,6 +58,7 @@ export const authenticateToken = async (
         firstName: true,
         lastName: true,
         status: true,
+        activationState: true,
         sessionVersion: true,
       },
     });
@@ -67,7 +68,7 @@ export const authenticateToken = async (
       return;
     }
 
-    if (user.status !== UserStatus.ACTIVE || user.sessionVersion !== decoded.sessionVersion) {
+    if (!['LEGACY', 'COMPLETE'].includes(user.activationState) || user.status !== UserStatus.ACTIVE || user.sessionVersion !== decoded.sessionVersion) {
       res.status(401).json({ error: 'Session no longer valid. Please sign in again.', code: 'SESSION_INVALID' });
       return;
     }

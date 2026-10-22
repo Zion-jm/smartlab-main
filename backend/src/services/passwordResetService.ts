@@ -9,6 +9,8 @@ export async function requestPasswordReset(email: string, actorId?: string) {
   await prisma.$transaction(async tx => {
     const users = await tx.$queryRaw<{ id: string; email: string; sessionVersion: number }[]>`SELECT "id", "email", "sessionVersion" FROM "users" WHERE "email"=${email} FOR UPDATE`;
     const user = users[0]; if (!user) return;
+    const account = await tx.user.findUnique({ where: { id: user.id } });
+    if (!account || !['LEGACY', 'COMPLETE'].includes(account.activationState)) return;
     const recent = await tx.$queryRaw<{ count: bigint }[]>`SELECT COUNT(*) AS count FROM "PasswordReset" WHERE "userId"=${user.id} AND "createdAt">NOW()-INTERVAL '30 minutes'`;
     if (Number(recent[0].count) >= 3) return;
     const cooldown = await tx.$queryRaw<{ tokenHash: string }[]>`SELECT "tokenHash" FROM "PasswordReset" WHERE "userId"=${user.id} AND "createdAt">NOW()-INTERVAL '1 minute' LIMIT 1`;
@@ -28,6 +30,8 @@ export async function resetPassword(token: string, password: string) {
     const reset = rows[0]; if (!reset) throw new DomainError(400,'This reset link is invalid or expired. Please request a new link.');
     const users = await tx.$queryRaw<{email:string;sessionVersion:number}[]>`SELECT "email","sessionVersion" FROM "users" WHERE "id"=${reset.userId} FOR UPDATE`;
     if (!users[0] || users[0].sessionVersion !== reset.sessionVersion) throw new DomainError(400,'This reset link is no longer valid. Please request a new link.');
+    const account = await tx.user.findUnique({ where: { id: reset.userId } });
+    if (!account || !['LEGACY', 'COMPLETE'].includes(account.activationState)) throw new DomainError(400, 'Use your account invitation to set up your password.');
     const claimed = await tx.$executeRaw`UPDATE "PasswordReset" SET "usedAt"=NOW() WHERE "tokenHash"=${tokenHash} AND "usedAt" IS NULL AND "expiresAt">NOW()`;
     if (!claimed) throw new DomainError(400,'This reset link is invalid or expired. Please request a new link.');
     await tx.user.update({where:{id:reset.userId},data:{passwordHash,sessionVersion:{increment:1}}});

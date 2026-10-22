@@ -1,3 +1,4 @@
+import AccountActivationPage from './pages/AccountActivationPage'
 import AdminBorrowingPolicy from './pages/AdminBorrowingPolicy'
 import DataRefreshNotice from './components/DataRefreshNotice'
 import NotFoundPage from './pages/NotFoundPage'
@@ -41,6 +42,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/admin/borrowing-policy" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdminBorrowingPolicy/></ProtectedRoute>}/>
         <Route path="/setup" element={<SetupPreview key="live" live />} />
         <Route path="/setup/verify" element={<SetupVerification />} />
+        <Route path="/activate-account" element={<AccountActivationPage />} />
         <Route path="/forgot-password" element={<PasswordRecoveryPage key="forgot" />} />
         <Route path="/reset-password" element={<PasswordRecoveryPage key="reset" reset />} />
         <Route path="/requests/:id" element={<RequestLinkPage />} />

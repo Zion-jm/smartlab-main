@@ -1,3 +1,4 @@
+import { inspectInvitation, acceptInvitation, isPendingActivation, usableActivation } from '../services/accountInvitationService';
 import { currentStudentAcademic } from '../services/currentStudentAcademic';
 import { passwordChangeLimiter } from '../middleware/requestLimiter';
 import { validNewPassword, passwordPolicyMessage } from '../utils/passwordPolicy';
@@ -19,7 +20,16 @@ const router = Router();
 
 // Accounts are created only through the admin-protected POST /api/users route.
 
-router.use(['/login', '/register', '/reactivation', '/forgot-password', '/reset-password'], authLimiter);
+router.use(['/login', '/register', '/reactivation', '/forgot-password', '/reset-password', '/invitations'], authLimiter);
+
+router.post('/invitations/inspect', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  try { res.json(await inspectInvitation(req.body.token)); } catch (error) { sendError(error, res); }
+});
+router.post('/invitations/accept', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  try { await acceptInvitation(req.body.token, req.body.password, req.body.confirmPassword); res.json({ message: 'Your account is ready. Please sign in.' }); } catch (error) { sendError(error, res); }
+});
 
 // Login
 router.post('/login', async (req, res) => {
@@ -50,6 +60,7 @@ router.post('/login', async (req, res) => {
       return;
     }
 
+    if (isPendingActivation(user.activationState)) { res.status(401).json({ error: 'Invalid credentials' }); return; }
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
@@ -67,7 +78,7 @@ router.post('/login', async (req, res) => {
 
     // Update last login
     const loggedIn = await prisma.user.updateMany({
-      where: { id: user.id, status: UserStatus.ACTIVE, passwordHash: user.passwordHash, sessionVersion: user.sessionVersion },
+      where: { id: user.id, activationState: usableActivation, status: UserStatus.ACTIVE, passwordHash: user.passwordHash, sessionVersion: user.sessionVersion },
       data: { lastLoginAt: new Date() },
     });
     if (loggedIn.count !== 1) { res.status(401).json({ error: 'Account changed. Please sign in again.' }); return; }
@@ -111,7 +122,7 @@ router.post('/reactivation', async (req, res) => {
       res.status(400).json({ error: 'Enter your credentials and a reason of at most 1000 characters.' }); return;
     }
     const user = await prisma.user.findUnique({ where: { email }, include: { studentProfile: { include: { program: true } } } });
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) { res.status(401).json({ error: 'Invalid email or password.' }); return; }
+    if (!user || isPendingActivation(user.activationState) || !(await bcrypt.compare(password, user.passwordHash))) { res.status(401).json({ error: 'Invalid email or password.' }); return; }
     const created = await prisma.$transaction(async tx => {
       const locked = await tx.$queryRaw<{ status: string; sessionVersion: number }[]>`SELECT "status", "sessionVersion" FROM "users" WHERE "id"=${user.id} FOR UPDATE`;
       if (!locked[0] || locked[0].status === 'ACTIVE' || locked[0].sessionVersion !== user.sessionVersion) throw new DomainError(409, 'Your account changed. Please sign in again.');

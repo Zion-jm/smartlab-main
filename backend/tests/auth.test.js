@@ -113,12 +113,12 @@ describe('Authentication', () => {
       async (roleId, roleName) => {
         const directory = await apiRequest('GET', '/academic-directory', null, adminToken);
         expect(directory.status).toBe(200);
-        const email = `admin_created_${roleName}_${Date.now()}@smartlab.local`;
+        const email = `admin_created_${roleName.toLowerCase()}_${Date.now()}@smartlab.local`;
         let createdId;
         try {
           const { status, data } = await apiRequest('POST', '/users', {
             first_name: 'Registration', last_name: 'Regression', gmail: email,
-            password: 'Password123!', role_id: roleId, status_id: 1,
+            role_id: roleId,
             department_id: directory.data.departments?.[0]?.id,
             program_id: directory.data.programs?.[0]?.id, year_level: 2,
           }, adminToken);
@@ -126,6 +126,12 @@ describe('Authentication', () => {
           expect(status).toBe(201);
           expect(createdId).toBeDefined();
           expect(data.user.role_name).toBe(roleName);
+          expect((await apiRequest('POST', '/auth/login', { email, password: 'Password123!' })).status).toBe(401);
+          const { prisma } = require('../dist/db/prisma');
+          const invitation = await prisma.accountInvitation.findFirst({ where: { userId: createdId }, orderBy: { createdAt: 'desc' } });
+          const mail = await prisma.emailOutbox.findUnique({ where: { eventKey: 'invitation:' + invitation.id } });
+          const token = mail.text.match(/token=([a-f0-9]{64})/)[1];
+          expect((await apiRequest('POST', '/auth/invitations/accept', { token, password: 'Password123!', confirmPassword: 'Password123!' })).status).toBe(200);
           const login = await apiRequest('POST', '/auth/login', { email, password: 'Password123!' });
           expect(login.status).toBe(200);
           expect(login.data.user.role).toBe(roleName);
